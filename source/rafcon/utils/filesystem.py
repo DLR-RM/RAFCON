@@ -19,8 +19,10 @@
 import os
 import tarfile
 import stat
-import shutil
-from os.path import realpath, dirname, join, expanduser
+
+from os.path import join, expanduser
+from rafcon.core.config import global_config
+
 import shutil, errno
 
 
@@ -32,47 +34,6 @@ def create_path(path):
     import os
     if not os.path.exists(path):
         os.makedirs(path)
-
-
-def get_md5_file_hash(filename):
-    """Calculates the MD5 hash of a file
-
-    :param str filename: The filename (including the path) of the file
-    :return: Md5 hash of the file
-    :rtype: str
-    """
-    import hashlib
-    BLOCKSIZE = 65536
-    hasher = hashlib.md5()
-    with open(filename, 'rb') as afile:
-        buf = afile.read(BLOCKSIZE)
-        while len(buf) > 0:
-            hasher.update(buf)
-            buf = afile.read(BLOCKSIZE)
-    return hasher.hexdigest()
-
-
-def file_needs_update(target_file, source_file):
-    """Checks if target_file is not existing or differing from source_file
-
-    :param target_file: File target for a copy action
-    :param source_file: File to be copied
-    :return: True, if target_file not existing or differing from source_file, else False
-    :rtype: False
-    """
-    if not os.path.isfile(target_file) or get_md5_file_hash(target_file) != get_md5_file_hash(source_file):
-        return True
-    return False
-
-
-def copy_file_if_update_required(source_file, target_file):
-    """Copies source_file to target_file if latter one in not existing or outdated
-
-    :param source_file: Source file of the copy operation
-    :param target_file: Target file of the copy operation
-    """
-    if file_needs_update(target_file, source_file):
-        shutil.copy(source_file, target_file)
 
 
 def read_file(file_path, filename=None):
@@ -113,6 +74,14 @@ def get_default_config_path():
     return None
 
 
+def get_default_log_path():
+    default_path = None
+    home_path = expanduser('~')
+    if home_path:
+        default_path = join(home_path, ".log", "rafcon")
+    return global_config.get_config_value("DEFAULT_LOG_PATH", default_path)
+
+
 def separate_folder_path_and_file_name(path):
     if os.path.isdir(path):
         return path, None
@@ -143,10 +112,12 @@ def make_tarfile(output_filename, source_dir):
 def copy_file_or_folder(src, dst):
     try:
         shutil.copytree(src, dst)
-    except OSError as exc: # python >2.5
+    except OSError as exc:
         if exc.errno == errno.ENOTDIR:
             shutil.copy(src, dst)
-        else: raise
+        else:
+            raise
+
 
 def make_file_executable(filename):
     st = os.stat(filename)

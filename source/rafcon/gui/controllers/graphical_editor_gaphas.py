@@ -23,7 +23,6 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GLib
-from future.utils import string_types
 import time
 from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
@@ -44,8 +43,6 @@ from rafcon.gui.models.library_state import LibraryStateModel
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.mygaphas.canvas import MyCanvas
-# noinspection PyUnresolvedReferences
-from rafcon.gui.mygaphas import guide
 from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
 from rafcon.gui.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVariablePortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
@@ -141,6 +138,7 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("cut", self._cut_selection)
 
         shortcut_manager.add_callback_for_action('show_data_flows', self.update_view)
+        shortcut_manager.add_callback_for_action('show_transitions', self.update_view)
         shortcut_manager.add_callback_for_action('show_data_values', self.update_view)
         shortcut_manager.add_callback_for_action('data_flow_mode', self.data_flow_mode)
         shortcut_manager.add_callback_for_action('show_aborted_preempted', self.update_view)
@@ -154,9 +152,8 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information e.g. about the changed config key
         """
         config_key = info['args'][1]
-        # config_value = info['args'][2]
 
-        if config_key in ["ENABLE_CACHING", "SHOW_ABORTED_PREEMPTED", "SHOW_DATA_FLOWS",
+        if config_key in ["ENABLE_CACHING", "SHOW_ABORTED_PREEMPTED", "SHOW_DATA_FLOWS", "SHOW_TRANSITIONS",
                           "SHOW_DATA_FLOW_VALUE_LABELS", "SHOW_NAMES_ON_DATA_FLOWS", "ROTATE_NAMES_ON_CONNECTION"]:
             self.update_view()
 
@@ -213,11 +210,11 @@ class GraphicalEditorController(ExtendedController):
             if not rafcon.gui.singleton.global_gui_config.get_config_value('DRAG_N_DROP_WITH_FOCUS'):
                 self.view.editor.handler_unblock(self.focus_changed_handler_id)
 
-    def update_view(self, *args):
+    def update_view(self, *args, **kwargs):
         self.canvas.update_root_items()
 
     @lock_state_machine
-    def data_flow_mode(self, *args):
+    def data_flow_mode(self, *args, **kwargs):
         pass
 
     @lock_state_machine
@@ -228,33 +225,39 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-            return gui_helper_state_machine.add_new_state(self.model, state_type)
+            cursor_position = kwargs.get("cursor_position", None)
+            if cursor_position:
+                from rafcon.gui.helpers.coordinates import main_window2graphical_editor
+                cursor_position = main_window2graphical_editor(cursor_position)
+            return gui_helper_state_machine.add_new_state(self.model, state_type, cursor_position)
 
     @lock_state_machine
-    def _copy_selection(self, *event):
+    def _copy_selection(self, *event, **kwargs):
         """Copies the current selection to the clipboard.
         """
         if react_to_event(self.view, self.view.editor, event):
-            logger.debug("copy selection")
+            logger.verbose("copy selection")
             global_clipboard.copy(self.model.selection)
             return True
 
     @lock_state_machine
-    def _cut_selection(self, *event):
-        """Cuts the current selection and copys it to the clipboard.
+    def _cut_selection(self, *event, **kwargs):
+        """Cuts the current selection and copies it to the clipboard.
         """
         if react_to_event(self.view, self.view.editor, event):
-            logger.debug("cut selection")
+            logger.verbose("cut selection")
             global_clipboard.cut(self.model.selection)
             return True
 
     @lock_state_machine
-    def _paste_clipboard(self, *event):
+    def _paste_clipboard(self, *event, **kwargs):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
         if react_to_event(self.view, self.view.editor, event):
-            logger.debug("Paste")
-            gui_helper_state_machine.paste_into_selected_state(self.model)
+            logger.verbose("Paste")
+            cursor_position = kwargs.get("cursor_position", None)
+
+            gui_helper_state_machine.paste_into_selected_state(self.model, cursor_position)
             return True
 
     def _move_focused_item_into_viewport(self, view, focused_item):
@@ -376,7 +379,7 @@ class GraphicalEditorController(ExtendedController):
     def update_of_ongoing_complex_actions(self, model, prop_name, info):
         # only once at the end of an complex action the ongoing complex actions dictionary is empty
         if not model.ongoing_complex_actions:
-            action_name, action_dict = self.model.complex_action_observer.nested_action_already_in[-1]
+            _, action_dict = self.model.complex_action_observer.nested_action_already_in[-1]
             self.adapt_complex_action(action_dict['target'], action_dict['new'])
 
     @ExtendedController.observe("state_machine", after=True)
@@ -398,7 +401,7 @@ class GraphicalEditorController(ExtendedController):
                 return
 
             # The method causing the change raised an exception, thus nothing was changed
-            if (isinstance(result, string_types) and "CRASH" in result) or isinstance(result, Exception):
+            if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
                 return
 
             # avoid to remove views of elements of states which parent state is destroyed recursively
@@ -771,6 +774,12 @@ class GraphicalEditorController(ExtendedController):
 
         size = state_meta['size']
 
+        # Use default values if no size information is stored
+        if not state_meta['background_color']:
+            state_meta = state_m.set_meta_data_editor('background_color', False)
+
+        background_color = state_meta['background_color']
+
         # Use default values if no position information is stored
         if not gui_helper_meta_data.contains_geometric_info(state_meta['rel_pos']):
             state_meta = state_m.set_meta_data_editor('rel_pos', rel_pos)
@@ -781,16 +790,11 @@ class GraphicalEditorController(ExtendedController):
             if not state_m.meta_data_was_scaled:
                 gui_helper_meta_data.scale_library_ports_meta_data(state_m, gaphas_editor=True)
 
-        state_v = StateView(state_m, size, hierarchy_level)
+        state_v = StateView(state_m, size, background_color, hierarchy_level)
 
         # Draw state above data flows and NameView but beneath transitions
         num_data_flows = len(state_m.state.parent.data_flows) if isinstance(state_m.parent, ContainerStateModel) else 0
         index = 1 if not parent_v else num_data_flows + 1
-        # if self.model.root_state is state_m:
-        #     print("init root_state", state_m, state_v)
-        # else:
-        #     print("init state", state_m, state_v)
-        # print([hash(elem) for elem in state_m.state.outcomes.values()])
         self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 
@@ -890,9 +894,7 @@ class GraphicalEditorController(ExtendedController):
                                                  hierarchy_level=parent_state_m.hierarchy_level + 1)
 
     @lock_state_machine
-    def _connect_transition_to_ports(self, transition_m, transition_v, parent_state_m, parent_state_v,
-                                     use_waypoints=True):
-
+    def _connect_transition_to_ports(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
         transition_meta = transition_m.get_meta_data_editor()
         # The state_copy (root_state_of_library) is not shown, therefore transitions to the state_copy are connected
         # to the LibraryState belonging to the state copy
@@ -900,14 +902,11 @@ class GraphicalEditorController(ExtendedController):
         connect_to_grandparent = False
         if parent_state_m.state.is_root_state_of_library:
             connect_to_grandparent = True
-
         try:
             if use_waypoints:
                 waypoint_list = transition_meta['waypoints']
-
                 for waypoint in waypoint_list:
                     transition_v.add_waypoint(waypoint)
-
             # Get id and references to the from and to state
             from_state_id = transition_m.transition.from_state
             if from_state_id is None:
@@ -920,22 +919,19 @@ class GraphicalEditorController(ExtendedController):
                 from_state_v = self.canvas.get_view_for_model(from_state_m)
                 from_outcome_id = transition_m.transition.from_outcome
                 from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
-
             to_state_id = transition_m.transition.to_state
-
             if to_state_id == parent_state_m.state.state_id:  # Transition goes back to parent
-                # Set the to coordinates to the outcome coordinates received earlier
+                # Set the coordinates to the outcome coordinates received earlier
                 to_outcome_id = transition_m.transition.to_outcome
                 if connect_to_grandparent:
                     grandparent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
                 else:
                     parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
             else:
-                # Set the to coordinates to the center of the next state
+                # Set the coordinates to the center of the next state
                 to_state_m = parent_state_m.states[to_state_id]
                 to_state_v = self.canvas.get_view_for_model(to_state_m)
                 to_state_v.connect_to_income(transition_v, transition_v.to_handle())
-
         except AttributeError as e:
             logger.error("Cannot connect transition: {0}".format(e))
             try:
@@ -944,7 +940,12 @@ class GraphicalEditorController(ExtendedController):
                 pass
 
     @lock_state_machine
-    def _connect_data_flow_to_ports(self, data_flow_m, data_flow_v, parent_state_m):
+    def _connect_data_flow_to_ports(self, data_flow_m, data_flow_v, parent_state_m, use_waypoints=True):
+        data_flow_meta = data_flow_m.get_meta_data_editor()
+        if use_waypoints:
+            waypoint_list = data_flow_meta['waypoints']
+            for waypoint in waypoint_list:
+                data_flow_v.add_waypoint(waypoint)
         # Get id and references to the from and to state
         from_state_id = data_flow_m.data_flow.from_state
         from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
@@ -954,33 +955,26 @@ class GraphicalEditorController(ExtendedController):
         if from_state_m.state.is_root_state_of_library:
             from_state_m = from_state_m.parent
         from_state_v = self.canvas.get_view_for_model(from_state_m)
-
         to_state_id = data_flow_m.data_flow.to_state
         to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
             to_state_id]
         if to_state_m.state.is_root_state_of_library:  # see comment above
             to_state_m = to_state_m.parent
         to_state_v = self.canvas.get_view_for_model(to_state_m)
-
         from_key = data_flow_m.data_flow.from_key
         to_key = data_flow_m.data_flow.to_key
-
         from_port_m = from_state_m.get_data_port_m(from_key)
         to_port_m = to_state_m.get_data_port_m(to_key)
-
         if from_port_m is None:
-            # One case, for which there is no from_port_m is when the the from-port is a ScopedVariable of a
-            # LibraryState
+            # One case, for which there is no from_port_m is when the from-port is a ScopedVariable of a
             if not isinstance(from_state_m, LibraryStateModel):
-                logger.warning('Cannot find model of the from data port {0}, ({1})'.format(from_key,
-                                                                                        data_flow_m.data_flow))
+                logger.warning('Cannot find model of the from data port {0}, ({1})'.format(from_key, data_flow_m.data_flow))
             return
         if to_port_m is None:
-            # One case, for which there is no to_port_m is when the the to-port is a ScopedVariable of a LibraryState
+            # One case, for which there is no to_port_m is when the to-port is a ScopedVariable of a LibraryState
             if not isinstance(to_state_m, LibraryStateModel):
                 logger.warning('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
             return
-
         # For scoped variables, there is no inner and outer connector
         if isinstance(from_port_m, ScopedVariableModel):
             from_state_v.connect_to_scoped_variable_port(from_key, data_flow_v, data_flow_v.from_handle())
@@ -988,7 +982,6 @@ class GraphicalEditorController(ExtendedController):
             from_state_v.connect_to_input_port(from_key, data_flow_v, data_flow_v.from_handle())
         elif from_port_m in from_state_m.output_data_ports:
             from_state_v.connect_to_output_port(from_key, data_flow_v, data_flow_v.from_handle())
-
         if isinstance(to_port_m, ScopedVariableModel):
             to_state_v.connect_to_scoped_variable_port(to_key, data_flow_v, data_flow_v.to_handle())
         elif to_port_m in to_state_m.output_data_ports:
@@ -1027,6 +1020,11 @@ class GraphicalEditorController(ExtendedController):
             return False
         return True
 
+    def update_item(self, model):
+        view = self.canvas.get_view_for_model(model)
+        self.canvas.request_update(view, matrix=False)
+        self.canvas.wait_for_update()
+
     @lock_state_machine
     def _add_data_port_to_selected_state(self, *event, **kwargs):
         if self.react_to_event(event):
@@ -1034,16 +1032,16 @@ class GraphicalEditorController(ExtendedController):
             gui_helper_state_machine.add_data_port_to_selected_states(data_port_type)
 
     @lock_state_machine
-    def _add_scoped_variable_to_selected_state(self, *event):
+    def _add_scoped_variable_to_selected_state(self, *event, **kwargs):
         if self.react_to_event(event):
             gui_helper_state_machine.add_scoped_variable_to_selected_states()
 
     @lock_state_machine
-    def _add_outcome_to_selected_state(self, *event):
+    def _add_outcome_to_selected_state(self, *event, **kwargs):
         if self.react_to_event(event):
             gui_helper_state_machine.add_outcome_to_selected_states()
 
     @lock_state_machine
-    def _remove_selected_elements(self, *event):
+    def _remove_selected_elements(self, *event, **kwargs):
         if self.react_to_event(event):
             gui_helper_state_machine.delete_selected_elements(self.model)

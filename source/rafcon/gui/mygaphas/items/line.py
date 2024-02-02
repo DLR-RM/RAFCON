@@ -10,12 +10,10 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import zip
 from math import atan2, pi, floor
 
 from gaphas.item import Line, NW, SE
 from gaphas.painter import CairoBoundingBoxContext
-# from cairo import Antialias, LINE_CAP_ROUND, LINE_CAP_BUTT
 from cairo import LINE_CAP_ROUND, LINE_CAP_BUTT
 from gi.repository.Pango import SCALE
 from gi.repository import PangoCairo
@@ -38,9 +36,7 @@ class PerpLine(Line):
         self._from_handle = self.handles()[0]
         self._to_handle = self.handles()[1]
         self._segment = Segment(self, view=self.canvas)
-
         self.hierarchy_level = hierarchy_level
-
         self._from_port = None
         self._from_waypoint = None
         self._from_port_constraint = None
@@ -48,14 +44,11 @@ class PerpLine(Line):
         self._to_waypoint = None
         self._to_port_constraint = None
         self._waypoint_constraints = []
-
         self._arrow_color = None
         self._line_color = None
-
         self._parent = None
         self._parent_state_v = None
         self._view = None
-
         self._label_image_cache = ImageCache()
         self._last_label_size = 0, 0
 
@@ -245,9 +238,6 @@ class PerpLine(Line):
                     angle -= pi
             else:
                 angle = 0
-
-        # c.set_antialias(Antialias.GOOD)
-
         parameters = {
             'name': self.name,
             'line_width': self.line_width,
@@ -262,7 +252,6 @@ class PerpLine(Line):
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print("draw port name from cache")
             self._label_image_cache.copy_image_to_context(c, upper_left_corner, angle)
 
         # Parameters have changed or nothing in cache => redraw
@@ -327,10 +316,6 @@ class PerpLine(Line):
         handles = self._handles
         for h1, h2 in zip(handles[:-1], handles[1:]):
             self._ports.append(self._create_port(h1.pos, h2.pos))
-
-    def _reversible_insert_handle(self, index, handle):
-        super(PerpLine, self)._reversible_insert_handle(index, handle)
-        self._keep_handle_in_parent_state(handle)
 
     def add_waypoint(self, pos):
         pos = self.canvas.get_matrix_i2i(self.parent, self).transform_point(*pos)

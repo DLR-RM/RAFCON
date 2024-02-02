@@ -19,12 +19,6 @@
 
 """
 
-
-
-from future import standard_library
-standard_library.install_aliases()
-from past.builtins import str
-from builtins import str
 from pydoc import locate, ErrorDuringImport
 from inspect import isclass
 import sys
@@ -44,10 +38,7 @@ def convert_string_to_type(string_value):
 
     # Get object associated with string
     # First check whether we are having a built in type (int, str, etc)
-    if sys.version_info >= (3,):
-        import builtins as builtins23
-    else:
-        import __builtin__ as builtins23
+    import builtins as builtins23
     if hasattr(builtins23, string_value):
         obj = getattr(builtins23, string_value)
         if type(obj) is type:

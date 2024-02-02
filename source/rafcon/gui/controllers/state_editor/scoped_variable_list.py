@@ -22,7 +22,6 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from builtins import str
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.state_elements.scope import ScopedVariable
@@ -55,12 +54,8 @@ class ScopedVariableListController(ListViewController):
 
     def __init__(self, model, view):
         """Constructor"""
-        super(ScopedVariableListController, self).__init__(model, view, view.get_top_widget(),
+        super(ScopedVariableListController, self).__init__(model, view, view.get_parent_widget(),
                                                            self.get_new_list_store(), logger)
-
-        self.next_focus_column = {}
-        self.prev_focus_column = {}
-
         if self.model.get_state_machine_m() is not None:
             self.observe_model(self.model.get_state_machine_m())
         else:
@@ -105,7 +100,7 @@ class ScopedVariableListController(ListViewController):
         shortcut_manager.add_callback_for_action("cut", self.cut_action_callback)
         shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
 
-    def paste_action_callback(self, *event):
+    def paste_action_callback(self, *event, **kwargs):
         """Callback method for paste action
 
          The method trigger the clipboard paste of the list of scoped variables in the clipboard or in case this list is
@@ -127,7 +122,7 @@ class ScopedVariableListController(ListViewController):
         # store port selection
         path_list = None
         if self.view is not None:
-            model, path_list = self.view.get_top_widget().get_selection().get_selected_rows()
+            model, path_list = self.view.get_parent_widget().get_selection().get_selected_rows()
         selected_data_port_ids = [self.list_store[path[0]][self.ID_STORAGE_ID] for path in path_list] if path_list else []
         self.reload_scoped_variables_list_store()
         # recover port selection

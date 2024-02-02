@@ -187,7 +187,7 @@ The following code blocks include code lines to generate the correct environment
 in an e.g. Ubuntu setup, where the environment is statically specified
 in the ~/.bashrc these environment generating commands can be omitted:
 
-.. code:: python
+.. code:: bash
 
     rmpm_do env ros.indigo.desktop > /tmp/desktop.env
     source /tmp/desktop.env
@@ -234,7 +234,7 @@ give this path a name.
 Option 1
 """"""""
 
-This can be done in the `Core configuration`_.
+This can be done in the :ref:`Core Configuration`.
 
 .. figure:: _static/WaitLibrary.png
    :alt: Screenshot of a empty library path and created 'Wait' state machine.
@@ -329,16 +329,13 @@ running the state machine.
 Option 2
 """"""""
 
-Instead of specifying the path of the library in the config file, there
-is an alternative solution. You can also set an environmental variable
-with name :envvar:`RAFCON_LIBRARY_PATH` and colon-separated paths to state
-machines, e. g. ``~/Desktop/rafcon_tutorial_library``. These libraries
-will also be loaded. The name of these libraries is equivalent to the
-name of the folder, thus in this case ``rafcon_tutorial_library``. This
-approach is especially useful if you release your libraries using
-`RMPM <https://wiki.robotic.dlr.de/RM_package_management>`__. In the PT-file, you can append the path of the library
-to :envvar:`RAFCON_LIBRARY_PATH` and do not have to modify the config file of
-the user.
+Instead of specifying the path of the library in the config file, there is an alternative solution.
+You can also set the environment variable :envvar:`RAFCON_LIBRARY_PATH` being a colon-separated list of paths to state machines,
+e.g. ``~/path/to/your/rafcon_tutorial_library1:~/path/to/your/rafcon_tutorial_library2``.
+These libraries will also be loaded.
+The name of the mounted library root keys is equivalent to name of the last folder of each path.
+In our case this would be ``rafcon_tutorial_library1`` and ``rafcon_tutorial_library2``.
+This approach is especially useful if you use RAFCON in combination with a package management system such as conan (https://conan.io/) or a local pip server.
 
 .. _tutorial_barrier_state:
 
@@ -455,7 +452,7 @@ and the client:
 If everything went fine, we should see below output in the debug console
 of the client:
 
-.. code:: python
+.. code::
 
     11:23:40 INFO - monitoring.client: Connect to server ('127.0.0.1', 9999)!
     11:23:40 INFO - monitoring.client: self.connector <monitoring.client.MonitoringClient on 59055>

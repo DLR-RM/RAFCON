@@ -1,5 +1,5 @@
-from builtins import str
 from pytest import raises
+import copy
 
 # state machine
 from rafcon.core.states.execution_state import ExecutionState
@@ -70,7 +70,6 @@ def test_create_state(caplog):
         # The name of the port differs in key and class member
         ExecutionState("test_execution_state", input_data_ports={'diff_input': port})
 
-
     # UTF8 strings should be allowed at least for descriptions
     state1.description = u'My English is not v\xc3ry good'
 
@@ -78,7 +77,7 @@ def test_create_state(caplog):
 
     a = ExecutionState("test", state_id=10)
     b = ExecutionState("test", state_id=10)
-    
+
     assert a == b
     assert a is not b
 
@@ -98,7 +97,8 @@ def test_create_container_state(caplog):
     assert len(container.states) == 1
 
     # As the ID of two states is identical, the add method should adapt the state_id and return the new state_id
-    new_state_id = container.add_state(ExecutionState("test_execution_state", state_id=state1.state_id))
+    new_state_id = container.add_state(
+        ExecutionState("test_execution_state", state_id=state1.state_id))
     assert len(container.states) == 2
     assert not new_state_id == state1.state_id
     container.remove_state(new_state_id)
@@ -126,7 +126,8 @@ def test_create_container_state(caplog):
     with raises(ValueError):
         # Data flow to non-existing port
         wrong_data_port_id = 218347
-        container.add_data_flow(state1.state_id, output_state1, state2.state_id, wrong_data_port_id)
+        container.add_data_flow(state1.state_id, output_state1, state2.state_id,
+                                wrong_data_port_id)
     with raises(ValueError):
         # Data flow from non-existing port
         wrong_data_port_id = 239847
@@ -145,7 +146,8 @@ def test_create_container_state(caplog):
         container.add_data_flow(container.state_id, scoped_var_1_container_state,
                                 container.state_id, scoped_var_2_container_state)
 
-    container.add_data_flow(container.state_id, input_port_container_state, state1.state_id, input_state1)
+    container.add_data_flow(container.state_id, input_port_container_state, state1.state_id,
+                            input_state1)
 
     # with raises(ValueError):  # cannot connect data flow to same child state
     container.add_data_flow(state2.state_id, output_state2, state2.state_id, input2_state2)
@@ -189,6 +191,29 @@ def test_create_container_state(caplog):
         # Transition going from one outcome to another outcome of the same state
         container.add_transition(state2.state_id, -1, state2.state_id, -2)
 
+    # Get connections for state
+    related_transitions, related_data_flows = container.get_connections_for_state(state1.state_id)
+    assert len(related_transitions['external']['outgoing']) == 2
+    assert len(related_data_flows['external']['ingoing']) == 1
+
+    container2 = ContainerState("Container 2")
+
+    container2.add_state(container)
+    related_transitions, related_data_flows = container2.get_connections_for_state(
+        container.state_id)
+    related_transitions_scoped, related_data_flows_scoped = container.get_connections_for_state_and_scoped_variables(
+        [state2.state_id, state1.state_id], container.scoped_variables)
+
+    # Test scoped connections
+
+    assert (related_transitions['internal']['enclosed'] == related_transitions_scoped['enclosed'])
+    assert (related_transitions['internal']['ingoing'] == related_transitions_scoped['ingoing'])
+    assert (related_transitions['internal']['outgoing'] == related_transitions_scoped['outgoing'])
+
+    assert (related_data_flows['internal']['enclosed'] == related_data_flows_scoped['enclosed'])
+    assert (related_data_flows['internal']['ingoing'] == related_data_flows_scoped['ingoing'])
+    assert (related_data_flows['internal']['outgoing'] == related_data_flows_scoped['outgoing'])
+
     with raises(AttributeError):
         # The removal of an undefined transition should throw an AttributeError
         container.remove_transition(-1)
@@ -212,9 +237,98 @@ def test_create_container_state(caplog):
 
     barrier_state_id = container.add_state(BarrierConcurrencyState())
     with raises(AttributeError):
-        container.states[barrier_state_id].remove(list(container.states[barrier_state_id].states.values())[0])
+        container.states[barrier_state_id].remove(
+            list(container.states[barrier_state_id].states.values())[0])
     container.remove_state(barrier_state_id)
     ###########################################
+
+    assert_logger_warnings_and_errors(caplog)
+
+
+def test_container_state(caplog):
+    container = ContainerState("Container")
+    input_container_state = container.add_input_data_port("input", "float")
+    output_container_state = container.add_output_data_port("output", "float")
+    scoped_variable_container_state = container.add_scoped_variable("scope", "float")
+
+    state1 = ExecutionState("test_execution_state")
+    input_state1 = state1.add_input_data_port("input", "float")
+    output_state1 = state1.add_output_data_port("output", "float")
+
+    container.add_state(state1)
+    transition_id = container.add_transition(state1.state_id, 0, container.state_id, -2)
+    container.add_data_flow(container.state_id, input_container_state, state1.state_id,
+                            input_state1)
+    container.add_data_flow(state1.state_id, output_state1, container.state_id,
+                            output_container_state)
+    container.add_data_flow(container.state_id, input_container_state, container.state_id,
+                            scoped_variable_container_state)
+
+    transition = container.get_transition_for_outcome(state1, state1.outcomes[0])
+
+    # Test transition from outcome
+    assert (transition == container.transitions[transition_id])
+    # Test contains
+    assert (transition in container)
+
+    # Test dictionary
+    dict_state = ContainerState.state_to_dict(container)
+    # print(dict_state)
+    container2, transitions, data_flows = ContainerState.from_dict(dict_state)
+
+    print(container)
+    print(container2)
+    assert (container == copy.copy(container))
+    assert (container == copy.deepcopy(container))
+
+    new_state1 = ExecutionState("new_test_execution_state")
+    old_state1_id = state1.state_id
+    new_state = container.substitute_state(state1.state_id, new_state1)
+
+    assert (old_state1_id == state1.state_id)
+    assert (not new_state.state_id == old_state1_id)
+
+    assert_logger_warnings_and_errors(caplog)
+
+
+def test_group_states(caplog):
+    container = ContainerState("Container")
+    input_port_container_state = container.add_input_data_port("input", "float")
+    container.add_output_data_port("output", "float")
+    container.add_scoped_variable("scope_1", "float")
+    container.add_scoped_variable("scope_2", "float")
+
+    state1 = ExecutionState("MyFirstState")
+    container.add_state(state1)
+    new_state_id = container.add_state(
+        ExecutionState("test_execution_state", state_id=state1.state_id))
+    container.remove_state(new_state_id)
+
+    state2 = ExecutionState("2nd State", state_id=container.state_id)
+    logger.debug("Old state id: {0}".format(str(state2.state_id)))
+    new_state_id = container.add_state(state2)
+    logger.debug("New state id: {0}".format(str(new_state_id)))
+
+    input_state1 = state1.add_input_data_port("input", "float")
+    output_state1 = state1.add_output_data_port("output", "float")
+    input_state2 = state2.add_input_data_port("input", "float")
+    input2_state2 = state2.add_input_data_port("input2", "float")
+    output_state2 = state2.add_output_data_port("output", "float")
+
+    container.add_data_flow(state1.state_id, output_state1, state2.state_id, input_state2)
+
+    container.add_data_flow(container.state_id, input_port_container_state, state1.state_id,
+                            input_state1)
+
+    container.add_data_flow(state2.state_id, output_state2, state2.state_id, input2_state2)
+
+    container.add_transition(state1.state_id, -1, state2.state_id, None)
+    container.add_transition(state1.state_id, -2, container.state_id, -2)
+    container.add_transition(state2.state_id, -1, container.state_id, -1)
+
+    group_state = container.group_states([state1.state_id, state2.state_id])
+
+    container.ungroup_state(group_state.state_id)
 
     assert_logger_warnings_and_errors(caplog)
 
@@ -238,10 +352,12 @@ def test_port_and_outcome_removal(caplog):
 
     container.add_state(state1)
     container.add_transition(state1.state_id, 0, container.state_id, -2)
-    container.add_data_flow(container.state_id, input_container_state, state1.state_id, input_state1)
-    container.add_data_flow(state1.state_id, output_state1, container.state_id, output_container_state)
-    container.add_data_flow(container.state_id, input_container_state,
-                            container.state_id, scoped_variable_container_state)
+    container.add_data_flow(container.state_id, input_container_state, state1.state_id,
+                            input_state1)
+    container.add_data_flow(state1.state_id, output_state1, container.state_id,
+                            output_container_state)
+    container.add_data_flow(container.state_id, input_container_state, container.state_id,
+                            scoped_variable_container_state)
 
     assert len(container.transitions) == 1
     assert len(container.data_flows) == 3
@@ -263,6 +379,8 @@ def test_port_and_outcome_removal(caplog):
 
 if __name__ == '__main__':
     test_create_state(None)
-    test_port_and_outcome_removal(None)
     test_create_container_state(None)
+    test_container_state(None)
+    test_group_states(None)
+    test_port_and_outcome_removal(None)
     # pytest.main([__file__])

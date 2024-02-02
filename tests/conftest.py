@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import pytest
 
 configs = [("core", "config.yaml"), ("gui", "gui_config.yaml"), ("runtime", "runtime_config.yaml")]

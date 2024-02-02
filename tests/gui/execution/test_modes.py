@@ -1,9 +1,8 @@
-from __future__ import print_function
 import time
 
 # test environment elements
 import tests.utils as testing_utils
-from tests.utils import call_gui_callback, wait_for_execution_engine_sync_counter, TEST_SCRIPT_PATH
+from tests.utils import call_gui_callback, TEST_SCRIPT_PATH
 
 # general tool elements
 from rafcon.utils import log
@@ -75,8 +74,6 @@ def test_execution_modes(gui):
     sm_m = gui_singleton.state_machine_manager_model.state_machines[sm_id]
 
     def wait_for_sync_counter_change_and_wait_for_gui(current_sync_counter):
-        # if current_sync_counter is None:
-        #     current_sync_counter = state_machine_execution_engine.synchronization_counter
         assert current_sync_counter is not None
         print("##### before {0} #####".format(current_sync_counter))
         while current_sync_counter == state_machine_execution_engine.synchronization_counter:
@@ -85,7 +82,7 @@ def test_execution_modes(gui):
         print("##### after {0} #####".format(state_machine_execution_engine.synchronization_counter))
         testing_utils.call_gui_callback(testing_utils.wait_for_gui)
 
-    from gtkmvc3.observer import Observer
+    from rafcon.design_patterns.observer.observer import Observer
 
     class ActiveStateObserver(Observer):
         def __init__(self, model):

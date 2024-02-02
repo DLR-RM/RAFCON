@@ -15,10 +15,7 @@
 import os
 import re
 import yaml
-try:
-    from yaml import CFullLoader as FullLoader
-except ImportError:
-    from yaml import FullLoader
+
 from collections import defaultdict
 from pkg_resources import resource_filename, resource_string
 
@@ -28,6 +25,7 @@ from rafcon.core.config import ObservableConfig
 from rafcon.utils.resources import get_data_file_path
 from rafcon.utils import storage_utils
 from rafcon.utils import log
+from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
 
 logger = log.get_logger(__name__)
 
@@ -41,12 +39,12 @@ class GuiConfig(ObservableConfig):
     Class to hold and load the global GUI configurations.
     """
 
-    keys_requiring_state_machine_refresh = ('MAX_VISIBLE_LIBRARY_HIERARCHY', 'HISTORY_ENABLED',
+    keys_requiring_state_machine_refresh = {'MAX_VISIBLE_LIBRARY_HIERARCHY', 'HISTORY_ENABLED',
                                             'AUTO_BACKUP_ENABLED', 'AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL',
                                             'AUTO_BACKUP_FORCED_STORAGE_INTERVAL',
                                             'AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL',
-                                            'AUTO_RECOVERY_CHECK', 'AUTO_RECOVERY_LOCK_ENABLED')
-    keys_requiring_restart = ('USE_ICONS_AS_TAB_LABELS', 'THEME_DARK_VARIANT')
+                                            'AUTO_RECOVERY_CHECK', 'AUTO_RECOVERY_LOCK_ENABLED'}
+    keys_requiring_restart = {'USE_ICONS_AS_TAB_LABELS', 'THEME_DARK_VARIANT'}
 
     colors = {}
     gtk_colors = {}
@@ -56,40 +54,32 @@ class GuiConfig(ObservableConfig):
         if self.get_config_value("TYPE") != "GUI_CONFIG":
             raise ConfigError("Type should be GUI_CONFIG for GUI configuration. "
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
-        self.path_to_tool = os.path.dirname(os.path.realpath(__file__))
-        self.configure_gtk()
-        self.configure_colors()
+        if not is_custom_design_enabled():
+            self.configure_gtk()
+            self.configure_colors()
 
     def load(self, config_file=None, path=None):
-        using_default_config = False
         if config_file is None:
-            if path is None or not os.path.isfile(os.path.join(path, CONFIG_FILE)):
-                using_default_config = True
-                path, config_file = os.path.split(resource_filename(__name__, CONFIG_FILE))
-            else:
-                config_file = CONFIG_FILE
+            config_file = CONFIG_FILE
         super(GuiConfig, self).load(config_file, path)
 
         self.configure_gtk()
         self.configure_colors()
 
-        # fill up shortcuts
-        if not using_default_config:
-            default_gui_config = yaml.load(self.default_config, Loader=FullLoader) if self.default_config else {}
-            shortcuts_dict = self.get_config_value('SHORTCUTS')
-            for shortcut_name, shortcuts_list in default_gui_config.get('SHORTCUTS', {}).items():
-                if shortcut_name not in shortcuts_dict:
-                    self.logger.info("Shortcut for '{0}' is {1}, now, and was taken from default config."
-                                     "".format(shortcut_name, shortcuts_list))
-                    shortcuts_dict[shortcut_name] = shortcuts_list if isinstance(shortcuts_list, list) else [shortcuts_list]
-
-    def get_theme_path(self):
+    def _get_theme_path(self):
         return get_data_file_path("themes", "RAFCON")
 
+    def _get_custom_theme_path(self):
+        return os.path.join(global_design_config.get_config_value("THEMES_FOLDER"),
+                            global_design_config.get_config_value("THEME_NAME"))
+
     def configure_gtk(self):
-        theme_path = self.get_theme_path()
+        theme_path = self._get_theme_path()
         if not theme_path:
             raise ValueError("GTK theme 'RAFCON' does not exist")
+
+        if is_custom_design_enabled():
+            theme_path = self._get_custom_theme_path()
 
         theme_name = "RAFCON"
         dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
@@ -105,8 +95,8 @@ class GuiConfig(ObservableConfig):
             from gi.repository import Gtk
             settings = Gtk.Settings.get_default()
             if settings:
-                settings.set_property("gtk-enable-animations", True)
                 settings.set_property("gtk-theme-name", theme_name)
+                settings.set_property("gtk-enable-animations", True)
                 settings.set_property("gtk-application-prefer-dark-theme", dark_theme)
 
             Gtk.Window.set_default_icon_name("rafcon" if dark_theme else "rafcon-light")
@@ -126,10 +116,14 @@ class GuiConfig(ObservableConfig):
         dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
         css_filename = "gtk-dark.css" if dark_theme else "gtk.css"
         # Get colors from GTKrc file
-        theme_path = self.get_theme_path()
+        theme_path = self._get_theme_path()
+
+        if is_custom_design_enabled():
+            theme_path = self._get_custom_theme_path()
+
         css_file_path = os.path.join(theme_path, "gtk-3.0", css_filename)
         if not os.path.isfile(css_file_path):
-            raise ValueError("GTK theme does not exist")
+            raise ValueError("GTK theme does not exist: {}".format(str(css_file_path)))
 
         with open(css_file_path) as f:
             lines = f.readlines()
@@ -137,6 +131,8 @@ class GuiConfig(ObservableConfig):
         for line in lines:
             match = re.match("\s*@define-color (\w*) (#[\w]{3,6})", line)
             if match:
+                # css colors are mapped to capital-case color names
+                # these colors can then be used in the colors definition file for the gaphas colors (e.g., colors.json)
                 color_name = match.group(1).upper()
                 color_code = match.group(2)
                 self.colors[color_name] = color_code
@@ -175,13 +171,6 @@ class GuiConfig(ObservableConfig):
                 continue
             self.gtk_colors[color_name] = color
             self.colors[color_name] = color_code
-
-    @staticmethod
-    def get_assets_path(folder=None, filename=None, for_theme=True):
-        theme = "share/themes/RAFCON/" if for_theme else ""
-        folder = folder + "/" if folder else ""
-        filename = filename if filename else ""
-        return "assets/{theme}{folder}{filename}".format(theme=theme, folder=folder, filename=filename)
 
 
 global_gui_config = GuiConfig(logger)

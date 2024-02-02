@@ -17,9 +17,9 @@
 
 """
 
-from os.path import split
-from pkg_resources import resource_string, resource_filename
-from gtkmvc3.observable import Observable
+import os
+from pkg_resources import resource_string
+from rafcon.design_patterns.observer.observable import Observable
 
 from yaml_configuration.config import DefaultConfig, ConfigError
 
@@ -28,8 +28,8 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 CONFIG_FILE = "config.yaml"
-
 DEFAULT_CONFIG = str(resource_string(__name__, CONFIG_FILE).decode("utf-8"))
+RELATIVE_PATH_KEYWORD = "$RELATIVE_PATH"
 
 
 class ObservableConfig(DefaultConfig, Observable):
@@ -37,8 +37,8 @@ class ObservableConfig(DefaultConfig, Observable):
     keys_requiring_state_machine_refresh = set()
     keys_requiring_restart = set()
 
-    def __init__(self, default_config_filename, logger_object=None):
-        DefaultConfig.__init__(self, default_config_filename, logger_object, rel_config_path='rafcon')
+    def __init__(self, default_config_string, logger_object=None):
+        DefaultConfig.__init__(self, default_config_string, logger_object, rel_config_path='rafcon')
         Observable.__init__(self)
 
     @Observable.observed
@@ -56,6 +56,31 @@ class ObservableConfig(DefaultConfig, Observable):
     @property
     def keys(self):
         return set(self._config_dict.keys())
+
+    def is_config_loaded_from_file(self):
+        """ Returns if the configuration values were loaded from a custom file
+        (and are thus not simply initiated from the default config any more).
+
+        :return: a flag indicating if the config was loaded from a file
+        """
+        # Currently this can be checked by checking if self.path is not None any more
+        # self.path is set in the load function of the DefaultConfig base class
+        return self.path is not None
+
+    def get_config_value(self, key, default=None):
+        """Overwrites the default behavior of the get_config_value method of the DefaultConfig base class
+        It supports the
+
+        :param key: the key to the configuration value
+        :param default: what to return if the key is not found
+        :return: The value for the given key, if the key was found. Otherwise the default value
+        """
+        return_value = DefaultConfig.get_config_value(self, key, default)
+        if self.is_config_loaded_from_file():
+            if isinstance(return_value, str) and (RELATIVE_PATH_KEYWORD in return_value):
+                return_value = return_value.replace(RELATIVE_PATH_KEYWORD+"{", self.path + os.path.sep)
+                return_value = return_value.replace("}", "")
+        return return_value
 
 
 class Config(ObservableConfig):
@@ -83,10 +108,7 @@ class Config(ObservableConfig):
         :param path: the path to the config file
         """
         if config_file is None:
-            if path is None:
-                path, config_file = split(resource_filename(__name__, CONFIG_FILE))
-            else:
-                config_file = CONFIG_FILE
+            config_file = CONFIG_FILE
         super(Config, self).load(config_file, path)
 
 

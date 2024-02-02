@@ -83,7 +83,7 @@ class StateEditorController(ExtendedController):
                 isinstance(model, LibraryStateModel) and not isinstance(model.state_copy, ContainerStateModel):
             self.add_controller('source_ctrl', SourceEditorController(sv_and_source_script_state_m, view.source_view))
         else:
-            view.source_view.get_top_widget().destroy()
+            view.source_view.get_parent_widget().destroy()
         self.add_controller('semantic_data_ctrl', SemanticDataEditorController(model, view.semantic_data_view))
 
     def register_view(self, view):
@@ -125,7 +125,6 @@ class StateEditorController(ExtendedController):
 
         # Container states do not have a source editor and library states does not show there source code
         # Thus, for those states we do not have to add the source controller and can hide the source code tab
-        # logger.info("init state: {0}".format(model))
         lib_with_and_ES_as_root = isinstance(self.model, LibraryStateModel) and \
                                   not isinstance(self.model.state_copy, ContainerStateModel)
         if not isinstance(self.model, ContainerStateModel) and not isinstance(self.model, LibraryStateModel) or \

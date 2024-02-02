@@ -15,10 +15,6 @@
 """
 
 
-exception_info = None
-result = None
-
-
 # This function is intentionally placed here, as placing it inside rafcon.gui will call rafcon.gui.__init__.py
 # and create the singletons, which is not desired inside the unit tests
 def call_gui_callback(callback, *args, **kwargs):
@@ -30,27 +26,27 @@ def call_gui_callback(callback, *args, **kwargs):
     :param callback: The callback method, e.g. on_open_activate
     :param args: The parameters to be passed to the callback method
     """
-    from future.utils import raise_
     from threading import Condition
     import sys
     from rafcon.utils import log
-    global exception_info, result
     from gi.repository import GLib
+    # concerning sharing data with inner functions see: https://stackoverflow.com/a/11987516
+    communication_dict = dict()
+    communication_dict["exception_info"] = None
+    communication_dict["result"] = None
+
     condition = Condition()
-    exception_info = None
 
     @log.log_exceptions()
     def fun():
         """Call callback and notify condition variable
         """
-        global exception_info, result
-        result = None
         try:
-            result = callback(*args, **kwargs)
+            communication_dict["result"] = callback(*args, **kwargs)
         except:
             # Exception within this asynchronously called function won't reach pytest. This is why we have to store
             # the information about the exception to re-raise it at the end of the synchronous call.
-            exception_info = sys.exc_info()
+            communication_dict["exception_info"] = sys.exc_info()
         finally:  # Finally is also executed in the case of exceptions
             condition.acquire()
             condition.notify()
@@ -66,7 +62,7 @@ def call_gui_callback(callback, *args, **kwargs):
         # Wait for the condition to be notified
         # TODO: implement timeout that raises an exception
         condition.wait()
-    if exception_info:
-        e_class, e_instance, e_traceback = exception_info
-        raise_(e_instance, None, e_traceback)
-    return result
+    if communication_dict["exception_info"]:
+        e_class, e_instance, e_traceback = communication_dict["exception_info"]
+        raise e_instance.with_traceback(e_traceback)
+    return communication_dict["result"]

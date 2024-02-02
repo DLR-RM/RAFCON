@@ -13,8 +13,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc3.view import View
-from builtins import range
+from rafcon.design_patterns.mvc.view import View
 
 from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label
@@ -34,9 +33,6 @@ from rafcon.gui.views.state_editor.semantic_data_editor import SemanticDataEdito
 
 
 class StateEditorView(View):
-    builder = glade.get_glade_path("state_editor_ld_widget_tab.glade")
-    top = 'main_frame_vbox'
-
     icons = {
         _('Source'): constants.ICON_SOURCE,
         _("Data Linkage"): constants.ICON_DLINK,
@@ -47,7 +43,7 @@ class StateEditorView(View):
     }
 
     def __init__(self):
-        View.__init__(self)
+        super().__init__(builder_filename=glade.get_glade_path('state_editor_ld_widget_tab.glade'), parent='main_frame_vbox')
 
         self.page_dict = {}
         self.notebook_names = ['main_notebook_1', 'main_notebook_2']
@@ -64,17 +60,17 @@ class StateEditorView(View):
         self.description_view = DescriptionEditorView()
         self.semantic_data_view = SemanticDataEditorView()
 
-        self['properties_viewport'].add(self.properties_view.get_top_widget())
-        self['input_ports_scroller'].add(self.inputs_view.get_top_widget())
-        self['output_ports_scroller'].add(self.outputs_view.get_top_widget())
-        self['scoped_variables_scroller'].add(self.scopes_view.get_top_widget())
-        self['outcomes_viewport'].add(self.outcomes_view.get_top_widget())
-        self['source_viewport'].add(self.source_view.get_top_widget())
-        self['transitions_viewport'].add(self.transitions_view.get_top_widget())
-        self['data_flows_viewport'].add(self.data_flows_view.get_top_widget())
-        self['linkage_overview_viewport'].add(self.linkage_overview.get_top_widget())
-        self['description_viewport'].add(self.description_view.get_top_widget())
-        self['semantic_data_viewport'].add(self.semantic_data_view.get_top_widget())
+        self['properties_viewport'].add(self.properties_view.get_parent_widget())
+        self['input_ports_scroller'].add(self.inputs_view.get_parent_widget())
+        self['output_ports_scroller'].add(self.outputs_view.get_parent_widget())
+        self['scoped_variables_scroller'].add(self.scopes_view.get_parent_widget())
+        self['outcomes_viewport'].add(self.outcomes_view.get_parent_widget())
+        self['source_viewport'].add(self.source_view.get_parent_widget())
+        self['transitions_viewport'].add(self.transitions_view.get_parent_widget())
+        self['data_flows_viewport'].add(self.data_flows_view.get_parent_widget())
+        self['linkage_overview_viewport'].add(self.linkage_overview.get_parent_widget())
+        self['description_viewport'].add(self.description_view.get_parent_widget())
+        self['semantic_data_viewport'].add(self.semantic_data_view.get_parent_widget())
 
         self.inputs_view.scrollbar_widget = self['input_ports_scroller']
         self.outputs_view.scrollbar_widget = self['output_ports_scroller']
@@ -82,14 +78,6 @@ class StateEditorView(View):
 
         self['description_text_view'] = self.description_view.textview
         self['description_scroller'] = self.description_view.scrollable
-
-        # Gtk TODO
-        # self['main_notebook_1'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        # self['main_notebook_1'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-        # self['main_notebook_2'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        # self['main_notebook_2'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-        # self['ports_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        # self['ports_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
 
         self.page_dict["Source"] = self['main_notebook_1'].get_nth_page(0)
         self.page_dict["Logical Linkage"] = self['main_notebook_1'].get_nth_page(1)

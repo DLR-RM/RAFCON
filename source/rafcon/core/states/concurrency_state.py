@@ -15,16 +15,11 @@
    :synopsis: A module to represent a concurrency state for the state machine
 
 """
-from future import standard_library
-standard_library.install_aliases()
 import queue
-
-from gtkmvc3.observable import Observable
 
 import rafcon.core.singleton as singleton
 from rafcon.core.states.container_state import ContainerState
-from rafcon.core.execution.execution_history import CallType
-from rafcon.core.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
+from rafcon.core.execution.execution_history_items import CallItem, ReturnItem, ConcurrencyItem, CallType
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.state_elements.logical_port import Outcome
 
@@ -40,6 +35,7 @@ class ConcurrencyState(ContainerState):
                  scoped_variables=None, safe_init=True):
         ContainerState.__init__(self, name, state_id, input_keys, output_keys, income, outcomes, states, transitions,
                                 data_flows, start_state_id, scoped_variables, safe_init=safe_init)
+        self.concurrency_history_item = None
 
     def run(self, *args, **kwargs):
         """ The abstract run method that has to be implemented by all concurrency states.
@@ -75,6 +71,9 @@ class ConcurrencyState(ContainerState):
         else:  # forward_execution
             self.execution_history.push_call_history_item(self, CallType.CONTAINER, self, self.input_data)
             concurrency_history_item = self.execution_history.push_concurrency_history_item(self, len(self.states))
+            # Save a reference to the concurrency_history_item here in order to be able to destruct it
+            # after the concurrency_state execution has finished
+            self.concurrency_history_item = concurrency_history_item
         return concurrency_history_item
 
     def start_child_states(self, concurrency_history_item, do_not_start_state=None):
@@ -100,14 +99,20 @@ class ConcurrencyState(ContainerState):
                 state.concurrency_queue_id = index
 
                 state.generate_run_id()
+                target_execution_history = None
                 if not self.backward_execution:
-                    # care for the history items; this item is only for execution visualization
-                    concurrency_history_item.execution_histories[index].push_call_history_item(
-                        state, CallType.EXECUTE, self, state.input_data)
+                    # In the case that execution logging is disabled there is no concurrency_history_item
+                    if concurrency_history_item:
+                        # care for the history items; this item is only for execution visualization
+                        concurrency_history_item.execution_histories[index].push_call_history_item(
+                            state, CallType.EXECUTE, self, state.input_data)
+                        target_execution_history = concurrency_history_item.execution_histories[index]
                 else:  # backward execution
                     last_history_item = concurrency_history_item.execution_histories[index].pop_last_item()
                     assert isinstance(last_history_item, ReturnItem)
-                state.start(concurrency_history_item.execution_histories[index], self.backward_execution, False)
+                    target_execution_history = concurrency_history_item.execution_histories[index]
+
+                state.start(target_execution_history, self.backward_execution, False)
 
         return concurrency_queue
 
@@ -130,8 +135,10 @@ class ConcurrencyState(ContainerState):
         if not self.backward_execution:
             state.concurrency_queue = None
             # add the data of all child states to the scoped data and the scoped variables
-            state.execution_history.push_return_history_item(state, CallType.EXECUTE, self, state.output_data)
-        else:
+            if state.execution_history is not None:
+                state.execution_history.push_return_history_item(state, CallType.EXECUTE, self, state.output_data)
+        else:  # backward execution case
+            # in case of a backward execution the concurrency_history_item always exists
             last_history_item = concurrency_history_item.execution_histories[history_index].pop_last_item()
             assert isinstance(last_history_item, CallItem)
 
@@ -141,7 +148,7 @@ class ConcurrencyState(ContainerState):
         :return:
         """
         # backward_execution needs to be True to signal the parent container state the backward execution
-        self.backward_execution = True
+        self.backward_execution = True  # TODO: why is this line needed?
         # pop the ConcurrencyItem as we are leaving the barrier concurrency state
         last_history_item = self.execution_history.pop_last_item()
         assert isinstance(last_history_item, ConcurrencyItem)

@@ -10,44 +10,10 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 
-from __future__ import print_function
-
-from builtins import str
-import datetime
-import time
-
-from gtkmvc3.observer import NTInfo
+from rafcon.design_patterns.observer.observer import NotifyInfo
 
 from rafcon.utils import constants
 from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
-
-
-EXECUTION_TRIGGERED_METHODS = constants.BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
-
-
-def is_execution_status_update_notification_from_state_machine_model(prop_name, info):
-    # avoid updates or checks because of execution status updates -> prop_name == 'state_machine'
-    if prop_name == 'state_machine' and 'kwargs' in info and 'prop_name' in info['kwargs'] and \
-            info['kwargs']['prop_name'] in ['states', 'state']:
-        if 'method_name' in info['kwargs'] and info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
-                'kwargs' in info['kwargs'] and 'method_name' in info['kwargs']['kwargs'] and \
-                info['kwargs']['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS:
-            return True
-    if prop_name == 'state_machine' and 'method_name' in info and info['method_name'] == '_add_new_execution_history':
-        return True
-
-
-def is_execution_status_update_notification_from_state_model(prop_name, info):
-    # avoid updates or checks because of execution status updates -> prop_name in ['state', 'states']
-    if prop_name == 'states' and 'kwargs' in info and 'method_name' in info['kwargs'] and \
-            info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
-            prop_name == 'state' and 'method_name' in info and info['method_name'] in EXECUTION_TRIGGERED_METHODS:
-        return True
-
-
-def is_execution_status_update_notification(prop_name, info):
-    return is_execution_status_update_notification_from_state_machine_model(prop_name, info) or \
-           is_execution_status_update_notification_from_state_model(prop_name, info)
 
 
 class NotificationOverview(object):
@@ -56,7 +22,7 @@ class NotificationOverview(object):
 
     def __init__(self, info=None):
         if info is None:
-            info = NTInfo('before', **self.empty_info)
+            info = NotifyInfo('before', **self.empty_info)
         self.info = info
         self.origin = self.extract_origin(info)
         self._type = self.extract_type(info)
@@ -67,7 +33,7 @@ class NotificationOverview(object):
 
     @staticmethod
     def extract_type(info):
-        possible_types = NTInfo._NTInfo__ONE_REQUESTED
+        possible_types = ['assign', 'before', 'after', 'signal']
         for type_ in possible_types:
             if type_ in info and info[type_]:
                 return type_
@@ -90,8 +56,7 @@ class NotificationOverview(object):
                 info_origin = message.notification.info
 
         notification_type = NotificationOverview.extract_type(info_origin)
-        info_origin = NTInfo(notification_type, **info_origin)
-        return info_origin
+        return NotifyInfo(notification_type, **info_origin)
 
     @property
     def type(self):
@@ -154,6 +119,9 @@ class NotificationOverview(object):
         if "after" != self.type:
             return False
         return not isinstance(self.get_result(), Exception)
+
+    def caused_modification(self):
+        return self.get_cause() not in constants.BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS + ["marked_dirty"]
 
     def __str__(self):
         text = \

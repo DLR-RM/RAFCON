@@ -10,9 +10,7 @@
 # Rico Belder <rico.belder@dlr.de>
 
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController
-from rafcon.gui.utils.notification_overview import NotificationOverview, \
-    is_execution_status_update_notification_from_state_machine_model, \
-    is_execution_status_update_notification_from_state_model
+from rafcon.gui.utils.notification_overview import NotificationOverview
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
@@ -108,7 +106,6 @@ class LinkageListController(ListViewController):
         if 'after' in info and isinstance(overview.get_result(), Exception):
             self.no_update = False
             self.no_update_state_destruction = False
-            # self.no_update_self_or_parent_state_destruction = False
             return
 
         if overview.get_cause() in ['group_states', 'ungroup_state', "change_state_type",
@@ -116,7 +113,6 @@ class LinkageListController(ListViewController):
             instance_is_self = self.model.state is overview.get_affected_core_element()
             instance_is_parent = self.model.parent and self.model.parent.state is overview.get_affected_core_element()
             instance_is_parent_parent = self.model.parent and self.model.parent.parent and self.model.parent.parent.state is overview.get_affected_core_element()
-            # print("no update flag: ", True if 'before' in info and (instance_is_self or instance_is_parent or instance_is_parent_parent) else False)
             if instance_is_self or instance_is_parent or instance_is_parent_parent:
                 self.no_update = True if 'before' in info else False
 
@@ -128,8 +124,9 @@ class LinkageListController(ListViewController):
 
     def check_no_update_flags_and_return_combined_flag(self, prop_name, info):
         # avoid updates because of execution status updates
-        if is_execution_status_update_notification_from_state_model(prop_name, info):
-            return True
+        overview = NotificationOverview(info)
+        if not overview.caused_modification():
+            return
 
         self.check_info_on_no_update_flags(info)
 
@@ -140,21 +137,19 @@ class LinkageListController(ListViewController):
     @ListViewController.observe("action_signal", signal=True)
     def notification_state_type_changed(self, model, prop_name, info):
         msg = info['arg']
-        # print(self.__class__.__name__, "state_type_changed check", info)
         if msg.action in ['change_state_type', 'change_root_state_type', 'group_states', 'ungroup_state'] and msg.after:
-            # print(self.__class__.__name__, msg.action)
             if model not in self._model_observed:
                 self.relieve_model(model)
             self.register_models_to_observe()
 
-        # TODO think about to remove this -> this a work around for the recreate state-editor assert __observer_threads
         if msg.action in ['change_state_type', 'change_root_state_type'] and not msg.after:
             self.relieve_all_models()
 
     @ListViewController.observe("state_machine", before=True)
     def before_notification_state_machine_observation_control(self, model, prop_name, info):
         """Check for multi-actions and set respective no update flags. """
-        if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
+        overview = NotificationOverview(info)
+        if not overview.caused_modification():
             return
         # do not update while multi-actions
         self.check_info_on_no_update_flags(info)

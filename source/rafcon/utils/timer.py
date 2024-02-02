@@ -1,5 +1,3 @@
-from builtins import object
-from builtins import str
 import time
 from timeit import default_timer as timer
 
@@ -30,11 +28,7 @@ class Timer(object):
         self.count = 0
 
     def start(self):
-        # print("start", self.count + 1)
-        if self.__status == 'stopped':
-            pass
-        else:
-            # self._logger.verbose("Do not start was not stopped")
+        if self.__status != 'stopped':
             return
 
         self.__status = 'running'
@@ -43,12 +37,10 @@ class Timer(object):
         return self.count
 
     def stop(self, key):
-        # print("stop", key, self.count, self.count == key)
         if self.__status == 'running':
             if self.count == key:
                 pass
             else:
-                # self._logger.verbose("Do not stop was not started with key {0}".format(key))
                 return
         else:
             self._logger.warning("Do not stop was not started")

@@ -13,7 +13,7 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config
 
@@ -30,7 +30,7 @@ class StateIconView(View, Gtk.IconView):
               ("BS", BarrierConcurrencyState, constants.ICON_STATE_CONS_BARRIER)]
 
     def __init__(self):
-        View.__init__(self)
+        View.__init__(self, parent='state_icon_view')
         Gtk.IconView.__init__(self)
         self.props.item_orientation = Gtk.Orientation.HORIZONTAL
 
@@ -47,13 +47,13 @@ class StateIconView(View, Gtk.IconView):
         self.set_tooltip_column(1)
 
         for shorthand, state_class, icon in self.states:
-            liststore.append(['<span font_desc="{font} {size}" color="{color}">{icon}</span> {text}'.format(
-                font=constants.ICON_FONT_FONTAWESOME,
-                size=constants.FONT_SIZE_BIG,
+            # use this line if the shorthand description of the state type should be included
+            liststore.append(['<span font_desc="{font} {size}" color="{color}">{icon}</span>'.format(
+                font=constants.ICON_FONT_RAFCON,
+                size=constants.FONT_SIZE_HUGE,
                 color=global_gui_config.colors['BUTTON_TEXT_COLOR'],
                 icon=icon,
                 text=shorthand
             ), "Add/Drag and Drop " + state_class.__name__])
 
         self['state_icon_view'] = self
-        self.top = 'state_icon_view'

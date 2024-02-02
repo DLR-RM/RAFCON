@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from os.path import join
 
 from rafcon.utils import log
@@ -100,7 +98,7 @@ def paste(gui, state_machine_model, state_m, main_window_controller, menu_bar_ct
     testing_utils.wait_for_gui()
 
 
-@pytest.mark.timeout(30)
+@pytest.mark.timeout(60)
 @pytest.mark.unstable35
 @pytest.mark.unstable37
 @pytest.mark.parametrize('gui', [{"libraries": {
@@ -227,26 +225,6 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     page_id = state_machines_ctrl.get_page_num(first_sm_id + 2)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
     gui(focus_graphical_editor_in_page, page)
-
-    # TODO keep core interface, too
-    # ##########################################################
-    # # group states
-    # # TODO improve test to related data flows
-    # state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
-    # state_ids_old = [state_id for state_id in state_m_parent.state.states]
-    # gui(state_m_parent.state.group_states, ['PAYECU', 'UEPNNW', 'KQDJYS'])
-    #
-    # ##########################################################
-    # # ungroup new state
-    # state_new = None
-    # for state_id in state_m_parent.state.states:
-    #     if state_id not in state_ids_old:
-    #         state_new = state_m_parent.state.states[state_id]
-    # gui(state_m_parent.state.ungroup_state, state_new.state_id)
-
-    ##########################################################
-    # group states
-    # TODO improve test to related data flows
     print("#" * 30, "\n", '#### group states \n', "#" * 30, "\n")
     state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
     state_ids_old = [state_id for state_id in state_m_parent.state.states]

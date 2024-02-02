@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.6
 
 # Copyright (C) 2015-2018 DLR
 #
@@ -12,10 +12,9 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from __future__ import print_function
 from setuptools import setup, find_packages, Command
 import distutils.log
-
+import sys
 import os
 
 distutils.log.set_verbosity(distutils.log.INFO)
@@ -52,7 +51,8 @@ def get_data_files():
 
 
 # read version from VERSION file
-# this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon
+# this might throw Exceptions, which are purposefully not caught as the version is a prerequisite
+# for installing rafcon
 version_file_path = os.path.join(".", "VERSION")
 with open(version_file_path, "r") as f:
     content = f.read().splitlines()
@@ -62,10 +62,16 @@ readme_file_path = os.path.join(".", "README.rst")
 with open(readme_file_path, "r") as f:
     long_description = f.read()
 
-global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.12', 'yaml_configuration~=0.1',
-                       'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0', 'future>=0.16,<0.18.0']
+requirements_path = os.path.join(".", "requirements.txt")
+with open(requirements_path, "r") as f:
+    all_requirements = f.readlines()
 
-test_requirements = ['pytest>=3.5,<5', 'pytest-timeout', 'pytest-mock', 'graphviz', 'pyuserinput']
+global_requirements = all_requirements
+test_requirements = ['pytest>=6.0.0,<7.0.0', 'pytest-timeout<2', 'pytest-mock>=1.9.0,<3', 'pytest-faulthandler~=1.6.0',
+                     'graphviz==0.18.2', 'pyuserinput', 'profiling==0.1.3', 'pykeyboard==0.1.2', 'pymouse==1.0',
+                     'monitoring==0.9.12', 'matplotlib==2.1.1', 'objgraph==3.5.0']
+setup_requirements = ['pytest-runner>=4.0.0,<7.0.0', 'libsass >= 0.15.0']
+
 test_requirements += global_requirements
 
 
@@ -107,14 +113,14 @@ setup(
         'rafcon': ['pylintrc', 'logging.conf', 'locale/*', 'locale/*/LC_MESSAGES/*'],
         # Include core and GUI config plush splashscreens
         'rafcon.core': ['config.yaml'],
-        'rafcon.gui': ['gui_config.yaml', 'assets/splashscreens/*'],
+        'rafcon.gui': ['gui_config.yaml', 'design_config.yaml', 'assets/splashscreens/*'],
         # Include all glade files
         'rafcon.gui.glade': ['*.glade']
     },
 
     data_files=get_data_files(),
 
-    setup_requires=['pytest-runner', 'libsass >= 0.15.0'],
+    setup_requires=setup_requirements,
     tests_require=test_requirements,
     install_requires=global_requirements,
 
@@ -157,8 +163,7 @@ setup(
         'License :: OSI Approved :: Eclipse Public License 1.0 (EPL-1.0)',
         'Natural Language :: English',
         'Operating System :: Unix',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Scientific/Engineering',
         'Topic :: Software Development',
         'Topic :: Utilities'

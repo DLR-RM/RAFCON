@@ -15,15 +15,10 @@
    :synopsis: A module to represent the state machine status
 
 """
-from builtins import str
 from enum import Enum
-import sys
-if sys.version_info[0] == 2:
-    from threading import _Condition as Condition
-else:
-    from threading import Condition
+from threading import Condition
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -89,6 +84,8 @@ class ExecutionStatus(Observable):
         self._execution_mode = execution_mode
 
 
-StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED STOPPED PAUSED FINISHED '
-                                                                     'STEP_MODE FORWARD_INTO FORWARD_OVER FORWARD_OUT '
-                                                                     'BACKWARD RUN_TO_SELECTED_STATE')
+StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS',
+                                   'STARTED STOPPED PAUSED FINISHED '
+                                   'STEP_MODE FORWARD_INTO FORWARD_OVER FORWARD_OUT '
+                                   'BACKWARD RUN_TO_SELECTED_STATE RUN_SELECTED_STATE '
+                                   'RUN_ONLY_SELECTED_STATE')

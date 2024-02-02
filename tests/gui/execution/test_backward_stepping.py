@@ -1,8 +1,5 @@
-from __future__ import print_function
-
 import pytest
 
-from builtins import range
 import os
 import time
 
@@ -47,12 +44,10 @@ def test_backward_stepping_library_state(gui):
     state_machines_editor_tab_status_check(current_state_machine_id, active=True)  # execution start is synchronous
     wait_for_execution_engine_sync_counter(1, logger)
 
-    # forward
     for i in range(5):
         gui(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
-    # backward
     for i in range(4):
         gui(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
@@ -101,7 +96,6 @@ def test_backward_stepping_preemptive_state(gui):
 
     wait_for_execution_engine_sync_counter(1, logger)
 
-    # forward
     for i in range(3):
         gui(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(2, logger)
@@ -160,7 +154,6 @@ def test_backward_stepping_barrier_state(gui):
     gui(menubar_ctrl.on_step_mode_activate, sm.state_machine_id, None)
     wait_for_execution_engine_sync_counter(1, logger)
 
-    # forward
     for i in range(2):
         gui(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(3, logger)
@@ -209,7 +202,10 @@ def test_backward_stepping_barrier_state(gui):
         elif sd.name == "whiskey_number":
             assert sd.value == 20
 
+    gui.expected_warnings = 3
     gui(menubar_ctrl.on_stop_activate, None)
+
+
 
 
 if __name__ == '__main__':

@@ -1,6 +1,5 @@
-from __future__ import print_function
-from builtins import range
 import time
+
 
 def execute(self, inputs, outputs, gvm):
     print("concurrence_barrier1: Hello world")

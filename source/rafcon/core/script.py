@@ -16,18 +16,17 @@
 
 """
 
-from future.utils import string_types
-from builtins import str
 import os
 import imp
 import yaml
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
+from rafcon.core.config import global_config
 from rafcon.core.id_generator import generate_script_id
+from rafcon.core.storage.storage import SCRIPT_FILE
 import rafcon.core.singleton
 
 from rafcon.utils import filesystem
-from rafcon.core.storage.storage import SCRIPT_FILE
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -49,8 +48,6 @@ class Script(Observable, yaml.YAMLObject):
     :ivar check_path: a flag to indicate if the path should be checked for existence
 
     """
-
-    yaml_tag = u'!Script'
 
     _script = None
 
@@ -75,13 +72,13 @@ class Script(Observable, yaml.YAMLObject):
 
     @script.setter
     def script(self, script_text):
-        if not isinstance(script_text, string_types):
+        if not isinstance(script_text, str):
             raise ValueError("The script text needs to be a string")
         self._script = script_text
-        self._compile_module()
 
     def set_script_without_compilation(self, script_text):
         self._script = script_text
+        self._compiled_module = None
 
     def execute(self, state, inputs=None, outputs=None, backward_execution=False):
         """Execute the user 'execute' function specified in the script
@@ -93,8 +90,8 @@ class Script(Observable, yaml.YAMLObject):
         :return: Return value of the execute script
         :rtype: str | int
         """
-        if not self.compiled_module:
-            self._compile_module()
+        if not self.compiled_module or global_config.get_config_value("SCRIPT_RECOMPILATION_ON_STATE_EXECUTION", True):
+            self.compile_module()
         if not outputs:
             outputs = {}
         if not inputs:
@@ -123,7 +120,7 @@ class Script(Observable, yaml.YAMLObject):
                           "".format(os.path.join(self.path, self.filename)))
         self.script = script_text
 
-    def _compile_module(self):
+    def compile_module(self):
         """Builds a temporary module from the script file
 
         :raises exceptions.IOError: if the compilation of the script module failed
@@ -143,18 +140,6 @@ class Script(Observable, yaml.YAMLObject):
             raise
         finally:
             imp.release_lock()
-
-    @classmethod
-    def to_yaml(cls, dumper, data):
-        #TODO:implement
-        dict_representation = {}
-        node = dumper.represent_mapping(u'!Script', dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        #TODO:implement
-        return None
 
     @property
     def parent(self):
@@ -180,7 +165,7 @@ class Script(Observable, yaml.YAMLObject):
 
     @filename.setter
     def filename(self, value):
-        if value is not None and not isinstance(value, string_types):
+        if value is not None and not isinstance(value, str):
             raise TypeError("The filename of a script has to be a string or None to use the default value.")
         self._filename = value
 
@@ -193,7 +178,7 @@ class Script(Observable, yaml.YAMLObject):
 
     @path.setter
     def path(self, value):
-        if not isinstance(value, string_types):
+        if not isinstance(value, str):
             raise TypeError("The path of a script has to be a string or None to use the default value.")
         self._path = value
         self._load_script()

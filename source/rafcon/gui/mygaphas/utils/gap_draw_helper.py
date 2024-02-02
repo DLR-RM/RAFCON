@@ -11,12 +11,9 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from future.utils import string_types
-from builtins import str
 from math import pi
 
 from gi.repository.Pango import SCALE, FontDescription
-# from cairo import Antialias
 from gi.repository import PangoCairo
 
 from gaphas.painter import CairoBoundingBoxContext
@@ -36,7 +33,7 @@ def limit_value_string_length(value):
     :param value: Value to limit string representation
     :return: String holding the value with a maximum length of MAX_VALUE_LABEL_TEXT_LENGTH + 3
     """
-    if isinstance(value, string_types) and len(value) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:
+    if isinstance(value, str) and len(value) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:
         value = value[:constants.MAX_VALUE_LABEL_TEXT_LENGTH] + "..."
         final_string = " " + value + " "
     elif isinstance(value, (dict, list)) and len(str(value)) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:
@@ -93,160 +90,6 @@ def get_side_length_of_resize_handle(view, item):
     return 0
 
 
-def draw_data_value_rect(cairo_context, color, value_size, name_size, pos, port_side):
-    """This method draws the containing rect for the data port value, depending on the side and size of the label.
-
-    :param cairo_context: Draw Context
-    :param color: Background color of value part
-    :param value_size: Size (width, height) of label holding the value
-    :param name_size: Size (width, height) of label holding the name
-    :param pos: Position of name label start point (upper left corner of label)
-    :param port_side: Side on which the value part should be drawn
-    :return: Rotation Angle (to rotate value accordingly), X-Position of value label start point, Y-Position
-             of value label start point
-    """
-    c = cairo_context
-
-    rot_angle = .0
-    move_x = 0.
-    move_y = 0.
-
-    if port_side is SnappedSide.RIGHT:
-        move_x = pos[0] + name_size[0]
-        move_y = pos[1]
-
-        c.rectangle(move_x, move_y, value_size[0], value_size[1])
-    elif port_side is SnappedSide.BOTTOM:
-        move_x = pos[0] - value_size[1]
-        move_y = pos[1] + name_size[0]
-        rot_angle = pi / 2.
-
-        c.rectangle(move_x, move_y, value_size[1], value_size[0])
-    elif port_side is SnappedSide.LEFT:
-        move_x = pos[0] - value_size[0]
-        move_y = pos[1]
-
-        c.rectangle(move_x, move_y, value_size[0], value_size[1])
-    elif port_side is SnappedSide.TOP:
-        move_x = pos[0] - value_size[1]
-        move_y = pos[1] - value_size[0]
-        rot_angle = -pi / 2.
-
-        c.rectangle(move_x, move_y, value_size[1], value_size[0])
-
-    c.set_source_rgba(*color)
-    c.fill_preserve()
-    c.set_source_rgb(*gui_config.gtk_colors['BLACK'].to_floats())
-    c.stroke()
-
-    return rot_angle, move_x, move_y
-
-
-def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side, port_side_size,
-                                draw_connection_to_port=False):
-    """Draw label of scoped variable
-
-    This method draws the label of a scoped variable connected to a data port. This is represented by drawing a bigger
-    label where the top part is filled and the bottom part isn't.
-
-    :param context: Draw Context
-    :param Gdk.Color color: Color to draw the label in (border and background fill color)
-    :param name_size: Size of the name labels (scoped variable and port name) combined
-    :param handle_pos: Position of port which label is connected to
-    :param port_side: Side on which the label should be drawn
-    :param port_side_size: Size of port (to have a relative size)
-    :param draw_connection_to_port: Whether there should be a line connecting the label to the port
-    :return: Rotation Angle (to rotate names accordingly), X-Position of name labels start point, Y-Position of name
-             labels start point
-    """
-    c = context.cairo
-    c.set_line_width(port_side_size * .03)
-
-    c.set_source_rgb(*color.to_floats())
-
-    rot_angle = .0
-    move_x = 0.
-    move_y = 0.
-
-    if port_side is SnappedSide.RIGHT:
-        move_x = handle_pos.x + 2 * port_side_size
-        move_y = handle_pos.y - name_size[1] / 2.
-
-        c.move_to(move_x + name_size[0], move_y + name_size[1] / 2.)
-        c.line_to(move_x + name_size[0], move_y)
-        c.line_to(move_x, move_y)
-        c.line_to(handle_pos.x + port_side_size, handle_pos.y)
-        c.fill_preserve()
-        c.stroke()
-        if draw_connection_to_port:
-            c.line_to(handle_pos.x + port_side_size / 2., handle_pos.y)
-            c.line_to(handle_pos.x + port_side_size, handle_pos.y)
-        else:
-            c.move_to(handle_pos.x + port_side_size, handle_pos.y)
-        c.line_to(move_x, move_y + name_size[1])
-        c.line_to(move_x + name_size[0], move_y + name_size[1])
-        c.line_to(move_x + name_size[0], move_y + name_size[1] / 2.)
-    elif port_side is SnappedSide.BOTTOM:
-        move_x = handle_pos.x + name_size[1] / 2.
-        move_y = handle_pos.y + 2 * port_side_size
-        rot_angle = pi / 2.
-
-        c.move_to(move_x - name_size[1] / 2., move_y + name_size[0])
-        c.line_to(move_x, move_y + name_size[0])
-        c.line_to(move_x, move_y)
-        c.line_to(handle_pos.x, move_y - port_side_size)
-        c.fill_preserve()
-        c.stroke()
-        if draw_connection_to_port:
-            c.line_to(handle_pos.x, handle_pos.y + port_side_size / 2.)
-            c.line_to(handle_pos.x, move_y - port_side_size)
-        else:
-            c.move_to(handle_pos.x, move_y - port_side_size)
-        c.line_to(move_x - name_size[1], move_y)
-        c.line_to(move_x - name_size[1], move_y + name_size[0])
-        c.line_to(move_x - name_size[1] / 2., move_y + name_size[0])
-    elif port_side is SnappedSide.LEFT:
-        move_x = handle_pos.x - 2 * port_side_size - name_size[0]
-        move_y = handle_pos.y - name_size[1] / 2.
-
-        c.move_to(move_x, move_y + name_size[1] / 2.)
-        c.line_to(move_x, move_y)
-        c.line_to(move_x + name_size[0], move_y)
-        c.line_to(handle_pos.x - port_side_size, move_y + name_size[1] / 2.)
-        c.fill_preserve()
-        c.stroke()
-        if draw_connection_to_port:
-            c.line_to(handle_pos.x - port_side_size / 2., handle_pos.y)
-            c.line_to(handle_pos.x - port_side_size, handle_pos.y)
-        else:
-            c.move_to(handle_pos.x - port_side_size, move_y + name_size[1] / 2.)
-        c.line_to(move_x + name_size[0], move_y + name_size[1])
-        c.line_to(move_x, move_y + name_size[1])
-        c.line_to(move_x, move_y + name_size[1] / 2.)
-    elif port_side is SnappedSide.TOP:
-        move_x = handle_pos.x - name_size[1] / 2.
-        move_y = handle_pos.y - 2 * port_side_size
-        rot_angle = -pi / 2.
-
-        c.move_to(move_x + name_size[1] / 2., move_y - name_size[0])
-        c.line_to(move_x, move_y - name_size[0])
-        c.line_to(move_x, move_y)
-        c.line_to(handle_pos.x, move_y + port_side_size)
-        c.fill_preserve()
-        c.stroke()
-        if draw_connection_to_port:
-            c.line_to(handle_pos.x, handle_pos.y - port_side_size / 2.)
-            c.line_to(handle_pos.x, move_y + port_side_size)
-        else:
-            c.move_to(handle_pos.x, move_y + port_side_size)
-        c.line_to(move_x + name_size[1], move_y)
-        c.line_to(move_x + name_size[1], move_y - name_size[0])
-        c.line_to(move_x + name_size[1] / 2., move_y - name_size[0])
-    c.stroke()
-
-    return rot_angle, move_x, move_y
-
-
 def draw_port_label(context, port, transparency, fill, label_position, show_additional_value=False,
                     additional_value=None, only_extent_calculations=False):
     """Draws a normal label indicating the port name.
@@ -264,9 +107,6 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
     cairo_context = c
     if isinstance(c, CairoBoundingBoxContext):
         cairo_context = c._cairo
-
-    # Gtk TODO
-    # c.set_antialias(Antialias.GOOD)
 
     text = port.name
     label_color = get_col_rgba(port.fill_color, transparency)
@@ -421,7 +261,6 @@ def draw_label_path(context, width, height, arrow_height, distance_to_port, port
     :param float height: Height of the label
     :param float distance_to_port: Distance to the port related to the label
     :param float port_offset: Distance from the port center to its border
-    :param bool draw_connection_to_port: Whether to draw a line from the tip of the label to the port
     """
     c = context
     # The current point is the port position

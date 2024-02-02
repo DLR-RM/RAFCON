@@ -50,11 +50,13 @@ pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
+htmlcov_core/
 .tox/
 .coverage
 .cache
 nosetests.xml
 coverage.xml
+coverage_core.xml
 
 # Translations
 *.mo
@@ -89,6 +91,7 @@ coverage.xml
 .idea/**/markdown-navigator/
 .idea/**/markdown-exported-files.xml
 .idea/**/markdown-navigator.xml
+.idea/markdown-navigator-enh.xml
 
 # as the jetbrains recommendation is not sufficient, custom files have to be added here as well
 .idea/misc.xml
@@ -138,4 +141,9 @@ tests/.idea
 
 # Profiler output
 *.prf
+
+# scss tmp files
+dart-sass
+dart-sass*
+*.css.map
 

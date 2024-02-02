@@ -17,7 +17,6 @@
 
 """
 
-from future.utils import string_types
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import react_to_event
@@ -35,7 +34,7 @@ class EditorController(ExtendedController):
 
     def __init__(self, model, view, observed_method="script_text"):
         """Constructor"""
-        assert isinstance(observed_method, string_types)
+        assert isinstance(observed_method, str)
         self._observed_method = observed_method
         super(EditorController, self).__init__(model, view)
 
@@ -63,16 +62,16 @@ class EditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("apply", self._apply)
         shortcut_manager.add_callback_for_action("open_external_editor", self._open_external_editor)
 
-    def _copy(self, *args):
+    def _copy(self, *args, **kwargs):
         pass
 
-    def _paste(self, *args):
+    def _paste(self, *args, **kwargs):
         pass
 
-    def _cut(self, *args):
+    def _cut(self, *args, **kwargs):
         pass
 
-    def _undo(self, *event):
+    def _undo(self, *event, **kwargs):
         if not self.view:
             return
         buffer = self.view.textview.get_buffer()
@@ -81,7 +80,7 @@ class EditorController(ExtendedController):
             return buffer.undo()
         return False
 
-    def _redo(self, *event):
+    def _redo(self, *event, **kwargs):
         if not self.view:
             return
         buffer = self.view.textview.get_buffer()
@@ -90,7 +89,7 @@ class EditorController(ExtendedController):
             return buffer.redo()
         return False
 
-    def _apply(self, *event):
+    def _apply(self, *event, **kwargs):
 
         if react_to_event(self.view, self.view.textview, event):
             logger.debug("Apply short-cut pressed {}".format(self.__class__.__name__))
@@ -101,7 +100,7 @@ class EditorController(ExtendedController):
             return True
         return False
 
-    def _open_external_editor(self, *event):
+    def _open_external_editor(self, *event, **kwargs):
         if react_to_event(self.view, self.view.textview, event):
             self.view['open_external_button'].set_active(True)
             return True

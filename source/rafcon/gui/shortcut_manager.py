@@ -13,7 +13,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from builtins import str, object
 from functools import partial
 
 from rafcon.gui.config import global_gui_config
@@ -56,18 +55,11 @@ class ShortcutManager(object):
                 self.accel_group.connect(keyval, modifier_mask, Gtk.AccelFlags.VISIBLE, callback)
 
     def __on_shortcut(self, action, accel_group, window, key_value, modifier_mask):
-        res = self.trigger_action(action, key_value, modifier_mask)
+        pointer = self.main_window.get_pointer()
+        res = self.trigger_action(action, key_value, modifier_mask, cursor_position=(pointer.x, pointer.y))
         # If returning False, the shortcut is forwarded to GTK to be used for default actions (like copy and paste in
         #  a text field). If a controller wants to prevent this, it has to return True.
         return res
-
-    def __get_action_for_shortcut(self, lookup_shortcut):
-        for action in self.__action_to_shortcuts:
-            shortcuts = self.__action_to_shortcuts[action]
-            for shortcut in shortcuts:
-                if shortcut == lookup_shortcut:
-                    return action
-        return None
 
     def add_callback_for_action(self, action, callback):
         """Adds a callback function to an action
@@ -81,7 +73,7 @@ class ShortcutManager(object):
         :return: True is the parameters are valid and the callback is registered, False else
         :rtype: bool
         """
-        if hasattr(callback, '__call__'):  # Is the callback really a function?
+        if callable(callback):  # Is the callback really a function?
             if action not in self.__action_to_callbacks:
                 self.__action_to_callbacks[action] = []
             self.__action_to_callbacks[action].append(callback)
@@ -124,23 +116,13 @@ class ShortcutManager(object):
                     self.remove_callback_for_action(action, callback)
             del self.__controller_action_callbacks[controller]
 
-    def get_shortcut_for_action(self, action):
-        """Get the shortcut(s) for the specified action
-
-        :param str action: An action like 'add', 'copy', 'info'
-        :return: None, if no action is not valid or no shortcut is exiting, a single shortcut or a list of shortcuts
-            if one or more shortcuts are registered for that action.
-        """
-        if action in self.__action_to_shortcuts:
-            return self.__action_to_shortcuts[action]
-        return None
-
-    def trigger_action(self, action, key_value, modifier_mask):
+    def trigger_action(self, action, key_value, modifier_mask, **kwargs):
         """Calls the appropriate callback function(s) for the given action
 
         :param str action: The name of the action that was triggered
         :param key_value: The key value of the shortcut that caused the trigger
         :param modifier_mask: The modifier mask of the shortcut that caused the trigger
+        :param cursor_position: The position of the cursor, relative to the main window.
         :return: Whether a callback was triggered
         :rtype: bool
         """
@@ -148,7 +130,7 @@ class ShortcutManager(object):
         if action in self.__action_to_callbacks:
             for callback_function in self.__action_to_callbacks[action]:
                 try:
-                    ret = callback_function(key_value, modifier_mask)
+                    ret = callback_function(key_value, modifier_mask, **kwargs)
                     # If at least one controller returns True, the whole result becomes True
                     res |= (False if ret is None else ret)
                 except Exception as e:
@@ -175,5 +157,5 @@ class ShortcutManager(object):
         self.accel_group = None
 
         self.__action_to_callbacks.clear()
-        self.__action_to_shortcuts.clear()
-
+        # this deletes the shortcuts form the global gui config, which is unnecessary!
+        self.__action_to_shortcuts = None

@@ -9,13 +9,12 @@ your home folder: ``~/.config/rafcon/`` with name ``config.yaml`` and
 the ``start.py`` script with argument "-c". The syntax used is
 `YAML <https://en.wikipedia.org/wiki/YAML>`__.
 
-Core configuration
+Core Configuration
 ------------------
 
 .. _core_config_example:
 
-Example
-"""""""
+Example:
 
 A typical config file looks like this:
 
@@ -31,19 +30,23 @@ A typical config file looks like this:
         "intermediate_level": "${RAFCON_LIB_PATH}/../examples/functionality_examples"
     }
     LIBRARY_RECOVERY_MODE: False
+    LOAD_SM_WITH_CHECKS: True
 
     STORAGE_PATH_WITH_STATE_NAME: True
     MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH: None
     NO_PROGRAMMATIC_CHANGE_OF_LIBRARY_STATES_PERFORMED: False
 
-    EXECUTION_LOG_ENABLE: False
+    IN_MEMORY_EXECUTION_HISTORY_ENABLE: True
+    FILE_SYSTEM_EXECUTION_HISTORY_ENABLE: True
     EXECUTION_LOG_PATH: "%RAFCON_TEMP_PATH_BASE/execution_logs"
     EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL: False
 
+    SCRIPT_RECOMPILATION_ON_STATE_EXECUTION: True
+    SCRIPT_COMPILE_ON_FILESYSTEM_LOAD: True
+
 .. _core_config_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 In the following, all possible parameters are described, together with
 their default value:
@@ -68,31 +71,45 @@ LIBRARY\_PATHS
 LIBRARY\_RECOVERY\_MODE
   | Type: boolean
   | Default: ``False``
-  | If this flag is activated, state machine with consistency erros concerning their data ports can be loaded.
-    Erros are just printed out as warnings. This can be used to fix erroneous state machines.
+  | If this flag is activated, state machine with consistency errors concerning their data ports can be loaded.
+    Instead of raising exceptions only errors are printed. Invalid transitions and data-flows will just be removed.
+    This mode can be used to fix erroneous state machines.
+    Intermediate and expert users can also keep this setting enabled all the time.
+
+LOAD\_SM\_WITH\_CHECKS
+  | Type: boolean
+  | Default: ``True``
+  | If this flag is activated, every state is checked for consistency before loaded.
+    If set to false all consistency checks will be skipped. This leads to much faster loading times.
+    However, if there are consistency errors RAFCON tries to open the state machines and will fail.
 
 STORAGE\_PATH\_WITH\_STATE\_NAME
   | Type: boolean
   | Default: ``True``
   | If set to True the paths to save states will contain the state names.
-  If False only the state IDs will be used to create the storage path.
+    If False only the state IDs will be used to create the storage path.
 
 MAX\_LENGTH\_FOR\_STATE\_NAME\_IN\_STORAGE\_PATH
   | Default: ``None``
   | Unit: number
   | Specifies the maximum length of a state name in the storage path.
-  If the state name is longer than the specified value, the state name is truncated.
-  If the value is set to None the whole state name is used inside the path.
+    If the state name is longer than the specified value, the state name is truncated.
+    If the value is set to None the whole state name is used inside the path.
 
 NO\_PROGRAMMATIC\_CHANGE\_OF\_LIBRARY\_STATES\_PERFORMED
   | Type: boolean
   | Default: ``False``
   | Set this to True if you can make sure that the interface of library states is not programmatically changed anywhere inside your state machines. This will speed up loading of libraries.
 
+EXECUTION\_HISTORY\_ENABLE
+  | Type: boolean
+  | Default: ``True``
+  | Enables execution history. The execution history is required for backward execution and execution logging to the file system.
+
 EXECUTION\_LOG\_ENABLE
   | Type: boolean
   | Default: ``True``
-  | Enables the logging of rafcon exeuction histories to the file system. Every time a statemachine is executed, a python shelve is created in the execution log directory, e.g. ``/tmp/rafcon_execution_logs/rafcon_execution_log_99-Bottles-of-Beer_2017-08-31-16-07-17.shelve``. Some helpful utility functions for working with log files through python are in: ``import rafcon.utils.execution_log``. A tiny tiny code snippet which shows how to use the pandas.DataFrame representation to query the outcomes of a state named ‘CheckFinished’ is here: ``https://rmc-github.robotic.dlr.de/common/rafcon/pull/324#issuecomment-2520``
+  | Enables the logging of rafcon execution histories to the file system. Every time a statemachine is executed, a python shelve is created in the execution log directory, e.g. ``/tmp/rafcon_execution_logs/rafcon_execution_log_99-Bottles-of-Beer_2017-08-31-16-07-17.shelve``. Some helpful utility functions for working with log files through python are in: ``import rafcon.utils.execution_log``. A tiny tiny code snippet which shows how to use the pandas.DataFrame representation to query the outcomes of a state named ‘CheckFinished’ is here: ``https://rmc-github.robotic.dlr.de/common/rafcon/pull/324#issuecomment-2520``
 
 EXECUTION\_LOG\_PATH:
   | Type: String
@@ -103,8 +120,23 @@ EXECUTION\_LOG\_SET\_READ\_AND\_WRITABLE\_FOR\_ALL:
   | Type: boolean
   | Default: ``False``
   | If True, the file permissions of the log file are set such that all users have read access to this file.
+
+SCRIPT\_RECOMPILATION\_ON\_STATE\_EXECUTION:
+  | Type: boolean
+  | Default: ``True``
+  | If True, the script of an ``ExecutionState`` will be recompiled each time the state is executed, effectively
+    resetting all global variables. For reasons of backwards compatibility, the default value is ``True``. It is
+    recommended to set the value to ``False``, causing a recompilation only when the execution of a state machine is
+    newly started, which is a bit faster and allows to share data between consecutive state executions.
+
+SCRIPT\_COMPILE\_ON\_FILESYSTEM\_LOAD:
+  | Type: boolean
+  | Default: ``True``
+  | If True, the script of an ``ExecutionState`` will be recompiled each time the state is loaded from file-system.
+    For faster loading times the setting can be changed to false.
+    Then, however, it might be the case that during runtime, script compilation error occur.
   
-GUI configuration
+GUI Configuration
 -----------------
 
 .. _gui_config_example:
@@ -269,8 +301,7 @@ A typical config file looks like this:
 
 .. _gui_config_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 TYPE
   | Type: String-constant
@@ -306,7 +337,7 @@ THEME\_DARK\_VARIANT:
 PORT\_SNAP\_DISTANCE
   | Default: ``5``
   | Unit: Pixel
-  | Maximum distane to a port, at which the moved end of a connection is
+  | Maximum distance to a port, at which the moved end of a connection is
     snapped to a port (outcome, input, output, scoped variable).
 
 LOGGING\_SHOW\_VERBOSE
@@ -588,8 +619,7 @@ package, please check the `official documentation <https://docs.python.org/2/lib
 
 .. _logging_config_example:
 
-Example
-"""""""
+Example:
 
 To not destroy the behavior of RAFCON, the default configuration should be used as basis for your extensions. The
 following example shows how to add another logging handler, writing all messages to a file:
@@ -597,18 +627,13 @@ following example shows how to add another logging handler, writing all messages
 .. code:: json
 
     {
-        ...
-
         "loggers": {
-            ...
             "rafcon": {
-                ...
                 "handlers": ["stdout", "stderr", "loggingView", "file"]
             }
         },
 
         "handlers": {
-            ...
             "file": {
                 "class": "logging.handlers.RotatingFileHandler",
                 "formatter": "default",
@@ -617,8 +642,6 @@ following example shows how to add another logging handler, writing all messages
                 "backupCount": 3
             }
         },
-
-        ...
     }
 
 
@@ -635,8 +658,7 @@ by launching the ``start.py`` script with argument "-nc".
 
 .. _monitoring_plugin_example:
 
-Example
-"""""""
+Example:
 
 The default ``network_config.file`` looks like:
 
@@ -658,8 +680,7 @@ The default ``network_config.file`` looks like:
 
 .. _monitoring_plugin_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 TYPE
   | Type: string

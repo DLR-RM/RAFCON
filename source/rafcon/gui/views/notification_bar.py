@@ -11,9 +11,10 @@
 import logging
 from threading import Timer
 
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 from gi.repository import Gtk
+from gi.repository import GLib
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.helpers import label
@@ -24,7 +25,7 @@ class NotificationBarView(View):
     timer = None
 
     def __init__(self):
-        View.__init__(self)
+        super().__init__(parent='notification_bar')
 
         self['notification_bar'] = self.notification_bar = Gtk.Revealer()
         self.notification_bar.set_transition_type(Gtk.RevealerTransitionType.SLIDE_UP)
@@ -39,9 +40,6 @@ class NotificationBarView(View):
         content_area.add(self._message_label)
         label.ellipsize_labels_recursively(content_area)
 
-    def get_top_widget(self):
-        return self.notification_bar
-
     def show_bar(self):
         if not self.notification_bar.get_reveal_child():
             self.notification_bar.set_reveal_child(True)
@@ -50,6 +48,9 @@ class NotificationBarView(View):
         self.notification_bar.set_reveal_child(False)
 
     def show_notification(self, message, log_level):
+        GLib.idle_add(self._show_notification, message, log_level, priority=GLib.PRIORITY_LOW)
+
+    def _show_notification(self, message, log_level):
         self._set_corresponding_message_type(log_level)
         self._message_label.set_label(message)
         duration = gui_config.get_config_value("NOTIFICATIONS_DURATION", 3.)
@@ -74,4 +75,3 @@ class NotificationBarView(View):
         if duration > 0:
             self.timer = Timer(duration, hide_me)
             self.timer.start()
-

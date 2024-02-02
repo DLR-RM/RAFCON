@@ -12,29 +12,31 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from future.utils import string_types
 import threading
 
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 from gi.repository import Gtk
 from gi.repository import GLib
 
 from rafcon.gui.config import global_gui_config
 from rafcon.utils import log
+from rafcon.utils.threads import ReaderWriterLock
+
 logger = log.get_logger(__name__)
 
 
 class LoggingConsoleView(View):
 
     def __init__(self):
-        View.__init__(self)
+        super().__init__(parent='scrollable')
 
         self._lock = threading.Lock()
 
         self.text_view = Gtk.TextView()
         self.text_view.set_property('editable', False)
 
-        self.filtered_buffer = self.create_text_buffer()
+        self._filtered_buffer = self.create_text_buffer()
+        self._filtered_buffer_lock = ReaderWriterLock(self._filtered_buffer)
 
         self.text_view.set_buffer(self.filtered_buffer)
 
@@ -57,47 +59,81 @@ class LoggingConsoleView(View):
         self.quit_flag = False
 
         self.logging_priority = global_gui_config.get_config_value("LOGGING_CONSOLE_GTK_PRIORITY", GLib.PRIORITY_LOW)
+        self.max_logging_buffer_lines = global_gui_config.get_config_value('MAX_LOGGING_BUFFER_LINES', 5000)
 
         self._stored_line_number = None
         self._stored_line_offset = None
         self._stored_text_of_line = None
         self._stored_relative_lines = None
 
-    def clean_buffer(self):
-        self.text_view.set_buffer(self.filtered_buffer)
+    def _insert(self, text, length=-1):
+        """
+        Insert a new row into the logging buffer.
+        """
+        with self._filtered_buffer_lock.writer_lock as filtered_buffer:
+            filtered_buffer.insert(filtered_buffer.get_end_iter(), text, length)
 
-        start, end = self.filtered_buffer.get_bounds()
-        self.filtered_buffer.delete(start, end)
+    def _insert_with_tags_by_name(self, text, *tags):
+        """
+        Insert a new row into the logging buffer alongside of the tags.
+        """
+        with self._filtered_buffer_lock.writer_lock as filtered_buffer:
+            filtered_buffer.insert_with_tags_by_name(filtered_buffer.get_end_iter(), text, *tags)
+
+    def clean_buffer(self):
+        """
+        Delete all contents of the logging buffer.
+        """
+        with self._filtered_buffer_lock.writer_lock as filtered_buffer:
+            start, end = filtered_buffer.get_bounds()
+            filtered_buffer.delete(start, end)
+
+    def clip_buffer(self):
+        """
+        Clip the logging buffer (if required) to avoid exceeding the maximum logging buffer lines.
+        """
+        with self._filtered_buffer_lock.writer_lock as filtered_buffer:
+            buffer_lines = filtered_buffer.get_line_count()
+            if buffer_lines > self.max_logging_buffer_lines:
+                filtered_buffer.delete(filtered_buffer.get_start_iter(),
+                                       filtered_buffer.get_iter_at_line(buffer_lines - self.max_logging_buffer_lines))
 
     def print_message(self, message, log_level):
-        with self._lock:
+        """
+        Add the logging requests to the event queue.
+        """
+        with self._filtered_buffer_lock.reader_lock as filtered_buffer:
             if log_level <= log.logging.VERBOSE and self._enables.get('VERBOSE', False):
-                GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "debug",
+                GLib.idle_add(self.print_to_text_view, message, filtered_buffer, "debug",
                               priority=GLib.PRIORITY_LOW)
             if log.logging.VERBOSE < log_level <= log.logging.DEBUG and self._enables.get('DEBUG', True):
-                GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "debug",
+                GLib.idle_add(self.print_to_text_view, message, filtered_buffer, "debug",
                               priority=self.logging_priority)
             elif log.logging.DEBUG < log_level <= log.logging.INFO and self._enables.get('INFO', True):
-                GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "info",
+                GLib.idle_add(self.print_to_text_view, message, filtered_buffer, "info",
                               priority=self.logging_priority)
             elif log.logging.INFO < log_level <= log.logging.WARNING and self._enables.get('WARNING', True):
-                GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "warning",
+                GLib.idle_add(self.print_to_text_view, message, filtered_buffer, "warning",
                               priority=self.logging_priority)
             elif log.logging.WARNING < log_level and self._enables.get('ERROR', True):
-                GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "error",
+                GLib.idle_add(self.print_to_text_view, message, filtered_buffer, "error",
                               priority=self.logging_priority)
 
     def print_to_text_view(self, text, text_buf, use_tag=None):
+        """
+        Add the new rows to the logging buffer.
+        """
+        self.clip_buffer()
         time, source, message = self.split_text(text)
-        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), time + " ", "tertiary_text", "default")
-        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), source + ": ", "text", "default")
+        self._insert_with_tags_by_name(time + " ", "tertiary_text", "default")
+        self._insert_with_tags_by_name(source + ": ", "text", "default")
         if use_tag:
-            if self.text_view.get_buffer().get_tag_table().lookup(use_tag) is not None:
-                text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), message + "\n", use_tag, "default")
+            if self.filtered_buffer.get_tag_table().lookup(use_tag) is not None:
+                self._insert_with_tags_by_name(message + "\n", use_tag, "default")
             else:
-                text_buf.insert(text_buf.get_end_iter(), message + "\n")
+                self._insert(message + "\n")
         else:
-            text_buf.insert(text_buf.get_end_iter(), message + "\n")
+            self._insert( message + "\n")
 
         if not self.quit_flag and self._enables['CONSOLE_FOLLOW_LOGGING']:
             self.scroll_to_cursor_onscreen()
@@ -111,7 +147,7 @@ class LoggingConsoleView(View):
         :param text_to_split: Text to split
         :return: List containing the content of text_to_split split up
         """
-        assert isinstance(text_to_split, string_types)
+        assert isinstance(text_to_split, str)
         try:
             time, rest = text_to_split.split(': ', 1)
             source, message = rest.split(':', 1)
@@ -152,11 +188,10 @@ class LoggingConsoleView(View):
         adj.set_value(adj.get_upper() - adj.get_page_size())
 
     def scroll_to_cursor_onscreen(self):
-        self.text_view.scroll_mark_onscreen(self.text_view.get_buffer().get_insert())
+        self.text_view.scroll_mark_onscreen(self.filtered_buffer.get_insert())
 
     def get_cursor_position(self):
-        text_buffer = self.text_view.get_buffer()
-        p_iter = text_buffer.get_iter_at_offset(text_buffer.props.cursor_position)
+        p_iter = self.filtered_buffer.get_iter_at_offset(self.filtered_buffer.props.cursor_position)
         return p_iter.get_line(), p_iter.get_line_offset()
 
     def set_cursor_position(self, line_number, line_offset):
@@ -182,16 +217,20 @@ class LoggingConsoleView(View):
         return text_buffer.get_line_count()
 
     def get_text_of_line(self, line_number_or_iter):
-        text_buffer = self.text_view.get_buffer()
-        if isinstance(line_number_or_iter, Gtk.TextIter):
-            line_iter = line_number_or_iter
-            line_end_iter = text_buffer.get_iter_at_line(line_iter.get_line())
-        else:
-            line_number = line_number_or_iter
-            line_iter = text_buffer.get_iter_at_line(line_number)
-            line_end_iter = text_buffer.get_iter_at_line(line_number)
-        line_end_iter.forward_to_line_end()
-        text = text_buffer.get_text(line_iter, line_end_iter, True)
+        """
+        We are not going to modify 'filtered_buffer' here in any shape or form.
+        But we need an exclusive lock here to insure the iters are still valid.
+        """
+        with self._filtered_buffer_lock.writer_lock as filtered_buffer:
+            if isinstance(line_number_or_iter, Gtk.TextIter):
+                line_iter = line_number_or_iter
+                line_end_iter = filtered_buffer.get_iter_at_line(line_iter.get_line())
+            else:
+                line_number = line_number_or_iter
+                line_iter = filtered_buffer.get_iter_at_line(line_number)
+                line_end_iter = filtered_buffer.get_iter_at_line(line_number)
+            line_end_iter.forward_to_line_end()
+            text = filtered_buffer.get_text(line_iter, line_end_iter, True)
         return text
 
     def set_cursor_on_line_with_string(self, s, line_offset=0):
@@ -261,3 +300,13 @@ class LoggingConsoleView(View):
                 text_of_line = next_relative_lines[0][1]
                 done = self.set_cursor_on_line_with_string(text_of_line, self._stored_line_offset)
             return done
+
+    @property
+    def filtered_buffer(self):
+        with self._filtered_buffer_lock.reader_lock:
+            return self._filtered_buffer
+
+    @filtered_buffer.setter
+    def filtered_buffer(self, buffer):
+        with self._filtered_buffer_lock.writer_lock:
+            self._filtered_buffer = buffer

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 def execute(self, inputs, outputs, gvm):
     self.logger.debug("add beer again")
     outputs['beer_value'] = inputs['beer_value'] + 40

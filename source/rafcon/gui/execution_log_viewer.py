@@ -7,7 +7,7 @@ from rafcon.gui.controllers.utils.single_widget_window import SingleWidgetWindow
 from rafcon.gui.controllers.execution_log_viewer import ExecutionLogTreeController
 
 
-if __name__ == "__main__":
+def main():
     from gi.repository import Gtk  # import here to avoid warning
     import argparse
     parser = argparse.ArgumentParser()
@@ -17,12 +17,10 @@ if __name__ == "__main__":
 
     # single widget window generation with respective size and title
     single_view = SingleWidgetWindowView(ExecutionLogTreeView, 1024, 786, "Execution Log Viewer")
-    single_view.top = 'execution_log_paned'
-    single_view['execution_log_paned'] = single_view.widget_view['execution_log_paned']
-
-    model = []  # use a not None model to avoid AssertionError in register_adapters methods
-    log_tree_ctrl = SingleWidgetWindowController(model, single_view, ExecutionLogTreeController, args.file, args.run_id)
-
-    # log_tree_ctrl = SingleWidgetWindowController(None, single_view, ExecutionLogTreeController, file, run_id)
+    log_tree_ctrl = SingleWidgetWindowController(None, single_view, ExecutionLogTreeController, args.file, args.run_id)
 
     Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

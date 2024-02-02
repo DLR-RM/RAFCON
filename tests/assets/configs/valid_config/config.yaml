@@ -1,9 +1,18 @@
-TYPE: SM_CONFIG
+IN_MEMORY_EXECUTION_HISTORY_ENABLE: True
+FILE_SYSTEM_EXECUTION_HISTORY_ENABLE: false
+EXECUTION_LOG_PATH: '%RAFCON_TEMP_PATH_BASE/execution_logs'
+EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL: false
 LIBRARY_PATHS:
     generic: ${RAFCON_LIB_PATH}/generic
     ros: ${RAFCON_LIB_PATH}/../examples/libraries/ros_libraries
     turtle_libraries: ${RAFCON_LIB_PATH}/../examples/libraries/turtle_libraries
     tutorials: ${RAFCON_LIB_PATH}/../examples/tutorials
     unit_test_state_machines: ../../../assets/unit_test_state_machines
-
-LIBRARY_RECOVERY_MODE: False
+LIBRARY_RECOVERY_MODE: false
+LOAD_SM_WITH_CHECKS: false
+MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH: None
+NO_PROGRAMMATIC_CHANGE_OF_LIBRARY_STATES_PERFORMED: false
+SCRIPT_RECOMPILATION_ON_STATE_EXECUTION: true
+STORAGE_PATH_WITH_STATE_NAME: true
+RAISE_ERROR_ON_MISSING_LIBRARY_STATES: false
+TYPE: SM_CONFIG

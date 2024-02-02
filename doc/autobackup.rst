@@ -53,5 +53,5 @@ respective state machines. So it is possible to enable lock file generation
 and only enable the check on lock files if explicitly needed.
 
 An auto recovery of whole crashed sessions including their open state machines
-and tab states is currently not supported. Nevertheless, sessons can be restored
+and tab states is currently not supported. Nevertheless, sessions can be restored
 if RAFCON was closed correctly and the config value ``SESSION_RESTORE_ENABLED`` is set to True.

@@ -80,8 +80,6 @@ class RuntimeConfig(ObservableConfig):
         :return:
         """
         if state_machine.file_system_path:
-            # check if path is in recent path already
-            # logger.info("update recent state machine: {}".format(sm.file_system_path))
             recently_opened_state_machines = self.get_config_value('recently_opened_state_machines', [])
             if state_machine.file_system_path in recently_opened_state_machines:
                 del recently_opened_state_machines[recently_opened_state_machines.index(state_machine.file_system_path)]

@@ -11,7 +11,6 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import object
 from simplegeneric import generic
 from gaphas.geometry import distance_line_point, distance_rectangle_point
 from gaphas.segment import Segment
@@ -68,6 +67,10 @@ class ConnectionHandleInMotion(ItemHandleInMotion):
                 v2i = view.get_matrix_v2i(item).transform_point
                 handle.pos = v2i(*glue_pos)
                 return sink
+        state_l = view.get_state_at_point(pos, distance=distance)
+        state_v = state_l
+        if state_v is not None and not state_v.model.state.is_root_state:
+            return ConnectionSink(state_v, None)
         return None
 
 

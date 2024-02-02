@@ -22,7 +22,6 @@
 
 from gi.repository import GObject
 from gi.repository import Gtk
-from builtins import str
 
 from rafcon.gui.helpers.meta_data import insert_self_transition_meta_data
 from rafcon.core.state_elements.logical_port import Outcome
@@ -336,16 +335,6 @@ class StateOutcomesListController(ListViewController):
     def outcomes_changed(self, model, prop_name, info):
         self.update(initiator=str(info))
 
-    # TODO Find out why the observation of the destruction_signal cause threading problems
-    # @ExtendedController.observe("destruction_signal", signal=True)
-    # def get_destruction_signal(self, model, prop_name, info):
-    #     """ Relieve models if the parent state model is destroyed"""
-    #     # this is necessary because the controller use data of its parent model and would try to adapt to
-    #     # transition changes before the self.model is destroyed, too
-    #     if not self.model.state.is_root_state and self.model.parent is model:
-    #         # as long as a relieve of models before the after will cause threading issues the controller is suspended
-    #         self.__suspended = True
-
 
 class StateOutcomesEditorController(ExtendedController):
 
@@ -381,7 +370,7 @@ class StateOutcomesEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("cut", self.oc_list_ctrl.cut_action_callback)
         shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
 
-    def paste_action_callback(self, *event):
+    def paste_action_callback(self, *event, **kwargs):
         """Callback method for paste action"""
         if react_to_event(self.view, self.oc_list_ctrl.tree_view, event) and self.oc_list_ctrl.active_entry_widget is None:
             global_clipboard.paste(self.model, limited=['outcomes'])

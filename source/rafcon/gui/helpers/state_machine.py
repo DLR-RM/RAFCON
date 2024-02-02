@@ -16,10 +16,10 @@
    Additional this module holds methods that employing the state machine manager. Maybe this changes in future.
 """
 
-from builtins import str
 import copy
 import time
 import os
+import shutil
 from gi.repository import Gtk
 
 import rafcon.gui.helpers.state as gui_helper_state
@@ -33,6 +33,7 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import State, StateType
 from rafcon.core.storage import storage
+from rafcon.core.custom_exceptions import LibraryNotFoundException
 import rafcon.core.config
 
 from rafcon.gui.helpers.text_formatting import format_default_folder_name
@@ -41,22 +42,15 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateModel, LibraryStateModel, TransitionModel, \
-    DataFlowModel, DataPortModel, ScopedVariableModel, OutcomeModel, StateMachineModel
-from rafcon.gui.singleton import library_manager_model
+    DataFlowModel, DataPortModel, OutcomeModel, StateMachineModel
+from rafcon.gui.models.signals import MetaSignalMsg
+from rafcon.gui.singleton import global_config, library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
 from rafcon.utils.filesystem import make_tarfile, copy_file_or_folder, create_path, make_file_executable
 from rafcon.utils import log, storage_utils
 import rafcon.gui.utils
 
 logger = log.get_logger(__name__)
-
-# TODO think about to generate a state machine manager helper to separate this functions from this module
-
-
-def is_element_none_with_error_message(method_name, element_dict):
-    missing_elements = [element_name for element_name, element in element_dict.items() if element is None]
-    if missing_elements:
-        logger.error("The following elements are missing to perform {0}: {1}".format(missing_elements))
 
 
 def new_state_machine(*args):
@@ -144,6 +138,355 @@ def open_library_state_separately():
             logger.exception('Library state {0} could not be open separately'.format(state_m.state))
 
 
+def find_library_root_dependencies(library_root_name, new_library_root_name):
+    """ Find and resolve all dependencies of all libraries of a library root
+
+    :param str library_root_name: the library root name
+    :param str new_library_root_name: the new library root name
+
+    :rtype list(rafcon.core.state_machine.StateMachine)
+    :return: library dependencies
+    """
+
+    library_dependencies = []
+    if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
+        library_manager.show_dialog = False
+    for library_root_path in library_manager.library_root_paths.values():
+        for path in storage.find_library_dependencies_via_grep(library_root_path, library_path=library_root_name):
+            try:
+                library = storage.load_state_machine_from_path(path)
+                if library is not None:
+                    queue = [library.root_state]
+                    while len(queue) > 0:
+                        state = queue.pop(0)
+                        if hasattr(state, 'library_path') and (state.library_path == library_root_name or state.library_path.startswith(os.path.join(library_root_name, ''))):
+                            library_path_parts = state.library_path.split('/')
+                            library_path_parts[0] = new_library_root_name
+                            state.library_path = '/'.join(library_path_parts)
+                        elif hasattr(state, 'states'):
+                            queue.extend(state.states.values())
+                library_dependencies.append(library)
+            except LibraryNotFoundException:
+                pass
+    if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
+        library_manager.show_dialog = True
+    return library_dependencies
+
+
+def find_libraries_dependencies(library_path, new_library_path):
+    """ Find and resolve all dependencies of all libraries of a library directory
+
+    :param str library_path: the library path
+    :param str new_library_path: the new library path
+
+    :rtype list(rafcon.core.state_machine.StateMachine)
+    :return: library dependencies
+    """
+
+    library_dependencies = []
+    if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
+        library_manager.show_dialog = False
+    for library_root_path in library_manager.library_root_paths.values():
+        for path in storage.find_library_dependencies_via_grep(library_root_path, library_path=library_path):
+            try:
+                library = storage.load_state_machine_from_path(path)
+                if library is not None:
+                    queue = [library.root_state]
+                    while len(queue) > 0:
+                        state = queue.pop(0)
+                        if hasattr(state, 'library_path') and state.library_path == library_path:
+                            state.library_path = new_library_path
+                        elif hasattr(state, 'states'):
+                            queue.extend(state.states.values())
+                library_dependencies.append(library)
+            except LibraryNotFoundException:
+                pass
+    if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
+        library_manager.show_dialog = True
+    return library_dependencies
+
+
+def find_library_dependencies(library_os_path, library_path=None, library_name=None, new_library_path=None, new_library_name=None):
+    """ Find and resolve all dependencies of a library
+
+    :param str library_os_path: the library os path
+    :param str library_path: the library path
+    :param str library_name: the library name
+    :param str new_library_path: the new library path
+    :param str new_library_name: the new library name
+
+    :rtype list(rafcon.core.state_machine.StateMachine)
+    :return: library dependencies
+    """
+
+    library_dependencies = []
+    if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
+        library_manager.show_dialog = False
+    for library_root_path in library_manager.library_root_paths.values():
+        for path in storage.find_library_dependencies_via_grep(library_root_path, library_path=library_path, library_name=library_name):
+            try:
+                library = storage.load_state_machine_from_path(path)
+                if library is not None:
+                    queue = [library.root_state]
+                    while len(queue) > 0:
+                        state = queue.pop(0)
+                        if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
+                            if new_library_path:
+                                state.library_path = new_library_path
+                            if new_library_name:
+                                state.library_name = new_library_name
+                                state.name = new_library_name
+                        elif hasattr(state, 'states'):
+                            queue.extend(state.states.values())
+                library_dependencies.append(library)
+            except LibraryNotFoundException:
+                pass
+    if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
+        library_manager.show_dialog = True
+    return library_dependencies
+
+
+def save_library_dependencies(library_dependencies):
+    """ Save all library dependencies and their meta data to a path
+
+    :param str library_dependencies: the library dependencies
+    """
+
+    affected_libraries = []
+    for library_dependency in library_dependencies:
+        affected_libraries.append((library_dependency.file_system_path, library_dependency))
+        save_library(library_dependency, library_dependency.file_system_path)
+    return affected_libraries
+
+
+def save_library(library, path):
+    """ Save a library and its meta data to a path
+
+    :param str library: the library
+    :param str path: the path
+    """
+
+    library_model = StateMachineModel(library)
+    library_model.load_meta_data()
+    storage.save_state_machine_to_path(library, path)
+    library_model.store_meta_data()
+
+
+def save_open_libraries():
+    """ Save all open libraries
+    """
+
+    for library in state_machine_manager.state_machines.values():
+        storage.save_state_machine_to_path(library, library.file_system_path)
+
+
+def refresh_after_relocate_and_rename(affected_libraries):
+    """ Save all library dependencies, refresh the open libraries and the library tree view
+
+    :param str affected_libraries: the affected libraries
+    """
+
+    for library_path, library in affected_libraries:
+        if state_machine_manager.get_open_state_machine_of_file_system_path(library_path):
+            state_machine_manager.remove_state_machine_by_path(library_path)
+            state_machine_manager.add_state_machine(library)
+    library_manager.clean_loaded_libraries()
+    refresh_libraries()
+
+
+def rename_library_root(library_root_name, new_library_root_name, logger=None):
+    """ Rename a library root
+
+    :param str library_root_name: the library root name
+    :param str new_library_root_name: the new library root name
+    :param logger logger: the logger
+    """
+
+    if not new_library_root_name:
+        if logger:
+            logger.error('The library root name is invalid')
+        return
+    library_paths = global_config.get_config_value('LIBRARY_PATHS')
+    if new_library_root_name in library_paths:
+        if logger:
+            logger.error("The library root name '{0}' already exists".format(new_library_root_name))
+        return
+    save_open_libraries()
+    affected_libraries = []
+    library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
+    affected_libraries.extend(save_library_dependencies(library_dependencies))
+    library_paths[new_library_root_name] = library_paths[library_root_name]
+    del library_paths[library_root_name]
+    global_config.save_configuration()
+    refresh_after_relocate_and_rename(affected_libraries)
+
+
+def rename_library(library_os_path, new_library_os_path, library_path, library_name, new_library_name, logger=None):
+    """ Rename a library
+
+    :param str library_os_path: the library os path
+    :param str new_library_os_path: the new library os path
+    :param str library_path: the library path
+    :param str library_name: the library name
+    :param str new_library_name: the new library name
+    :param logger logger: the logger
+    """
+
+    if not new_library_name:
+        if logger:
+            logger.error('The library name is invalid')
+        return
+    elif library_path in library_manager.libraries:
+        for library_os_path_ in library_manager.libraries[library_path].values():
+            if library_os_path_ == new_library_os_path:
+                if logger:
+                    logger.error("The library name '{0}' already exists".format(new_library_name))
+                return
+    library_os_path = os.path.abspath(library_os_path)
+    new_library_os_path = os.path.abspath(new_library_os_path)
+    save_open_libraries()
+    affected_libraries = []
+    if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
+        library_manager.show_dialog = False
+    try:
+        library = storage.load_state_machine_from_path(library_os_path)
+        if library is None:
+            raise LibraryNotFoundException
+    except Exception:
+        logger.error('The library is broken and the operation failed')
+        library_manager.show_dialog = True
+        return
+    library.root_state.name = new_library_name
+    affected_libraries.append((library.file_system_path, library))
+    save_library(library, new_library_os_path)
+    library_dependencies = find_library_dependencies(library_os_path,
+                                                     library_path=library_path,
+                                                     library_name=library_name,
+                                                     new_library_name=new_library_name)
+    affected_libraries.extend(save_library_dependencies(library_dependencies))
+    shutil.rmtree(library_os_path)
+    refresh_after_relocate_and_rename(affected_libraries)
+
+
+def relocate_library_root(library_root_name, new_directory, logger=None):
+    """ Relocate a library root
+
+    :param str library_root_name: the library root name
+    :param str new_directory: the new directory
+    :param logger logger: the logger
+    """
+
+    if new_directory == '/':
+        if logger:
+            logger.error('The library root path is invalid')
+        return
+    library_root_path = library_manager.library_root_paths[library_root_name]
+    if library_root_path == new_directory:
+        return
+    save_open_libraries()
+    affected_libraries = []
+    new_library_root_name = os.path.basename(os.path.normpath(new_directory))
+    if new_library_root_name in library_manager.library_root_paths:
+        new_library_root_name_number = 2
+        while new_library_root_name + str(new_library_root_name_number) in library_manager.library_root_paths:
+            new_library_root_name_number += 1
+        new_library_root_name += str(new_library_root_name_number)
+    library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
+    affected_libraries.extend(save_library_dependencies(library_dependencies))
+    for content in os.listdir(library_root_path):
+        shutil.move(os.path.join(library_root_path, content), os.path.join(new_directory, content))
+    library_paths = global_config.get_config_value('LIBRARY_PATHS')
+    library_paths[new_library_root_name] = new_directory
+    del library_paths[library_root_name]
+    global_config.save_configuration()
+    refresh_after_relocate_and_rename(affected_libraries)
+
+
+def relocate_libraries(libraries_os_path, libraries_name, new_directory, logger=None):
+    """ Relocate a library directory
+
+    :param str libraries_os_path: the libraries os path
+    :param str libraries_name: the libraries name
+    :param str new_directory: the new directory
+    :param logger logger: the logger
+    """
+
+    if new_directory == '/':
+        if logger:
+            logger.error('The library directory path is invalid')
+        return
+    elif os.path.exists(os.path.join(new_directory, libraries_name)):
+        if logger:
+            logger.error('The path contains a library directory with the similar name')
+        return
+    libraries_os_path = os.path.abspath(libraries_os_path)
+    save_open_libraries()
+    affected_libraries = []
+    library_path = None
+    library_path_without_root_name = None
+    for library_root_name, library_root_path in library_manager.library_root_paths.items():
+        if libraries_os_path.startswith(os.path.join(library_root_path, '')):
+            library_path_without_root_name = libraries_os_path[len(library_root_path) + 1:]
+            library_path = os.path.join(library_root_name, library_path_without_root_name)
+            break
+    new_library_path = os.path.join(os.path.basename(os.path.normpath(new_directory)), library_path_without_root_name)
+    new_root_required = True
+    for library_root_name, library_root_path in library_manager.library_root_paths.items():
+        if new_directory.startswith(os.path.join(library_root_path, '')):
+            new_root_required = False
+            new_library_path = os.path.join(library_root_name, library_path_without_root_name)
+            break
+    library_dependencies = find_libraries_dependencies(library_path, new_library_path)
+    affected_libraries.extend(save_library_dependencies(library_dependencies))
+    shutil.move(libraries_os_path, os.path.join(new_directory, libraries_name))
+    if new_root_required:
+        library_paths = global_config.get_config_value('LIBRARY_PATHS')
+        library_paths[os.path.basename(os.path.normpath(new_directory))] = new_directory
+        global_config.save_configuration()
+    refresh_after_relocate_and_rename(affected_libraries)
+
+
+def relocate_library(library_os_path, library_path, library_name, new_directory, logger=None):
+    """ Relocate a library
+
+    :param str library_os_path: the file system path of the library
+    :param str library_path: the path of the library
+    :param str library_name: the name of the library
+    :param str new_directory: the new directory
+    :param logger logger: the logger
+    """
+
+    if new_directory == '/':
+        if logger:
+            logger.error('The library path is invalid')
+        return
+    elif os.path.exists(os.path.join(new_directory, library_name)):
+        if logger:
+            logger.error('The path contains a library with the similar name')
+        return
+    library_os_path = os.path.abspath(library_os_path)
+    save_open_libraries()
+    affected_libraries = []
+    new_library_path = os.path.basename(os.path.normpath(new_directory))
+    new_root_required = True
+    for library_root, library_root_path in library_manager.library_root_paths.items():
+        if library_root_path == new_directory or new_directory.startswith(os.path.join(library_root_path, '')):
+            new_root_required = False
+            new_library_path = os.path.join(library_root, new_directory[len(library_root_path) + 1:]).strip('/')
+            break
+    library_dependencies = find_library_dependencies(library_os_path,
+                                                     library_path=library_path,
+                                                     library_name=library_name,
+                                                     new_library_path=new_library_path)
+    affected_libraries.extend(save_library_dependencies(library_dependencies))
+    shutil.move(library_os_path, os.path.join(new_directory, library_name))
+    if new_root_required:
+        library_paths = global_config.get_config_value('LIBRARY_PATHS')
+        library_paths[os.path.basename(os.path.normpath(new_directory))] = new_directory
+        global_config.save_configuration()
+    refresh_after_relocate_and_rename(affected_libraries)
+
+
 def save_state_machine(delete_old_state_machine=False, recent_opened_notification=False, as_copy=False, copy_path=None):
     """ Save selected state machine
 
@@ -170,7 +513,6 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
         return False
 
     previous_path = state_machine_m.state_machine.file_system_path
-    previous_marked_dirty = state_machine_m.state_machine.marked_dirty
     all_tabs = list(states_editor_ctrl.tabs.values())
     all_tabs.extend(states_editor_ctrl.closed_tabs.values())
     dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if
@@ -235,6 +577,8 @@ def save_state_machine_as(path=None, recent_opened_notification=False, as_copy=F
     :rtype bool:
     """
 
+    library_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('library_controller')
+
     state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
     selected_state_machine_model = state_machine_manager_model.get_selected_state_machine_model()
     if selected_state_machine_model is None:
@@ -246,9 +590,13 @@ def save_state_machine_as(path=None, recent_opened_notification=False, as_copy=F
             logger.error("No function defined for creating a folder")
             return False
         folder_name = selected_state_machine_model.state_machine.root_state.name
+        library_os_path, _, _, _ = library_ctrl.extract_library_properties_from_selected_row()
+        if library_os_path is not None and library_os_path.startswith('[source]:\n'):
+            library_os_path = library_os_path.rsplit('\n', 1)[1]
         path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
                                             "The default folder name is the name of the root state.",
-                                            format_default_folder_name(folder_name))
+                                            format_default_folder_name(folder_name),
+                                            current_folder=library_os_path)
         if path is None:
             logger.warning("No valid path specified")
             return False
@@ -423,7 +771,6 @@ def replace_all_libraries_by_template(state_model):
 
 def save_all_libraries(target_path):
     for library_key, library_root_path in library_manager.library_root_paths.items():
-        # lib_target_path = os.path.join(target_path, os.path.split(library_root_path)[1])
         lib_target_path = os.path.join(target_path, library_key)
         copy_file_or_folder(library_root_path, lib_target_path)
 
@@ -697,7 +1044,10 @@ def delete_selected_elements(state_machine_m):
         return True
 
 
-def paste_into_selected_state(state_machine_m):
+def paste_into_selected_state(state_machine_m, cursor_position=None):
+    """
+    :param (float, float) cursor_position: the cursor position relative to the main window.
+    """
     selection = state_machine_m.selection
     if len(selection.states) != 1:
         logger.warning("Please select a single container state for pasting the clipboard")
@@ -705,7 +1055,13 @@ def paste_into_selected_state(state_machine_m):
 
     # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
     target_state_m = selection.get_selected_state()
-    global_clipboard.paste(target_state_m)
+    item_coordinates = None
+    if cursor_position:
+        from rafcon.gui.helpers.coordinates import main_window2graphical_editor
+        from rafcon.gui.helpers.coordinates import graphical_editor2item
+        gc_coordinates = main_window2graphical_editor(cursor_position)
+        item_coordinates = graphical_editor2item(target_state_m, gc_coordinates)
+    global_clipboard.paste(target_state_m, item_coordinates)
 
 
 def selected_state_toggle_is_start_state():
@@ -735,11 +1091,15 @@ def selected_state_toggle_is_start_state():
         return False
 
 
-def add_new_state(state_machine_m, state_type):
+def add_new_state(state_machine_m, state_type, target_position=None):
     """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
     Adds a new state only if the parent state (selected state) is a container state, and if the graphical editor or
     the state machine tree are in focus.
+
+    :param state_machine_m: the state machine model to add the state to
+    :param state_type: the state type of the state to be added
+    :param (float, float) target_position: The position, to add the state at, relative to the graphical editor.
     """
     assert isinstance(state_machine_m, StateMachineModel)
 
@@ -755,10 +1115,14 @@ def add_new_state(state_machine_m, state_type):
         return
 
     if isinstance(state_m, StateModel):
-        return gui_helper_state.add_state(state_m, state_type)
+        rel_pos_to_state = None
+        if target_position:
+            from rafcon.gui.helpers.coordinates import graphical_editor2item
+            rel_pos_to_state = graphical_editor2item(state_m, target_position)
+        return gui_helper_state.add_state(state_m, state_type, rel_pos_to_state)
     else:
         logger.warning("Add new state is not performed because target state indication has to be a {1} not {0}"
-                    "".format(state_m.__class__.__name__, StateModel.__name__))
+                       "".format(state_m.__class__.__name__, StateModel.__name__))
 
     # TODO this code can not be reached -> recover again? -> e.g. feature select transition add's state to parent
     if isinstance(state_m, (TransitionModel, DataFlowModel)) or \
@@ -936,7 +1300,6 @@ def substitute_selected_state_and_use_choice_dialog():
         root_window = rafcon.gui.singleton.main_window_controller.get_root_window()
         x, y = root_window.get_position()
         _width, _height = root_window.get_size()
-        # print("x, y, width, height, bit_depth", x, y, width, height)
         pos = (x + _width/4, y + _height/6)
         StateSubstituteChooseLibraryDialog(rafcon.gui.singleton.library_manager_model, width=450, height=550, pos=pos,
                                            parent=root_window)
@@ -953,7 +1316,6 @@ def substitute_selected_state(state, as_template=False, keep_name=False):
     :param bool as_template: The flag determines if a handed the state of type LibraryState is insert as template
     :return:
     """
-    # print("substitute_selected_state", state, as_template)
     assert isinstance(state, State)
     from rafcon.core.states.barrier_concurrency_state import DeciderState
     if isinstance(state, DeciderState):
@@ -982,10 +1344,8 @@ def substitute_selected_library_state_with_template(keep_name=True):
     selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and isinstance(selected_state_m, LibraryStateModel):
-        # print("start substitute library state with template")
         # TODO optimize this to not generate one more library state and model
         lib_state = copy.deepcopy(selected_state_m.state)
-        # lib_state_m = copy.deepcopy(selected_states[0].state)
         substitute_selected_state(lib_state, as_template=True, keep_name=keep_name)
         # TODO think about to use as return value the inserted state
         return True
@@ -1004,7 +1364,7 @@ def group_selected_states_and_scoped_variables():
     selected_states = list(selection.states)
     selected_scoped_vars = list(selection.scoped_variables)
     selected_state_m = selection.get_selected_state()
-    if len(selected_states) > 0 and isinstance(selected_state_m.parent, StateModel) or len(selected_scoped_vars):
+    if len(selected_states) > 0 and isinstance(selected_state_m.parent, StateModel) or selected_scoped_vars:
         # check if all elements have the same parent or leave it to the parent
         parent_list = []
         for state_m in selected_states:
@@ -1034,6 +1394,31 @@ def ungroup_selected_state():
             return
         selection.remove(selected_state_m)
         return gui_helper_state.ungroup_state(selected_state_m)
+
+
+def change_background_color(state_model):
+    from rafcon.gui.utils.dialog import get_root_window
+    dialog = Gtk.ColorSelectionDialog('Change Background Color', parent=get_root_window())
+    default_button_response = -7
+    dialog.add_button('Set to Default', default_button_response)
+    response = dialog.run()
+    changed = False
+    if response == -5:
+        current_color = dialog.get_color_selection().get_current_color()
+        state_model.set_meta_data_editor('background_color', (current_color.red_float, current_color.green_float, current_color.blue_float))
+        changed = True
+    elif response == default_button_response:
+        state_model.set_meta_data_editor('background_color', False)
+        changed = True
+    dialog.destroy()
+    if changed:
+        state_model.meta_signal.emit(MetaSignalMsg('change_background_color_action', 'all', True))
+        from rafcon.gui.singleton import main_window_controller
+        from rafcon.gui.singleton import state_machine_manager_model
+        state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
+        graphical_editor_ctrl = state_machines_editor_ctrl.get_controller(state_machine_manager_model.selected_state_machine_id)
+        graphical_editor_ctrl.update_item(state_model)
+        graphical_editor_ctrl.view.editor.unselect_all()
 
 
 def get_root_state_file_path(sm_file_system_path):

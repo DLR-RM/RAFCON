@@ -23,9 +23,9 @@ import os
 
 def open_folder_cmd_line(query, default_path=None):
     """Queries the user for a path to open
-    
+
     :param str query: Query that asks the user for a specific folder path to be opened
-    :param str default_path: Path to use if the user doesn't specify a path 
+    :param str default_path: Path to use if the user doesn't specify a path
     :return: Input path from the user or `default_path` if nothing is specified or None if path does not exist
     :rtype: str
     """
@@ -90,13 +90,11 @@ def save_folder_cmd_line(query, default_name=None, default_path=None):
         return None
     return user_input
 
-save_folder_func = save_folder_cmd_line
 
+def show_notice(notice, custom_buttons=None):
+    """Shows a notice on the console that has to be acknowledged
 
-def show_notice(notice):
-    """Shows a notice on the console that has to be acknowledged 
-    
-    :param str notice: Notice to show to the user 
+    :param str notice: Notice to show to the user
     """
     input(notice)
 

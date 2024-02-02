@@ -17,8 +17,6 @@
 """
 
 from weakref import ref
-from future.utils import string_types
-from builtins import str
 import os
 import re
 import math
@@ -35,11 +33,14 @@ from rafcon.utils.filesystem import read_file, write_file
 from rafcon.utils import storage_utils
 from rafcon.utils import log
 from rafcon.utils.timer import measure_time
+from rafcon.utils.vividict import Vividict
 
-from rafcon.core.custom_exceptions import LibraryNotFoundException
+from rafcon.core.custom_exceptions import LibraryNotFoundException, LibraryNotFoundSkipException
 from rafcon.core.constants import DEFAULT_SCRIPT_PATH
 from rafcon.core.config import global_config
 from rafcon.core.state_machine import StateMachine
+from rafcon.core.state_elements.logical_port import Outcome
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 
 logger = log.get_logger(__name__)
 
@@ -48,7 +49,6 @@ LIBRARY_NOT_FOUND_DUMMY_STATE_NAME = "LIBRARY NOT FOUND DUMMY STATE"
 #: File names for various purposes
 FILE_NAME_META_DATA = 'meta_data.json'
 FILE_NAME_META_DATA_SM = 'sm_meta_data.json'
-FILE_NAME_META_DATA_OLD = 'gui_Gtk.json'
 FILE_NAME_CORE_DATA = 'core_data.json'
 FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
@@ -72,7 +72,7 @@ def remove_obsolete_folders(states, path):
 
     This function removes all folders in the file system folder `path` that do not belong to the states given by
     `states`.
-    
+
     :param list states: the states that should reside in this very folder
     :param str path: the file system path to be checked for valid folders
     """
@@ -135,14 +135,13 @@ def clean_path(base_path):
     """
     This function cleans a file system path in terms of removing all not allowed characters of each path element.
     A path element is an element of a path between the path separator of the operating system.
-    
+
     :param base_path: the path to be cleaned
     :return: the clean path
     """
     path_elements = base_path.split(os.path.sep)
     reduced_path_elements = [clean_path_element(elem, max_length=255) for elem in path_elements]
     if not all(path_elements[i] == elem for i, elem in enumerate(reduced_path_elements)):
-        # logger.info("State machine storage path is reduced")
         base_path = os.path.sep.join(reduced_path_elements)
     return base_path
 
@@ -174,16 +173,12 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 
-        old_update_time = state_machine.last_update
-        state_machine.last_update = storage_utils.get_current_time_string()
         state_machine_dict = state_machine.to_dict()
         storage_utils.write_dict_to_json(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE))
 
         # set the file_system_path of the state machine
         if not as_copy:
             state_machine.file_system_path = copy.copy(base_path)
-        else:
-            state_machine.last_update = old_update_time
 
         # add root state recursively
         remove_obsolete_folders([root_state], base_path)
@@ -306,36 +301,13 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     if 'used_rafcon_version' in state_machine_dict:
         previously_used_rafcon_version = StrictVersion(state_machine_dict['used_rafcon_version']).version
         active_rafcon_version = StrictVersion(rafcon.__version__).version
-
-        rafcon_newer_than_sm_version = "You are trying to load a state machine that was stored with an older " \
-                                       "version of RAFCON ({0}) than the one you are using ({1}).".format(
-                                        state_machine_dict['used_rafcon_version'], rafcon.__version__)
         rafcon_older_than_sm_version = "You are trying to load a state machine that was stored with an newer " \
                                        "version of RAFCON ({0}) than the one you are using ({1}).".format(
-                                        state_machine_dict['used_rafcon_version'], rafcon.__version__)
+            state_machine_dict['used_rafcon_version'], rafcon.__version__)
         note_about_possible_incompatibility = "The state machine will be loaded with no guarantee of success."
-
-        if active_rafcon_version[0] > previously_used_rafcon_version[0]:
-            # this is the default case
-            # for a list of breaking changes please see: doc/breaking_changes.rst
-            # logger.warning(rafcon_newer_than_sm_version)
-            # logger.warning(note_about_possible_incompatibility)
-            pass
-        if active_rafcon_version[0] == previously_used_rafcon_version[0]:
-            if active_rafcon_version[1] > previously_used_rafcon_version[1]:
-                # this is the default case
-                # for a list of breaking changes please see: doc/breaking_changes.rst
-                # logger.info(rafcon_newer_than_sm_version)
-                # logger.info(note_about_possible_incompatibility)
-                pass
-            elif active_rafcon_version[1] == previously_used_rafcon_version[1]:
-                # Major and minor version of RAFCON and the state machine match
-                # It should be safe to load the state machine, as the patch level does not change the format
-                pass
-            else:
-                logger.warning(rafcon_older_than_sm_version)
-                logger.warning(note_about_possible_incompatibility)
-        else:
+        if active_rafcon_version[0] < previously_used_rafcon_version[0] or \
+                (active_rafcon_version[0] == previously_used_rafcon_version[0] and
+                 active_rafcon_version[1] < previously_used_rafcon_version[1]):
             logger.warning(rafcon_older_than_sm_version)
             logger.warning(note_about_possible_incompatibility)
 
@@ -357,6 +329,7 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     dirty_states = []
     state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path,
                                                       dirty_states=dirty_states)
+    reconnect_data_flow(state_machine)
     if state_machine.root_state is None:
         return  # a corresponding exception has been handled with a proper error log in load_state_recursively
     if len(dirty_states) > 0:
@@ -370,17 +343,69 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
         number_of_states, base_path, hierarchy_level))
     logger.debug("Loaded state machine ({1}) has {0} transitions.".format(
         state_machine.root_state.get_number_of_transitions(), base_path))
+    logger.debug("Loaded state machine ({1}) has {0} data flows.".format(
+        state_machine.root_state.get_number_of_data_flows(), base_path))
 
     return state_machine
 
 
-def load_state_from_path(state_path):
-    """Loads a state from a given path
+def reconnect_data_flow(state_machine):
+    queue = [state_machine.root_state]
+    while len(queue) > 0:
+        state = queue.pop(0)
+        if hasattr(state, 'is_dummy') and state.is_dummy:
+            same_level_states = [state.parent]
+            for same_level_state in state.parent.states.values():
+                if same_level_state.state_id != state.state_id:
+                    same_level_states.append(same_level_state)
+            for same_level_state in same_level_states:
+                for data_flow in state.parent.data_flows.values():
+                    data_type = int
+                    default_value = None
+                    if data_flow.from_state == state.state_id and data_flow.to_state == same_level_state.state_id:
+                        if data_flow.to_key in same_level_state.input_data_ports:
+                            data_type = same_level_state.input_data_ports[data_flow.to_key].data_type
+                            default_value = same_level_state.input_data_ports[data_flow.to_key].default_value
+                        elif data_flow.to_key in same_level_state.output_data_ports:
+                            data_type = same_level_state.output_data_ports[data_flow.to_key].data_type
+                            default_value = same_level_state.output_data_ports[data_flow.to_key].default_value
+                        elif data_flow.to_key in same_level_state.scoped_variables:
+                            data_type = same_level_state.scoped_variables[data_flow.to_key].data_type
+                            default_value = same_level_state.scoped_variables[data_flow.to_key].default_value
+                        else:
+                            logger.warning("The data flow type could not be found. It is set to 'int'.")
+                        state.output_data_ports[data_flow.from_key] = OutputDataPort('output_' + str(len(state.output_data_ports)),
+                                                                                     data_type,
+                                                                                     default_value,
+                                                                                     data_flow.from_key,
+                                                                                     state)
+                    elif data_flow.from_state == same_level_state.state_id and data_flow.to_state == state.state_id:
+                        if data_flow.from_key in same_level_state.input_data_ports:
+                            data_type = same_level_state.input_data_ports[data_flow.from_key].data_type
+                            default_value = same_level_state.input_data_ports[data_flow.from_key].default_value
+                        elif data_flow.from_key in same_level_state.output_data_ports:
+                            data_type = same_level_state.output_data_ports[data_flow.from_key].data_type
+                            default_value = same_level_state.output_data_ports[data_flow.from_key].default_value
+                        elif data_flow.from_key in same_level_state.scoped_variables:
+                            data_type = same_level_state.scoped_variables[data_flow.from_key].data_type
+                            default_value = same_level_state.scoped_variables[data_flow.from_key].default_value
+                        else:
+                            logger.warning("The data flow type could not be found. It is set to 'int'.")
+                        state.input_data_ports[data_flow.to_key] = InputDataPort('input_' + str(len(state.input_data_ports)),
+                                                                                 data_type,
+                                                                                 default_value,
+                                                                                 data_flow.to_key,
+                                                                                 state)
+        elif hasattr(state, 'states'):
+            queue.extend(state.states.values())
 
-    :param state_path: The path of the state on the file system.
-    :return: the loaded state
-    """
-    return load_state_recursively(parent=None, state_path=state_path)
+
+def get_core_data_path(state_path):
+    return os.path.join(state_path, FILE_NAME_CORE_DATA)
+
+
+def get_meta_data_path(state_path):
+    return os.path.join(state_path, FILE_NAME_META_DATA)
 
 
 def load_state_recursively(parent, state_path=None, dirty_states=[]):
@@ -396,14 +421,12 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     from rafcon.core.states.execution_state import ExecutionState
     from rafcon.core.states.container_state import ContainerState
     from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.singleton import library_manager
 
-    path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA)
+    path_core_data = get_core_data_path(state_path)
+    path_meta_data = get_meta_data_path(state_path)
 
     logger.debug("Load state recursively: {0}".format(str(state_path)))
-
-    # TODO: Should be removed with next minor release
-    if not os.path.exists(path_core_data):
-        path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA_OLD)
 
     try:
         state_info = load_data_file(path_core_data)
@@ -411,17 +434,37 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         logger.exception("Error while loading state data: {0}".format(e))
         return
     except LibraryNotFoundException as e:
+        if global_config.get_config_value("RAISE_ERROR_ON_MISSING_LIBRARY_STATES", False) or not library_manager.show_dialog:
+            raise
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(e))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
+        missing_library_meta_data = None
+        if os.path.exists(path_meta_data):
+            missing_library_meta_data = Vividict(storage_utils.load_objects_from_json(path_meta_data))
         state_id = state_info["state_id"]
-        dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
+        outcomes = {outcome['outcome_id']: Outcome(outcome['outcome_id'], outcome['name']) for outcome in state_info["outcomes"].values()}
+        dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME,
+                                     state_id=state_id,
+                                     outcomes=outcomes,
+                                     is_dummy=True,
+                                     missing_library_meta_data=missing_library_meta_data)
+        library_name = state_info['library_name']
+        path_parts = os.path.join(state_info['library_path'], library_name).split(os.sep)
+        dummy_state.description = 'The Missing Library Path: %s\nThe Missing Library Name: %s\n\n' % (state_info['library_path'], library_name)
+        from rafcon.core.singleton import library_manager
+        if path_parts[0] in library_manager.library_root_paths:
+            dummy_state.description += 'The Missing Library OS Path: %s' % os.path.join(library_manager.library_root_paths[path_parts[0]], *path_parts[1:])
+        else:
+            dummy_state.description += 'The missing library was located in the missing library root "%s"' % path_parts[0]
         # set parent of dummy state
         if isinstance(parent, ContainerState):
             parent.add_state(dummy_state, storage_load=True)
         else:
             dummy_state.parent = parent
         return dummy_state
+    except LibraryNotFoundSkipException:
+        return None
 
     # Transitions and data flows are not added when loading a state, as also states are not added.
     # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
@@ -442,17 +485,7 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     # read script file if state is an ExecutionState
     if isinstance(state, ExecutionState):
         script_text = read_file(state_path, state.script.filename)
-        if not global_config.get_config_value("SCRIPT_COMPILE_ON_FILESYSTEM_LOAD", True):
-            state.script.set_script_without_compilation(script_text)
-        else:
-            try:
-                state.script.script = script_text
-            except ImportError as e:
-                logger.info("The script of the state '{}' (id {}) uses a module that is not available: {}".format(
-                            state.name, state.state_id, str(e)))
-            except Exception as e:
-                logger.warning("The script of the state '{}' (id {}) contains a {}: {}".format(
-                               state.name, state.state_id, e.__class__.__name__, str(e)))
+        state.script.set_script_without_compilation(script_text)
 
     # load semantic data
     try:
@@ -461,8 +494,6 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     except Exception as e:
         # semantic data file does not have to be there
         pass
-
-    one_of_my_child_states_not_found = False
 
     # load child states
     for p in os.listdir(state_path):
@@ -475,24 +506,21 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
             child_state = load_state_recursively(state, child_state_path, dirty_states)
             if not child_state:
                 return None
-            if child_state.name is LIBRARY_NOT_FOUND_DUMMY_STATE_NAME:
-                one_of_my_child_states_not_found = True
 
-    if one_of_my_child_states_not_found:
-        # omit adding transitions and data flows in this case
-        pass
-    else:
-        # Now we can add transitions and data flows, as all child states were added
-        if isinstance(state_info, tuple):
-            # safe version
-            # state.transitions = transitions
-            # state.data_flows = data_flows
+    # Now we can add transitions and data flows, as all child states were added
+    if isinstance(state_info, tuple):
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
+        if safe_init:
+            # this will trigger all validity checks the state machine
+            state.transitions = transitions
+        else:
             state._transitions = transitions
-            for _, transition in state.transitions.items():
-                transition._parent = ref(state)
             state._data_flows = data_flows
-            for _, data_flow in state.data_flows.items():
-                data_flow._parent = ref(state)
+        for _, transition in state.transitions.items():
+            transition._parent = ref(state)
+        state._data_flows = data_flows
+        for _, data_flow in state.data_flows.items():
+            data_flow._parent = ref(state)
 
     state.file_system_path = state_path
 
@@ -518,7 +546,7 @@ def limit_text_max_length(text, max_length, separator='_'):
     """
     Limits the length of a string. The returned string will be the first `max_length/2` characters of the input string
     plus a separator plus the last `max_length/2` characters of the input string.
-    
+
     :param text: the text to be limited
     :param max_length: the maximum length of the output string
     :param separator: the separator between the first "max_length"/2 characters of the input string and
@@ -526,7 +554,7 @@ def limit_text_max_length(text, max_length, separator='_'):
     :return: the shortened input string
     """
     if max_length is not None:
-        if isinstance(text, string_types) and len(text) > max_length:
+        if isinstance(text, str) and len(text) > max_length:
             max_length = int(max_length)
             half_length = float(max_length - 1) / 2
             return text[:int(math.ceil(half_length))] + separator + text[-int(math.floor(half_length)):]
@@ -576,7 +604,6 @@ def get_storage_id_for_state(state):
         max_length = global_config.get_config_value('MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH')
 
         max_length_of_state_name_in_folder_name = 255 - len(ID_NAME_DELIMITER + state.state_id)
-        # TODO: should we allow "None" in config file?
         if max_length is None or max_length == "None" or max_length > max_length_of_state_name_in_folder_name:
             if max_length_of_state_name_in_folder_name < len(state.name):
                 logger.info("The storage folder name is forced to be maximal 255 characters in length.")
@@ -585,3 +612,37 @@ def get_storage_id_for_state(state):
         return limit_text_to_be_path_element(state.name, max_length) + ID_NAME_DELIMITER + state.state_id
     else:
         return state.state_id
+
+
+def find_library_dependencies_via_grep(library_root_path, library_path=None, library_name=None):
+    """ Find the dependencies of a library via grep
+
+    :param str library_root_path: the library root path
+    :param str library_path: the library path
+    :param str library_name: the library name
+
+    :rtype list(str)
+    :return: library dependency paths
+    """
+
+    library_dependency_paths = []
+    command_library_path = 'grep -r -l -E \'"library_path": "%s"|"library_path": "%s/(.*)"\' --include \\*.json %s' % (library_path, library_path, library_root_path)
+    command_library_name = 'grep -r -l \'"library_name": "%s"\' --include \\*.json %s' % (library_name, library_root_path)
+    if library_path is None and library_name is None:
+        return library_dependency_paths
+    elif library_path is None and library_name is not None:
+        final_findings = set(os.popen(command_library_name).read().splitlines())
+    elif library_path is not None and library_name is None:
+        final_findings = set(os.popen(command_library_path).read().splitlines())
+    else:
+        path_findings = set(os.popen(command_library_path).read().splitlines())
+        name_findings = set(os.popen(command_library_name).read().splitlines())
+        final_findings = path_findings.intersection(name_findings)
+    for library_dependency_path in final_findings:
+        parent = library_dependency_path
+        while True:
+            parent = os.path.dirname(parent)
+            if os.path.exists(os.path.join(parent, 'statemachine.json')):
+                break
+        library_dependency_paths.append(parent)
+    return set(library_dependency_paths)

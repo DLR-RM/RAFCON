@@ -18,8 +18,7 @@
 """
 
 from weakref import ref
-from future.utils import string_types
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
@@ -44,8 +43,6 @@ class Transition(StateElement):
     :ivar int Transition.to_outcome: the outcome of the target state
     :ivar rafcon.core.states.container_state.ContainerState StateElement.parent: reference to the parent state
     """
-
-    yaml_tag = u'!Transition'
 
     _transition_id = None
     _from_state = None
@@ -133,7 +130,7 @@ class Transition(StateElement):
         :raises exceptions.ValueError: If parameters have wrong types or the new transition is not valid
         """
         if not (from_state is None and from_outcome is None):
-            if not isinstance(from_state, string_types):
+            if not isinstance(from_state, str):
                 raise ValueError("Invalid transition origin port: from_state must be a string")
             if not isinstance(from_outcome, int):
                 raise ValueError("Invalid transition origin port: from_outcome must be of type int")
@@ -159,7 +156,7 @@ class Transition(StateElement):
         :raises exceptions.ValueError: If parameters have wrong types or the new transition is not valid
         """
         if not (to_state is None and (to_outcome is not int and to_outcome is not None)):
-            if not isinstance(to_state, string_types):
+            if not isinstance(to_state, str):
                 raise ValueError("Invalid transition target port: to_state must be a string")
             if not isinstance(to_outcome, int) and to_outcome is not None:
                 raise ValueError("Invalid transition target port: to_outcome must be of type int or None (if to_state "
@@ -168,6 +165,8 @@ class Transition(StateElement):
         old_to_state = self.to_state
         old_to_outcome = self.to_outcome
         self._to_state = to_state
+        if hasattr(self.parent, "states") and isinstance(self.parent.states, dict) and to_state in self.parent.states:
+            to_outcome = None
         self._to_outcome = to_outcome
 
         valid, message = self._check_validity()
@@ -185,9 +184,8 @@ class Transition(StateElement):
 
     @from_state.setter
     @lock_state_machine
-    # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
-        if from_state is not None and not isinstance(from_state, string_types):
+        if from_state is not None and not isinstance(from_state, str):
             raise ValueError("from_state must be a string")
 
         self._change_property_with_validity_check('_from_state', from_state)
@@ -219,7 +217,7 @@ class Transition(StateElement):
     @lock_state_machine
     @Observable.observed
     def to_state(self, to_state):
-        if to_state is not None and not isinstance(to_state, string_types):
+        if to_state is not None and not isinstance(to_state, str):
             raise ValueError("to_state must be a string")
 
         self._change_property_with_validity_check('_to_state', to_state)

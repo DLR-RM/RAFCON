@@ -19,7 +19,8 @@
 
 """
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.state_machine import StateMachine
 
@@ -27,6 +28,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class StateMachineManager(Observable):
     """A class to organize all main components of a state machine
 
@@ -48,8 +50,7 @@ class StateMachineManager(Observable):
                 self.add_state_machine(state_machine)
 
     def delete_all_state_machines(self):
-        sm_ids = [sm_id for sm_id in self.state_machines]
-        for sm_id in sm_ids:
+        for sm_id in list(self.state_machines.keys()):
             if not (sm_id == self.active_state_machine_id):
                 self.remove_state_machine(sm_id)
 
@@ -77,11 +78,6 @@ class StateMachineManager(Observable):
             if sm.marked_dirty:
                 return True
         return False
-
-    def reset_dirty_flags(self):
-        """Set all marked_dirty flags of the state machine to false."""
-        for sm_id, sm in self.state_machines.items():
-            sm.marked_dirty = False
 
     def is_state_machine_open(self, file_system_path):
         for loaded_sm in self._state_machines.values():
@@ -112,7 +108,6 @@ class StateMachineManager(Observable):
 
         :param state_machine_id: the id of the state machine to be removed
         """
-        import rafcon.core.singleton as core_singletons
         removed_state_machine = None
         if state_machine_id in self._state_machines:
             logger.debug("Remove state machine with id {0}".format(state_machine_id))
@@ -125,11 +120,32 @@ class StateMachineManager(Observable):
         removed_state_machine.destroy_execution_histories()
         return removed_state_machine
 
+    def remove_state_machine_by_path(self, state_machine_path):
+        """ Remove an open state machine by path
+
+        :param str state_machine_path: the state machine path
+        """
+
+        state_machine_ids = []
+        for state_machine_id, state_machine in self._state_machines.items():
+            if state_machine.file_system_path == state_machine_path:
+                state_machine_ids.append(state_machine_id)
+        for state_machine_id in state_machine_ids:
+            self.remove_state_machine(state_machine_id)
+
     def get_active_state_machine(self):
         """Return a reference to the active state-machine
         """
         if self._active_state_machine_id in self._state_machines:
             return self._state_machines[self._active_state_machine_id]
+        else:
+            return None
+
+    def get_state_machine(self, state_machine_id):
+        """Return a reference to the state machine with the given id if it exists
+        """
+        if state_machine_id in self._state_machines.keys():
+            return self._state_machines[state_machine_id]
         else:
             return None
 

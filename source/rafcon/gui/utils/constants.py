@@ -19,6 +19,7 @@ from collections import OrderedDict
 from gi.repository import Gdk
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
+from rafcon.gui.design_config import global_design_config
 
 
 def get_glade_path(glade_file):
@@ -27,7 +28,7 @@ def get_glade_path(glade_file):
     return path.join(mvc_dir, "glade", glade_file)
 
 
-INTERFACE_FONT = "Source Sans Pro"
+INTERFACE_FONT = global_design_config.get_config_value("PRIMARY_FONT", "Source Sans Pro")
 ICON_FONT_FONTAWESOME = "FontAwesome5Free"
 ICON_FONT_RAFCON = "RAFCON"
 FONTS = [INTERFACE_FONT, ICON_FONT_FONTAWESOME, ICON_FONT_RAFCON]
@@ -35,6 +36,7 @@ FONTS = [INTERFACE_FONT, ICON_FONT_FONTAWESOME, ICON_FONT_RAFCON]
 FONT_SIZE_SMALL = "9"
 FONT_SIZE_NORMAL = "10"
 FONT_SIZE_BIG = "13"
+FONT_SIZE_HUGE = "17"
 
 LETTER_SPACING_NONE = "0"
 LETTER_SPACING_05PT = "512"
@@ -124,19 +126,24 @@ BUTTON_REFR = "&#xf021;"
 BUTTON_BAKE = "&#xf187;"
 BUTTON_CLOSE = "&#xf00d;"
 BUTTON_QUIT = "&#xf057;"
+BUTTON_CHANGE_BACKGROUND_COLOR = "&#xf53f;"
 BUTTON_CUT = "&#xf0c4;"
 BUTTON_COPY = "&#xf0c5;"
 BUTTON_PASTE = "&#xf0ea;"
 BUTTON_ADD = "&#xf067;"
 BUTTON_GROUP = "&#xf247;"
 BUTTON_UNGR = "&#xf248;"
+BUTTON_RENAME = "&#xf304;"
 BUTTON_DEL = "&#xf1f8;"
+BUTTON_RELOCATE = "&#xf07b;"
 BUTTON_UNDO = "&#xf0e2;"
 BUTTON_REDO = "&#xf01e;"
 BUTTON_VIEW = "&#xf06e;"
 BUTTON_START = "&#xf04b;"
 BUTTON_START_FROM_SELECTED_STATE = "&#xf2f5;"
 BUTTON_RUN_TO_SELECTED_STATE = "&#xf2f6;"
+BUTTON_RUN_SELECTED_STATE = "&#xf192;"
+BUTTON_ONLY_RUN_SELECTED_STATE = "&#xf5d2;"
 BUTTON_PAUSE = "&#xf04c;"
 BUTTON_STOP = "&#xf04d;"
 BUTTON_STEPM = "&#xf54b;"
@@ -150,6 +157,7 @@ BUTTON_RIGHTA = "&#xf0da;"
 BUTTON_UPA = "&#xf0d8;"
 BUTTON_DOWNA = "&#xf0d7;"
 BUTTON_UNDOCK = "&#xf24d;"
+BUTTON_SHOW_SEARCH_BAR = "&#xf002;"
 SIGN_LIB = "&#xf02d;"
 SIGN_ARROW = "&#xf0b2;"
 ICON_SOURCE = "&#xf121;"
@@ -165,6 +173,7 @@ ICON_EHIST = "&#xf1b3;"
 ICON_NET = "&#xf0ec;"
 ICON_STICKY = "&#xf08d;"
 ICON_ERASE = "&#xf12d;"
+ICON_FIND_USAGES = "&#xf46d;"
 
 ICON_STATE_EXECUTION = "&#xe904;"
 ICON_STATE_HIERARCHY = "&#xe905;"

@@ -22,28 +22,33 @@ import shutil
 import copy
 import warnings
 from collections import OrderedDict
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core import interface
 from rafcon.core.storage import storage
-from rafcon.core.custom_exceptions import LibraryNotFoundException
+from rafcon.core.custom_exceptions import LibraryNotFoundException, LibraryNotFoundSkipException
 import rafcon.core.config as config
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
+SKIP = 10
+SKIP_ALL = 11
 
+
+@Singleton
 class LibraryManager(Observable):
     """This class manages all libraries
 
-    Libraries are essentially just (reusable) state machines. A set of state machines from path library_root_path 
+    Libraries are essentially just (reusable) state machines. A set of state machines from path library_root_path
     are mounted at point/name library_root_key in the library_manager.
     With library_path and library_name the respective library state machine is found in the library manager.
     Hereby a library_root_key has to be the first element of the library_path.
-    The library_root_paths are handed in the config.yaml in the LIBRARY_PATHS dictionary as pairs of library_root_key 
+    The library_root_paths are handed in the config.yaml in the LIBRARY_PATHS dictionary as pairs of library_root_key
     and library_root_path.
     The library_root_path can be relative paths and could include environment variables.
-    A library is pointed on by the file system path library_os_path which again partial consists of 
+    A library is pointed on by the file system path library_os_path which again partial consists of
     library_root_path + library_path (partly) + library_name.
     :ivar _libraries: a dictionary to hold  all libraries
     """
@@ -58,10 +63,34 @@ class LibraryManager(Observable):
         # a list to hold all library states that were skipped by the user during the replacement procedure
         self._skipped_states = []
         self._skipped_library_roots = []
-
-        # loaded libraries
         self._loaded_libraries = {}
-        self._libraries_instances = {}
+        self._open_group_of_state_machines = False
+        self._skip_all_broken_libraries = False
+        self._show_dialog = True
+
+    @property
+    def show_dialog(self):
+        return self._show_dialog
+
+    @show_dialog.setter
+    def show_dialog(self, value):
+        self._show_dialog = value
+
+    @property
+    def open_group_of_state_machines(self):
+        return self._open_group_of_state_machines
+
+    @open_group_of_state_machines.setter
+    def open_group_of_state_machines(self, value):
+        self._open_group_of_state_machines = value
+
+    @property
+    def skip_all_broken_libraries(self):
+        return self._skip_all_broken_libraries
+
+    @skip_all_broken_libraries.setter
+    def skip_all_broken_libraries(self, value):
+        self._skip_all_broken_libraries = value
 
     def prepare_destruction(self):
         self.clean_loaded_libraries()
@@ -166,7 +195,7 @@ class LibraryManager(Observable):
         :param target_dict: the target dictionary to store all loaded libraries to
         """
         for library_name in os.listdir(library_path):
-            library_folder_path, library_name = self.check_clean_path_of_library(library_path, library_name)
+            _, library_name = self.check_clean_path_of_library(library_path, library_name)
             full_library_path = os.path.join(library_path, library_name)
             if os.path.isdir(full_library_path) and library_name[0] != '.':
                 if os.path.exists(os.path.join(full_library_path, storage.STATEMACHINE_FILE)) \
@@ -210,11 +239,11 @@ class LibraryManager(Observable):
     def get_os_path_to_library(self, library_path, library_name, allow_user_interaction=True):
         """Find library_os_path of library
 
-        This function retrieves the file system library_os_path of a library specified by a library_path and a 
-        library_name. In case the library does not exist any more at its original location, the user has to specify 
+        This function retrieves the file system library_os_path of a library specified by a library_path and a
+        library_name. In case the library does not exist any more at its original location, the user has to specify
         an alternative location.
 
-        :param str library_path: The library_path of the library, that must be relative and within a library_root_path 
+        :param str library_path: The library_path of the library, that must be relative and within a library_root_path
                              given in the config.yaml by LIBRARY_PATHS
         :param str library_name: The name of the library
         :param bool allow_user_interaction: Whether the user may be asked to specify library location
@@ -259,19 +288,25 @@ class LibraryManager(Observable):
 
         library_os_path = self._get_library_os_path_from_library_dict_tree(library_path, library_name)
         while library_os_path is None:  # until the library is found or the user aborts
-
             regularly_found = False
             new_library_os_path = None
-            if allow_user_interaction:
+            if allow_user_interaction and self.show_dialog:
                 notice = "Cannot find library '{0}' in library_path '{1}' in any of the library root paths. " \
                          "Please check your library root paths configuration in config.yaml " \
                          "LIBRARY_PATHS and environment variable RAFCON_LIBRARY_PATH. " \
                          "If your library_path is correct and the library was moved, please " \
                          "select the new root/library_os_path folder of the library which should be situated within a "\
                          "loaded library_root_path. If not, please abort.".format(library_name, library_path)
-                interface.show_notice_func(notice)
-                new_library_os_path = interface.open_folder_func("Select root folder for library name '{0}'"
-                                                                 "".format(original_path_and_name))
+                custom_buttons = (('Skip', SKIP), ('Skip All', SKIP_ALL)) if self.open_group_of_state_machines else None
+                response = SKIP if self.skip_all_broken_libraries else interface.show_notice_func(notice, custom_buttons)
+                if response == SKIP:
+                    raise LibraryNotFoundSkipException("Library '{0}' not found in sub-folder {1}".format(library_name, library_path))
+                elif response == SKIP_ALL:
+                    self.skip_all_broken_libraries = True
+                    raise LibraryNotFoundSkipException("Library '{0}' not found in sub-folder {1}".format(library_name, library_path))
+                else:
+                    new_library_os_path = interface.open_folder_func("Select root folder for library name '{0}'"
+                                                                     "".format(original_path_and_name))
             if new_library_os_path is None:
                 # User clicked cancel => cancel library search
                 # If the library root path is existent (e.g. "generic") and only the specific library state is not (
@@ -322,16 +357,11 @@ class LibraryManager(Observable):
 
     def _get_library_root_key_for_os_path(self, path):
         """Return library root key if path is within library root paths"""
-        path = os.path.realpath(path)
-        library_root_key = None
+        path = os.path.abspath(path)
         for library_root_key, library_root_path in self._library_root_paths.items():
-            rel_path = os.path.relpath(path, library_root_path)
-            if rel_path.startswith('..'):
-                library_root_key = None
-                continue
-            else:
-                break
-        return library_root_key
+            if path.startswith(library_root_path):
+                return library_root_key
+        return None
 
     def is_os_path_within_library_root_paths(self, path):
         return True if self._get_library_root_key_for_os_path(path) is not None else False
@@ -343,14 +373,14 @@ class LibraryManager(Observable):
     def get_library_path_and_name_for_os_path(self, path):
         """Generate valid library_path and library_name
 
-        The method checks if the given os path is in the list of loaded library root paths and use respective 
+        The method checks if the given os path is in the list of loaded library root paths and use respective
         library root key/mounting point to concatenate the respective library_path and separate respective library_name.
 
         :param str path: A library os path a library is situated in.
         :return: library path library name
         :rtype: str, str
         """
-        path = os.path.realpath(path)
+        path = os.path.abspath(path)
         library_path = None
         library_name = None
         library_root_key = self._get_library_root_key_for_os_path(path)
@@ -359,7 +389,7 @@ class LibraryManager(Observable):
             path_elements_without_library_root = path[len(library_root_path)+1:].split(os.sep)
             library_name = path_elements_without_library_root[-1]
             sub_library_path = ''
-            if len(path_elements_without_library_root[:-1]):
+            if path_elements_without_library_root[:-1]:
                 sub_library_path = os.sep + os.sep.join(path_elements_without_library_root[:-1])
             library_path = library_root_key + sub_library_path
         return library_path, library_name
@@ -379,16 +409,11 @@ class LibraryManager(Observable):
         :return:
         """
 
-        # originally libraries were called like this; DO NOT DELETE; interesting for performance tests
-        # state_machine = storage.load_state_machine_from_path(lib_os_path)
-        # return state_machine.version, state_machine.root_state
-
         # TODO observe changes on file system and update data
         if lib_os_path in self._loaded_libraries:
             # this list can also be taken to open library state machines TODO -> implement it -> because faster
             state_machine = self._loaded_libraries[lib_os_path]
-            # logger.info("Take copy of {0}".format(lib_os_path))
-            # as long as the a library state root state is never edited so the state first has to be copied here
+            # as long as the library state root state is never edited so the state first has to be copied here
             state_copy = copy.deepcopy(state_machine.root_state)
             return state_machine.version, state_copy
         else:

@@ -1,4 +1,3 @@
-from builtins import object
 import os
 import pytest
 from tests import utils as testing_utils

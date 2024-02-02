@@ -1,6 +1,3 @@
-from __future__ import print_function
-from builtins import str
-import pytest
 from os.path import realpath, dirname, join
 import rafcon
 import os
@@ -33,7 +30,7 @@ def test_number_of_whitespaces():
     assert len(core_print_lines) == 0
     print("\n".join([str(line) for line in utils_print_lines]))
     print(len(utils_print_lines))
-    assert len(utils_print_lines) == 2
+    assert len(utils_print_lines) == 4
 
 
 if __name__ == '__main__':

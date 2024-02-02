@@ -18,23 +18,23 @@
 
 """
 
-from builtins import str
 import traceback
 import sys
 import os
 from copy import copy, deepcopy
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.states.state import State
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.script import Script
 from rafcon.core.states.state import StateExecutionStatus
-from rafcon.core.execution.execution_history import CallType
+from rafcon.core.execution.execution_history_items import CallType
 from rafcon.core.config import global_config
 
-from rafcon.utils import log
+from rafcon.utils import log, plugins
+
 logger = log.get_logger(__name__)
 
 
@@ -43,8 +43,6 @@ class ExecutionState(State):
 
     This kind of state does not have any child states.
     """
-
-    yaml_tag = u'!ExecutionState'
     
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None, path=None, filename=None, check_path=True, safe_init=True):
@@ -65,17 +63,15 @@ class ExecutionState(State):
         return str(self) == str(other) and self.script_text == other.script_text
 
     def __copy__(self):
-        input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.items()}
-        output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.items()}
+        input_data_ports = {key: copy(self._input_data_ports[key]) for key in self._input_data_ports.keys()}
+        output_data_ports = {key: copy(self._output_data_ports[key]) for key in self._output_data_ports.keys()}
         income = copy(self._income)
-        outcomes = {elem_id: copy(elem) for elem_id, elem in list(self._outcomes.items())}
+        outcomes = {elem_id: copy(self._outcomes[elem_id]) for elem_id in self._outcomes.keys()}
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, None,
                                safe_init=False)
-        try:
-            # use setter here! the acutal value, which is changed is self._script.script!
-            state.script_text = deepcopy(self.script_text)
-        except:
-            pass  # Tolerate script compilation errors
+
+        state.script_text = deepcopy(self.script_text)
+
         state._description = deepcopy(self.description)
         state._semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
@@ -108,10 +104,11 @@ class ExecutionState(State):
         return state
 
     def _execute(self, execute_inputs, execute_outputs, backward_execution=False):
-        """Calls the custom execute function of the script.py of the state
+        """Calls the custom execute function of the script.py of the state"""
 
-        """
+        plugins.run_hook('pre_script')
         outcome_item = self._script.execute(self, execute_inputs, execute_outputs, backward_execution)
+        plugins.run_hook('post_script')
 
         # in the case of backward execution the outcome is not relevant
         if backward_execution:
@@ -138,7 +135,7 @@ class ExecutionState(State):
 
         :return:
         """
-        if self.is_root_state:
+        if self.is_root_state and self.execution_history is not None:
             self.execution_history.push_call_history_item(self, CallType.EXECUTE, None, self.input_data)
 
         logger.debug("Running {0}{1}".format(self, " (backwards)" if self.backward_execution else ""))
@@ -159,7 +156,7 @@ class ExecutionState(State):
                 self.check_output_data_type()
                 result = self.finalize(outcome)
 
-            if self.is_root_state:
+            if self.is_root_state and self.execution_history is not None:
                 self.execution_history.push_return_history_item(self, CallType.EXECUTE, None, self.output_data)
             return result
         except Exception as e:

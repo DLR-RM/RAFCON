@@ -17,16 +17,14 @@
    :synopsis: A module holds the controller to edit the state source script text.
 
 """
-
-from future import standard_library
-standard_library.install_aliases()
 import os
-import subprocess
 from gi.repository import Gtk
-import shlex
 import contextlib
 from pylint import lint
-from pylint.reporters.json import JSONReporter
+try:
+    from pylint.reporters.json import JSONReporter
+except ModuleNotFoundError:
+    from pylint.reporters.json_reporter import JSONReporter
 from io import StringIO
 from astroid import MANAGER
 from pkg_resources import resource_filename
@@ -221,4 +219,4 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
     @staticmethod
     def format_error_string(message):
-        return "Line {}: {} ({})".format(message["line"], message["message"], message["symbol"]), message["line"]
+        return "Line {}: {} ({})".format(message.line, message.msg, message.symbol), message.line

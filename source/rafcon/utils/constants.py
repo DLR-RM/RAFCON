@@ -19,7 +19,6 @@
 
 """
 
-from builtins import str
 import tempfile
 import getpass
 import os
@@ -37,9 +36,10 @@ if not (bool(os.stat(TEMP_PATH).st_mode & stat.S_IRUSR) and bool(os.stat(TEMP_PA
 
 try:
     os.makedirs(RAFCON_TEMP_PATH_BASE)
-except OSError:  # Raised when directory is already existing, thus can be ignored
+except OSError:
     pass
 
 RAFCON_TEMP_PATH_STORAGE = tempfile.mkdtemp(dir=RAFCON_TEMP_PATH_BASE)
 
-BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS = ['state_execution_status']
+BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS = ['state_execution_status',
+                                                   '_add_new_execution_history', 'clear_execution_histories']

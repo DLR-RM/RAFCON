@@ -11,15 +11,12 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
 import os
 import time
 import threading
 
 from gi.repository import Gtk
-from gtkmvc3.model_mt import ModelMT
+from rafcon.design_patterns.mvc.model import ModelMT
 
 from rafcon.core.storage import storage
 import rafcon.core.singleton as core_singletons
@@ -32,7 +29,7 @@ from rafcon.gui.utils.constants import RAFCON_INSTANCE_LOCK_FILE_PATH
 from rafcon.utils.vividict import Vividict
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
-from rafcon.utils.storage_utils import get_time_string_for_float
+
 logger = log.get_logger(__name__)
 
 FILE_NAME_AUTO_BACKUP = 'auto_backup.json'
@@ -98,13 +95,10 @@ def move_dirty_lock_file(dirty_lock_file, sm_path):
         os.rename(dirty_lock_file, os.path.join(sm_path, dirty_lock_file.split(os.sep)[-1]))
 
 
-def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=None, with_gui_wait=False):
+def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=None):
 
     if full_path_dirty_lock is None:
         full_path_dirty_lock = find_dirty_lock_file_for_state_machine_path(sm_path)
-    # logger.info("found lock file to recover " + str(full_path_dirty_lock))
-
-    # find last_save_file_system_path
     try:
         auto_backup_meta = storage.load_data_file(os.path.join(sm_path, FILE_NAME_AUTO_BACKUP))
     except ValueError:
@@ -151,7 +145,6 @@ def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=No
             if last_save_file_system_path is None:
                 del sm_m.auto_backup.meta['last_saved']
             else:
-                sm_m.auto_backup.meta['last_saved']['time'] = auto_backup_meta['last_saved']['time']
                 sm_m.auto_backup.meta['last_saved']['file_system_path'] = sm_m.state_machine.file_system_path
 
     # set dirty flag -> TODO think about to make it more reliable still not fully sure that the flag is right
@@ -214,7 +207,6 @@ def check_for_crashed_rafcon_instances():
                     if not os.path.isdir(full_path) and 'dirty_lock_' in elem:
                         with open(full_path) as f:
                             path = f.readline().replace('\n', '')
-                            # logger.info("{0} \n{1}".format(path, os.path.join(path, storage.STATEMACHINE_FILE)))
                             if os.path.isdir(path) and os.path.exists(os.path.join(path, storage.STATEMACHINE_FILE)):
                                 logger.debug("Found restorable state machine from crashed instance {0} in path: {1}"
                                              "".format(folder, path))
@@ -224,9 +216,6 @@ def check_for_crashed_rafcon_instances():
                                 logger.warning("dirty_lock file without consistent state machine path '{}'!"
                                                "".format(full_path))
                                 os.remove(full_path)
-
-    # if restorable_sm:
-    #     print("Restorable state machines: \n" + '\n'.join([elem[0] for elem in restorable_sm if elem[0] is not None]))
 
     if restorable_sm and any([path is not None for path, pid, lock_file, m_time, full_path_dirty_lock in restorable_sm]):
         message_string = "State machines of not correctly closed RAFCON instances have been found.\n\n" \
@@ -257,7 +246,7 @@ def check_for_crashed_rafcon_instances():
                                            callback=on_message_dialog_response_signal, callback_args=[restorable_sm],
                                            table_header=table_header, table_data=table_data, toggled_callback=on_toggled,
                                            message_type=Gtk.MessageType.QUESTION,
-                                           parent=gui_singletons.main_window_controller.view.get_top_widget(),
+                                           parent=gui_singletons.main_window_controller.view.get_parent_widget(),
                                            width=800, standalone=False)
         dialog.activate()
 
@@ -297,7 +286,6 @@ class AutoBackupModel(ModelMT):
             self.AUTO_RECOVERY_LOCK_ENABLED = True
         self.lock_file_lock = threading.Lock()
         self.lock_file = None
-        self.last_lock_file_name = None
 
         # general auto-backup variable
         self.timed_temp_storage_enabled = global_gui_config.get_config_value('AUTO_BACKUP_ENABLED')
@@ -312,9 +300,7 @@ class AutoBackupModel(ModelMT):
         self.tmp_timed_storage_thread = None
         self.meta = Vividict()
         if state_machine_model.state_machine.file_system_path is not None:
-            # logger.info("store meta data of {0} to {1}".format(self, meta_data_path))
             # data used for restore tabs -> (having the information to load state machines without loading them)
-            self.meta['last_saved']['time'] = state_machine_model.state_machine.last_update
             self.meta['last_saved']['file_system_path'] = state_machine_model.state_machine.file_system_path
 
         logger.debug("The auto-backup for state-machine {2} is {0} and set to '{1}'"
@@ -361,14 +347,9 @@ class AutoBackupModel(ModelMT):
         sm = self.state_machine_model.state_machine
         if sm.marked_dirty and self.lock_file is None and self.AUTO_RECOVERY_LOCK_ENABLED:
             with self.lock_file_lock:
-                # logger.info('create lock {0} -> path {1}'.format(sm.state_machine_id,
-                #                                                  RAFCON_RUNTIME_BACKUP_PATH +
-                #                                                  '/dirty_lock_' + str(sm.state_machine_id)))
                 self.lock_file = open(RAFCON_RUNTIME_BACKUP_PATH + '/dirty_lock_' + str(sm.state_machine_id), 'a+')
                 self.lock_file.write(self._tmp_storage_path + '\n')
-                # TODO move this and the inverse functionality to one location (capsule)
                 self.lock_file.close()
-                self.last_lock_file_name = self.lock_file.name
 
     def clean_lock_file(self, final=False):
         if self.__destroyed:
@@ -377,7 +358,6 @@ class AutoBackupModel(ModelMT):
             with self.lock_file_lock:
                 if final:
                     self.__destroyed = True
-                # logger.info('clean lock {}'.format(self.state_machine_model.state_machine.state_machine_id))
                 if not self.lock_file.closed:
                     self.lock_file.close()
                 if os.path.exists(self.lock_file.name):
@@ -399,15 +379,12 @@ class AutoBackupModel(ModelMT):
 
     def update_last_backup_meta_data(self):
         """Update the auto backup meta data with internal recovery information"""
-        self.meta['last_backup']['time'] = get_time_string_for_float(self.last_backup_time)
         self.meta['last_backup']['file_system_path'] = self._tmp_storage_path
         self.meta['last_backup']['marked_dirty'] = self.state_machine_model.state_machine.marked_dirty
 
     def update_last_sm_origin_meta_data(self):
         """Update the auto backup meta data with information of the state machine origin"""
-        # TODO finally maybe remove this when all backup features are integrated into one backup-structure
         # data also used e.g. to backup tabs
-        self.meta['last_saved']['time'] = self.state_machine_model.state_machine.last_update
         self.meta['last_saved']['file_system_path'] = self.state_machine_model.state_machine.file_system_path
 
     @ModelMT.observe("state_machine", after=True)
@@ -419,7 +396,6 @@ class AutoBackupModel(ModelMT):
                 self.clean_lock_file()
             self.marked_dirty = self.state_machine_model.state_machine.marked_dirty
         if info['method_name'] == 'file_system_path' and not self.__perform_storage:
-            # logger.info("update last time stored")
             self.update_last_sm_origin_meta_data()
             self.write_backup_meta_data()
 
@@ -434,38 +410,27 @@ class AutoBackupModel(ModelMT):
         """
         current_time = time.time()
         with self.timer_request_lock:
-            # sm = self.state_machine_model.state_machine
-            # TODO check for self._timer_request_time is None to avoid and reset auto-backup in case and fix it better
             if self._timer_request_time is None:
-                # logger.warning("timer_request is None")
                 return
             if self.timed_temp_storage_interval < current_time - self._timer_request_time:
-                # logger.info("{0} Perform timed auto-backup of state-machine {1}.".format(time.time(),
-                #                                                                          sm.state_machine_id))
                 self.check_for_auto_backup(force=True)
             else:
                 duration_to_wait = self.timed_temp_storage_interval - (current_time - self._timer_request_time)
                 hard_limit_duration_to_wait = self.force_temp_storage_interval - (current_time - self.last_backup_time)
                 hard_limit_active = hard_limit_duration_to_wait < duration_to_wait
-                # logger.info('{2} restart_thread {0} time to go {1}, hard limit {3}'.format(sm.state_machine_id,
-                #                                                                            duration_to_wait, time.time(),
-                #                                                                            hard_limit_active))
                 if hard_limit_active:
                     self.set_timed_thread(hard_limit_duration_to_wait, self.check_for_auto_backup, True)
                 else:
                     self.set_timed_thread(duration_to_wait, self._check_for_dyn_timed_auto_backup)
 
     def set_timed_thread(self, duration, func, *args):
-        # logger.info("start timed thread duration: {0} func: {1}".format(duration, func))
         self.tmp_timed_storage_thread = threading.Timer(duration, func, args)
         self.tmp_timed_storage_thread.daemon = True
         self.tmp_timed_storage_thread.start()
 
     def perform_temp_storage(self):
         if self.__perform_storage:
-            # logger.debug("Do not perform storage, one is running!")
             return
-        # logger.debug('acquire lock')
         with self.state_machine_model.storage_lock, self.state_machine_model.state_machine.get_modification_lock():
             with self.timer_request_lock:
                 self.__perform_storage = True
@@ -501,7 +466,6 @@ class AutoBackupModel(ModelMT):
         current_time = time.time()
 
         if not self.only_fix_interval and not self.marked_dirty:
-            # logger.info("adjust last_backup_time " + str(sm.state_machine_id))
             self.last_backup_time = current_time         # used as 'last-modification-not-backup-ed' time
 
         is_not_timed_or_reached_time_to_force = \
@@ -511,18 +475,15 @@ class AutoBackupModel(ModelMT):
             if not self.only_fix_interval or self.marked_dirty:
                 thread = threading.Thread(target=self.perform_temp_storage)
                 thread.start()
-                # self.last_backup_time = current_time  # used as 'last-backup' time
             if self.only_fix_interval:
                 self.set_timed_thread(self.force_temp_storage_interval, self.check_for_auto_backup)
         else:
             if not self.only_fix_interval:
                 with self.timer_request_lock:
                     if self._timer_request_time is None:
-                        # logger.info('{0} start_thread {1}'.format(current_time, sm.state_machine_id))
                         self._timer_request_time = current_time
                         self.set_timed_thread(self.timed_temp_storage_interval, self._check_for_dyn_timed_auto_backup)
                     else:
-                        # logger.info('{0} update_thread {1}'.format(current_time, sm.state_machine_id))
                         self._timer_request_time = current_time
             else:
                 self.set_timed_thread(self.force_temp_storage_interval, self.check_for_auto_backup)

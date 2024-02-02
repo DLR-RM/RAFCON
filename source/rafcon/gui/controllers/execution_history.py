@@ -18,12 +18,10 @@
 .. module:: execution_history
    :synopsis: A module holding a controller for the ExecutionHistoryView holding information about the
      execution history in a execution tree
+   :noindex:
 
 """
 
-from builtins import range
-from builtins import next
-from builtins import str
 from os import path
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -33,10 +31,10 @@ from threading import RLock
 import rafcon
 
 from rafcon.core.state_machine_manager import StateMachineManager
-from rafcon.core.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem, HistoryItem
+from rafcon.core.execution.execution_history_items import HistoryItem, StateMachineStartItem, ScopedDataItem, CallItem, \
+    ConcurrencyItem, CallType
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-from rafcon.core.execution.execution_history import CallType, StateMachineStartItem
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
@@ -58,7 +56,6 @@ class ExecutionHistoryTreeController(ExtendedController):
         tree.
     :param rafcon.core.state_machine_manager.StateMachineManager state_machine_manager:
     """
-    LABEL_NAME_STORAGE_ID = 0
     HISTORY_ITEM_STORAGE_ID = 1
     TOOL_TIP_STORAGE_ID = 2
     TOOL_TIP_TEXT = "Right click for more details\n" \
@@ -95,6 +92,10 @@ class ExecutionHistoryTreeController(ExtendedController):
 
     def open_selected_history_separately(self, widget, event=None):
         model, row = self.history_tree.get_selection().get_selected()
+        if not row:
+            logger.info("Now execution run is selected. "
+                        "Please select an execution run that should be opened externally")
+            return
         item_path = self.history_tree_store.get_path(row)
         selected_history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
 
@@ -120,19 +121,21 @@ class ExecutionHistoryTreeController(ExtendedController):
                            "The external execution history viewer can only open finished executions.")
             return
 
-        if execution_history.execution_history_storage and execution_history.execution_history_storage.filename:
+        if execution_history.consumer_manager.file_system_consumer_exists and \
+                execution_history.consumer_manager.get_file_system_consumer_file_name():
             from rafcon.gui.utils.shell_execution import execute_command_in_process
             gui_path = path.dirname(path.dirname(path.realpath(__file__)))
             source_path = path.dirname(path.dirname(gui_path))
             viewer_path = path.join(gui_path, "execution_log_viewer.py")
-            # TODO run in fully separate process but from here to use the option for selection synchronization via dict
-            cmd = "{path} {filename} {run_id}" \
-                  "".format(path=viewer_path, filename=execution_history.execution_history_storage.filename,
+            import sys
+            cmd = "{python_version} {path} '{filename}' '{run_id}'" \
+                  "".format(python_version="python3", path=viewer_path,
+                            filename=execution_history.consumer_manager.get_file_system_consumer_file_name(),
                             run_id=run_id)
             execute_command_in_process(cmd, shell=True, cwd=source_path, logger=logger)
         else:
-            logger.info("Set EXECUTION_LOG_ENABLE to True in your config to activate execution file logging and to use "
-                        "the external execution history viewer.")
+            logger.info("Set FILE_SYSTEM_EXECUTION_HISTORY_ENABLE to True in your config in order to "
+                        "activate execution file logging and to use the external execution history viewer.")
 
     def append_string_to_menu(self, popup_menu, menu_item_string):
         final_string = menu_item_string
@@ -149,12 +152,10 @@ class ExecutionHistoryTreeController(ExtendedController):
         element.
         """
         if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
-
             (model, row) = self.history_tree.get_selection().get_selected()
             if row is not None:
                 histroy_item_path = self.history_tree_store.get_path(row)
                 histroy_item_iter = self.history_tree_store.get_iter(histroy_item_path)
-                # logger.info(history_item.state_reference)
                 # TODO generalize double-click folding and unfolding -> also used in states tree of state machine
                 if histroy_item_path is not None and self.history_tree_store.iter_n_children(histroy_item_iter):
                     if self.history_tree.row_expanded(histroy_item_path):
@@ -241,12 +242,6 @@ class ExecutionHistoryTreeController(ExtendedController):
                 popup_menu.popup(None, None, None, None, event.get_button()[1], time)
 
             return True
-
-    # TODO: implement! To do this efficiently a mechanism is needed that does not regenerate the whole tree view
-    # TODO: the appropriate state machine would have to be observed as well
-    # @ExtendedController.observe("execution_history_container", after=True)
-    # def model_changed(self, model, prop_name, info):
-    #     #self.update()
 
     def get_history_item_for_tree_iter(self, child_tree_iter):
         """Hands history item for tree iter and compensate if tree item is a dummy item
@@ -423,7 +418,6 @@ class ExecutionHistoryTreeController(ExtendedController):
         if not history_item.state_reference:
             logger.error("This must never happen! Current history_item is {}".format(history_item))
             return None
-        content = None
 
         if global_gui_config.get_config_value("SHOW_PATH_NAMES_IN_EXECUTION_HISTORY", False):
             content = (history_item.state_reference.name + " - " +

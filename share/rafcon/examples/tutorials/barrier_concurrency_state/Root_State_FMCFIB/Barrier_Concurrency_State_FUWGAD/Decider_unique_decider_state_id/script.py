@@ -1,5 +1,7 @@
-from builtins import str
-from exceptions import ZeroDivisionError
+import sys
+
+if sys.version_info[0] < 3:
+    from exceptions import ZeroDivisionError
 
 def execute(self, inputs, outputs, gvm):
     self.logger.debug("Executing decider state")

@@ -1,7 +1,7 @@
 import pytest
 from tests import utils as testing_utils
 
-from gtkmvc3.observer import Observer
+from rafcon.design_patterns.observer.observer import Observer
 
 
 class SignalCounter(Observer):
@@ -13,7 +13,8 @@ class SignalCounter(Observer):
         self._signal_name = signal_name
         self._signal_counter = 0
 
-    @Observer.observe("*_signal", signal=True)
+    @Observer.observe("selection_changed_signal", signal=True)
+    @Observer.observe("focus_signal", signal=True)
     def increment_signal_counter(self, selection_m, signal_name, signal_msg):
         """ Increments counter if specified signal is emitted """
         if signal_name == self._signal_name:
@@ -308,6 +309,7 @@ def test_focus():
     assert len(selection.states) == 0
     assert focus_signal_observer.count == 3
     assert selection_signal_observer.count == 2
+
 
 if __name__ == '__main__':
     test_add_set_remove_clear()
