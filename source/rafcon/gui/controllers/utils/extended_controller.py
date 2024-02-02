@@ -181,6 +181,18 @@ class ExtendedController(Controller):
         The method remove all controllers, which calls the destroy method of the child controllers. Then,
         all registered models are relieved and and the widget hand by the initial view argument is destroyed.
         """
+
+        # The following six lines are a somewhat hacky solution for preventing a segmentation fault when
+        # changing the state type via the state editor menu. The problem is that it tries to destruct the 
+        # StateOverviewController again when exiting scope the controller. For a in-depth fix, the 
+        # StateOverviewController class should probably be restructured/rewritten. 
+        if 'StateOverviewController' in str(type(self)):
+            try:
+                from rafcon.gui.controllers.state_editor.overview import on_change
+                return
+            except:
+                pass
+
         self.disconnect_all_signals()
         controller_names = list(self.__child_controllers)
         for controller_name in controller_names:

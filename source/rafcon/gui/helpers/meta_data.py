@@ -287,7 +287,7 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
             elif key in ['scoped_variables', 'input_data_ports', 'output_data_ports']:
                 rel_positions = [model.get_meta_data_editor()['inner_rel_pos']]
             elif key in ['transitions', 'data_flows']:
-                if key is "data_flows":
+                if key == "data_flows":
                     # take into account the meta data positions of opengl if there is some (always in opengl format)
                     rel_positions = mirror_waypoints(deepcopy(model.get_meta_data_editor()))['waypoints']
                 else:

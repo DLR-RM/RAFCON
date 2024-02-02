@@ -679,7 +679,7 @@ class MenuBarController(ExtendedController):
     def on_start_from_selected_state_activate(self, widget, data=None):
         logger.debug("Run from selected state ...")
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
-        if len(selection.states) is not 1:
+        if len(selection.states) != 1:
             logger.error("Exactly one state must be selected!")
         else:
             self.state_machine_execution_engine.start(self.model.selected_state_machine_id,
@@ -688,7 +688,7 @@ class MenuBarController(ExtendedController):
     def on_run_selected_state_activate(self, widget, data=None):
         logger.debug("Run selected state ...")
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
-        if len(selection.states) is not 1:
+        if len(selection.states) != 1:
             logger.error("Exactly one state must be selected!")
         else:
             self.state_machine_execution_engine.run_selected_state(selection.get_selected_state().state.get_path(),
@@ -697,7 +697,7 @@ class MenuBarController(ExtendedController):
     def on_run_only_selected_state_activate(self, widget, data=None):
         logger.debug("Only run selected state ...")
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
-        if len(selection.states) is not 1:
+        if len(selection.states) != 1:
             logger.error("Exactly one state must be selected!")
         else:
             self.state_machine_execution_engine.run_only_selected_state(
@@ -730,7 +730,7 @@ class MenuBarController(ExtendedController):
         logger.debug("Run to selected state ...")
 
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
-        if len(selection.states) is not 1:
+        if len(selection.states) != 1:
             logger.error("Exactly one state must be selected!")
         else:
             self.state_machine_execution_engine.run_to_selected_state(selection.get_selected_state().state.get_path(),

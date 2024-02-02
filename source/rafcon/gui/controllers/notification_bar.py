@@ -14,6 +14,7 @@ from gi.repository import Gtk
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.utils import log, log_helpers
+from rafcon.gui.config import global_gui_config
 logger = log.get_logger(__name__)
 
 
@@ -37,15 +38,16 @@ class NotificationBarController(ExtendedController):
         super(NotificationBarController, self).destroy()
 
     def print_message(self, message, log_level):
-        if self.view is None:
-            return
-        if not self._handle_log_level(log_level):
-            return
-        message_text = ": ".join(message.split(": ")[2:])  # remove time, log level and source
-        now = time.time() * 1000
-        if self.last_notification_timestamp is None or self.last_notification_timestamp + 100 < now:
-            self.view.show_notification(message_text, log_level)
-        self.last_notification_timestamp = now
+       if global_gui_config.get_config_value('LOGGING_SHOW_POPUP', True):
+            if self.view is None:
+                return
+            if not self._handle_log_level(log_level):
+                return
+            message_text = ": ".join(message.split(": ")[2:])  # remove time, log level and source
+            now = time.time() * 1000
+            if self.last_notification_timestamp is None or self.last_notification_timestamp + 100 < now:
+                self.view.show_notification(message_text, log_level)
+            self.last_notification_timestamp = now
 
     def _handle_log_level(self, log_level):
         minimum_low_level = self.model.config.get_config_value("NOTIFICATIONS_MINIMUM_LOG_LEVEL", 30)

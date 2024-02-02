@@ -140,17 +140,48 @@ def create_folder(query, default_name=None, default_path=None, current_folder=No
     # Add library roots to list of shortcut folders
     add_library_root_path_to_shortcut_folders_of_dialog(dialog)
 
-    response = dialog.run()
+    # Run until the desired folder is found (warn if files are deleted)
+    confirmed = 0
+    while not confirmed:
+        response = dialog.run()
 
-    if response != Gtk.ResponseType.OK:
-        dialog.destroy()
-        if default_path and default_name:
-            default = os.path.join(default_path, default_name)
-            if os.path.isdir(default):
-                return default
-        return None
+        # Exit without saving
+        if response != Gtk.ResponseType.OK:
+            dialog.destroy()
+            if default_path and default_name:
+                default = os.path.join(default_path, default_name)
+                if os.path.isdir(default):
+                    return default
+            return None
 
-    path = dialog.get_filename()
+        path = dialog.get_filename()
+
+        # Give a warning if the path already contains files
+        files_in_path = os.listdir(path)
+        if files_in_path:
+            path_list = path.split('/')
+            popup = Gtk.Dialog('Path confirmation', parent=dialog, flags=0, 
+                                buttons= (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                                Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+            text = 'Do you want to choose "{}" as a root folder?\n'\
+                   'The {} file(s)/folder(s) inside will be deleted!'\
+                   .format(path_list[-1], len(files_in_path))
+            label = Gtk.Label(label=text)
+            label.set_padding(xpad=20, ypad=15)
+            popup.vbox.pack_start(label, True, True, 0)
+            label.show()
+            popup.set_transient_for(dialog)
+            response = popup.run()
+            popup.destroy()
+
+            if not response == Gtk.ResponseType.ACCEPT:
+                path = '/'.join(path_list[:-1])
+                dialog.set_current_folder(path)
+            else:
+                confirmed = 1
+        else:
+            confirmed = 1
+
     dialog.destroy()
 
     if os.path.isdir(path):
