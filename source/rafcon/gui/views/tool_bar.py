@@ -51,3 +51,9 @@ class ToolBarView(View):
             create_label_widget_with_icon(
                 constants.BUTTON_BAKE, _("Bake State Machine"),
                 "Saves the currently selected state machine and all library folders it refers to"))
+
+        button_layout_state_machine = self['button_layout_state_machine']
+        button_layout_state_machine.set_label_widget(
+            create_label_widget_with_icon(
+                constants.BUTTON_LAYOUT, _("Auto Layout"),
+                "Automatically layouts the selected state machine."))

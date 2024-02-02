@@ -10,8 +10,6 @@ logger = log.get_logger(__name__)
 
 def create_mo_files():
     curdir = os.path.abspath(os.curdir)
-    while "setup.py" not in os.listdir(os.curdir):
-        os.chdir("..")
     i18n.create_mo_files(logger)
     os.chdir(curdir)
 

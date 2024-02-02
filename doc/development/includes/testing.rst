@@ -36,7 +36,7 @@ unstable"``.
     $ tox -e 2.7 -- -x -m "core"
     $ tox -- -s -k "test__destruct"
 
-Tox creates a virtualenv for each environment, based on the dependencies defined in ``setup.py`` and ``tox.ini``.
+Tox creates a virtualenv for each environment, based on the dependencies defined in ``pyproject.toml`` and ``tox.ini``.
 These are only generated on the first run of an environment. If the dependencies change, you need to tell tox to
 recreate the environments using the ``-r/--recreate`` option:
 

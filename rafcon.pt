@@ -27,7 +27,7 @@ DEPENDS.osl*        = python-gtkmvc3==1.0,
 
 ARCHS               = osl42-x86_64
 PYTHON_PATHS        = ${PKGROOT}/source
-ADDITIONAL_ENV.osl* = RAFCON_LIB_PATH=${PKGROOT}/share/rafcon/libraries,
+ADDITIONAL_ENV.osl* = RAFCON_LIB_PATH=${PKGROOT}/source/rafcon/share/rafcon/libraries,
                       RAFCON_CHECK_INSTALLATION=True,
                       PATH=${PKGROOT}/bin:$${PATH}
 

@@ -316,7 +316,7 @@ SOURCE\_EDITOR\_STYLE
     download different styles
     `here <https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes>`__.
     The scripts have to be downloaded to
-    ~/.local/share/gtksourceview-2.0/styles. "rafcon" is a style
+    <rafcon package directory>/share/gtksourceview-2.0/styles. "rafcon" is a style
     created to fit to the design of RAFCON.
 
 GAPHAS\_EDITOR\_AUTO\_FOCUS\_OF\_ROOT\_STATE

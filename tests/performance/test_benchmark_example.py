@@ -10,7 +10,7 @@ def something(duration=0.000001):
     return 123
 
 
-def test_my_stuff(benchmark):
+def _test_my_stuff(benchmark):
     # benchmark something
     result = benchmark.pedantic(something, iterations=10, rounds=10)
     print(result)

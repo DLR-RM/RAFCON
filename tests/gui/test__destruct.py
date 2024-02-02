@@ -1128,7 +1128,7 @@ def test_complex_model_and_core_destruct_with_gui(gui):
                 (rafcon.design_patterns.mvc.controller.Controller, True),
                 (searched_class, False),
                 ]
-    run_setup_gui_destruct(gui, elements, searched_class, run_complex_controller_construction, expected_warnings=4)
+    run_setup_gui_destruct(gui, elements, searched_class, run_complex_controller_construction)
 
 
 def run_setup_gui_destruct(gui, elements, searched_class, func,
