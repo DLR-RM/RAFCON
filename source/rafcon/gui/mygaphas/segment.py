@@ -19,7 +19,7 @@ from gaphas.segment import LineSegment, Segment
 from rafcon.gui.mygaphas.items.connection import ConnectionView, DataFlowView
 
 
-@Segment.when_type(ConnectionView)
+@Segment.register(ConnectionView)
 class TransitionSegment(LineSegment):
     """
     This class is used to redefine the behavior of transitions and how new waypoints may be added.
