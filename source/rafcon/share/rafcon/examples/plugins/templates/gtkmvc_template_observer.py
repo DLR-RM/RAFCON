@@ -1,5 +1,5 @@
 import rafcon.gui.singleton
-from rafcon.design_patterns.mvc_observer.observer import Observer
+from rafcon.design_patterns.observer.observer import Observer
 from rafcon.gui.utils.notification_overview import NotificationOverview
 
 from rafcon.utils import log
