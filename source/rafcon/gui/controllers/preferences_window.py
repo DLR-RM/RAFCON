@@ -592,10 +592,8 @@ class PreferencesWindowController(ExtendedController):
         :param title_text: Title text
         :param description: Description
         """
-        dialog = Gtk.Dialog(title_text, self.view["preferences_window"],
-                            flags=0, buttons=
-                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
-                             Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+        dialog = Gtk.Dialog(title_text, self.view["preferences_window"], flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT, Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
         label = Gtk.Label(label=description)
         label.set_padding(xpad=10, ypad=10)
         dialog.vbox.pack_start(label, True, True, 0)

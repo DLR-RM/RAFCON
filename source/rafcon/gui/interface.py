@@ -160,9 +160,8 @@ def create_folder(query, default_name=None, default_path=None, current_folder=No
         files_in_path = os.listdir(path)
         if files_in_path:
             path_list = path.split('/')
-            popup = Gtk.Dialog('Path confirmation', parent=dialog, flags=0, 
-                                buttons= (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
-                                Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+            popup = Gtk.Dialog('Path confirmation', parent=dialog, flags=0)
+            popup.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT, Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
             text = 'Do you want to choose "{}" as a root folder?\n'\
                    'The {} file(s)/folder(s) inside will be deleted!'\
                    .format(path_list[-1], len(files_in_path))
