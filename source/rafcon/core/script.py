@@ -18,6 +18,7 @@
 
 import os
 import importlib
+import _imp
 import yaml
 from rafcon.design_patterns.observer.observable import Observable
 
@@ -126,12 +127,13 @@ class Script(Observable, yaml.YAMLObject):
         :raises exceptions.IOError: if the compilation of the script module failed
         """
         try:
-            importlib.acquire_lock()
+            _imp.acquire_lock()
 
             code = compile(self.script, '%s (%s)' % (self.filename, self._script_id), 'exec')
             # load module
             module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
-            tmp_module = importlib.new_module(module_name)
+            module_spec = importlib.machinery.ModuleSpec(module_name, None)
+            tmp_module = importlib.util.module_from_spec(module_spec)
             exec(code, tmp_module.__dict__)
             # return the module
             self.compiled_module = tmp_module
@@ -139,7 +141,7 @@ class Script(Observable, yaml.YAMLObject):
             self.compiled_module = None
             raise
         finally:
-            importlib.release_lock()
+            _imp.release_lock()
 
     @property
     def parent(self):
