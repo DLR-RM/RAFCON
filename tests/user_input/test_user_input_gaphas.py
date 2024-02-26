@@ -53,7 +53,7 @@ def resize_state(sm_model, sm_notebook_page, graphical_editor_controller):
     main_w = rafcon.gui.singleton.main_window_controller.view.get_parent_widget()
     pos_main = main_w.get_position()
     rel_pos = sm_notebook_page.translate_coordinates(main_w, 0, 0)
-    abs_pos_se = (pos_main[0] + rel_pos[0] + se_x, pos_main[1] + rel_pos[1] + se_y)
+    abs_pos_se = (int(pos_main[0] + rel_pos[0] + se_x), int(pos_main[1] + rel_pos[1] + se_y))
 
     mouse.move(*abs_pos_se)
     mouse.press(*abs_pos_se)
