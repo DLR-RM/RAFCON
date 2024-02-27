@@ -1,10 +1,13 @@
 {
     "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
     "description": null, 
+    "income": {
+        "__jsonqualname__": "rafcon.core.state_elements.logical_port.Income"
+    }, 
     "input_data_ports": {
-        "35": {
+        "37": {
             "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
-            "data_port_id": 35, 
+            "data_port_id": 37, 
             "data_type": {
                 "__type__": "__builtin__.int"
             }, 
@@ -12,29 +15,24 @@
             "name": "bottles"
         }
     }, 
-    "name": "Count bottles", 
+    "name": "Sing", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
-            "name": "==0", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "done", 
             "outcome_id": 0
-        }, 
-        "1": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
-            "name": ">0", 
-            "outcome_id": 1
         }
     }, 
     "output_data_ports": {}, 
-    "state_id": "SFZGMH"
+    "state_id": "PXTKIH"
 }
