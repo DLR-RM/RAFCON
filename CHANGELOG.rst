@@ -7,6 +7,23 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Future Release
 """""""
 
+2.1.0
+""""""
+    - Features:
+        - Added option to disable popups in the config file
+        - Display warning when saving new state machine (and overwriting) in already existing folder
+
+    - Bug fixes:
+        - Fixing segmentation fault when changing state type in gui via state editor
+        - Fixing decider node is not preempted in concurrency state
+        - Fixed warnings and bugs in unit tests
+        - More minor bugfixes
+        
+    - Miscellaneous:
+        - Checked dependencies and deprecations for libraries
+        - Updated shebang versions to python3
+        - Removed some warnings resulting from old python conventions
+
 2.0.0
 """"""
     - Features:
@@ -17,21 +34,21 @@ Future Release
 1.3.0
 """""""
     - Features:
-        Add possibility to only release rafcon-core
+        - Add possibility to only release rafcon-core
 
 1.2.1
 """""""
     - Features:
-        Add __main__.py
+        - Add __main__.py
 
 1.2.0
 """""""
     - Features:
-        Support python 3.10
+        - Support python 3.10 
 
 1.1.1
 """""""
-- Bug Fixes:
+    - Bug Fixes:
     - Fix a few GUI bugs
 
 1.1.0
@@ -56,25 +73,24 @@ Future Release
 
 1.0.0
 """""""
+    - Features:
+        - Not supporting Python 2 anymore
+        - Run this state
+        - Only run this state
+        - Add singleton pattern
+        - Add new hooks before and after running each state
+        - Add new memory profiling test to assert the memory leak during running sequential & concurrency state machines
+        - Update gaphas to 2.1.2
+        - Update libsass to the latest version of dart sass
+        - Replace gtkmvc3 with two separated mvc and observer patterns
+        - Run this state
 
-- Features:
-    - Not supporting Python 2 anymore
-    - Run this state
-    - Only run this state
-    - Add singleton pattern
-    - Add new hooks before and after running each state
-    - Add new memory profiling test to assert the memory leak during running sequential & concurrency state machines
-    - Update gaphas to 2.1.2
-    - Update libsass to the latest version of dart sass
-    - Replace gtkmvc3 with two separated mvc and observer patterns
-    - Run this state
+    - Bug Fixes:
+        - Fix GUI freezing during keeping undo/redo shortcuts
 
-- Bug Fixes:
-    - Fix GUI freezing during keeping undo/redo shortcuts
-
-- Miscellaneous:
-    - Remove last update field to improve versioning control
-    - Remove a big amount of the dead codes and comments
+    - Miscellaneous:
+        - Remove last update field to improve versioning control
+        - Remove a big amount of the dead codes and comments
 
 
 0.15.4
