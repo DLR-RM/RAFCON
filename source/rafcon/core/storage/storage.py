@@ -25,7 +25,7 @@ import glob
 import copy
 import yaml
 import warnings
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 import rafcon
 
@@ -298,15 +298,15 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
 
     state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
     if 'used_rafcon_version' in state_machine_dict:
-        previously_used_rafcon_version = StrictVersion(state_machine_dict['used_rafcon_version']).version
-        active_rafcon_version = StrictVersion(rafcon.__version__).version
+        previously_used_rafcon_version = Version(state_machine_dict['used_rafcon_version'])
+        active_rafcon_version = Version(rafcon.__version__)
         rafcon_older_than_sm_version = "You are trying to load a state machine that was stored with an newer " \
                                        "version of RAFCON ({0}) than the one you are using ({1}).".format(
             state_machine_dict['used_rafcon_version'], rafcon.__version__)
         note_about_possible_incompatibility = "The state machine will be loaded with no guarantee of success."
-        if active_rafcon_version[0] < previously_used_rafcon_version[0] or \
-                (active_rafcon_version[0] == previously_used_rafcon_version[0] and
-                 active_rafcon_version[1] < previously_used_rafcon_version[1]):
+        if active_rafcon_version.major < previously_used_rafcon_version.major or \
+                (active_rafcon_version.major == previously_used_rafcon_version.major and
+                 active_rafcon_version.minor < previously_used_rafcon_version.minor):
             logger.warning(rafcon_older_than_sm_version)
             logger.warning(note_about_possible_incompatibility)
 

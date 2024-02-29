@@ -75,7 +75,7 @@ class StateModel(AbstractStateModel):
 
         cause, changed_list = self.get_cause_and_affected_model_list(model)
 
-        if not (cause is None or cause is "income_change" or changed_list is None):
+        if not (cause is None or cause == "income_change" or changed_list is None):
             if overview.operation_started():
                 changed_list.notify_before(self.state, cause, (self.state,), info)
             else:

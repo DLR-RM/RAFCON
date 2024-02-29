@@ -69,6 +69,8 @@ def test_preemption_of_all_state_machines_at_once(gui):
                 raise RuntimeError("The state machine should finish in less then {0}".format(duration_waited))
         print("Run duration of execute_preemption_of_all_state_machines_at_once was: {0}".format(duration_waited))
         assert len([record for record in deprecations_warnings if record.category is log.RAFCONDeprecationWarning]) == 4
+        # The warning "The value of output port is 'None'. It has replaced with the default value." will be thrown twice
+        gui.expected_warnings = 2
 
 if __name__ == '__main__':
     # test_preemption_of_all_state_machines_at_once(None)

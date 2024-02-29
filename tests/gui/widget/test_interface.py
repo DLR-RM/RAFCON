@@ -118,6 +118,18 @@ def test_gui_create_folder(monkeypatch):
     # replaces get_filename by an expression that returns "/tmp"
     monkeypatch.setattr(Gtk.FileChooserDialog, 'get_filename', lambda _: RAFCON_TEMP_PATH_TEST_BASE)
 
+    class PatchedConfirmDialog(Gtk.Dialog):
+        """Subclass for Dialog (when asking to replace existing files in folder)
+
+        FileChooserDialog cannot be monkey-patched directly. It must first be replaced by a subclass, which is this one.
+        """
+        pass
+
+    # prepare Dialog for monkey-patching
+    monkeypatch.setattr(Gtk, "Dialog", PatchedConfirmDialog)
+    # replaces run by an expression that returns Gtk.ResponseType.ACCEPT
+    monkeypatch.setattr(Gtk.Dialog, 'run', lambda _: Gtk.ResponseType.ACCEPT)
+
     # Return user input
     assert gui_interface.create_folder("query") == RAFCON_TEMP_PATH_TEST_BASE
     # Return user input despite default path given

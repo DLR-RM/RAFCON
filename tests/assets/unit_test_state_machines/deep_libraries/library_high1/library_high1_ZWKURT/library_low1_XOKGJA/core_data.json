@@ -5,20 +5,20 @@
     }, 
     "library_name": "library_low1", 
     "library_path": "unit_test_state_machines/deep_libraries", 
-    "name": "library low1", 
+    "name": "library_low1", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "success", 
             "outcome_id": 0
         }

@@ -2,21 +2,24 @@
     "__jsonqualname__": "rafcon.core.states.hierarchy_state.HierarchyState", 
     "data_flows": {}, 
     "description": null, 
+    "income": {
+        "__jsonqualname__": "rafcon.core.state_elements.logical_port.Income"
+    }, 
     "input_data_ports": {}, 
     "name": "sm_with_deep_libraries", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "success", 
             "outcome_id": 0
         }
