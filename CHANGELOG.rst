@@ -6,6 +6,11 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 
 Future Release
 """""""
+2.1.1
+""""""
+    - Bug fixes:
+        - Updated deprecated dependency to jsonconversion
+        - Added new test state machine for backward compatibility testing
 
 2.1.0
 """"""
