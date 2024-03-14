@@ -810,11 +810,10 @@ class ContainerState(State):
         The method creates dictionaries for all 'internal' and 'external' (first dict-key) connections of the state.
         Both dictionaries contain sub dicts with 3 (external)/4 (internal) fields 'enclosed', 'ingoing', 'outgoing' and
         'self'.
-         - 'enclosed' means the handed state.states cover origin and target of those linkage
-         - 'ingoing' means the handed state is target of those linkage
-         - 'outgoing' means the handed state is origin of those linkage
-         - 'self' (corner case) single state that has linkage with it self and is thereby also origin and target at 
-           the same time
+        - 'enclosed' means the handed state.states cover origin and target of those linkage
+        - 'ingoing' means the handed state is target of those linkage
+        - 'outgoing' means the handed state is origin of those linkage
+        - 'self' (corner case) single state that has linkage with it self and is thereby also origin and target at the same time
         
         :param state_id: State taken into account.
         :rtype tuple
@@ -888,9 +887,9 @@ class ContainerState(State):
         
         The method creates dictionaries with connections for a set of states and scoped variables.
         Both dictionaries have 3 fields (as first dict-key), 'enclosed', 'ingoing' and 'outgoing'
-         - 'enclosed' means the given sets cover origin and target of those linkage
-         - 'ingoing' means the given sets is target of those linkage
-         - 'ingoing' means the given sets is origin of those linkage
+        - 'enclosed' means the given sets cover origin and target of those linkage
+        - 'ingoing' means the given sets is target of those linkage
+        - 'ingoing' means the given sets is origin of those linkage
         
         :param state_ids: List of states taken into account. 
         :param scoped_variables: List of scoped variables taken into account
