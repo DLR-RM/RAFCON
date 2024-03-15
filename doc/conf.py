@@ -130,8 +130,8 @@ modindex_common_prefix = ['rafcon.']
 suppress_warnings = ['ref.python']
 
 extlinks = {
-    'issue_ghe': ('https://rmc-github.robotic.dlr.de/common/rafcon/issues/%s', 'Issue #'),
-    'issue_gh': ('https://github.com/DLR-RM/RAFCON/issues/%s', 'Issue #')
+    'issue_ghe': ('https://rmc-github.robotic.dlr.de/common/rafcon/issues/%s', 'Issue #%s'),
+    'issue_gh': ('https://github.com/DLR-RM/RAFCON/issues/%s', 'Issue #%s')
 }
 
 # -- Options for HTML output ----------------------------------------------

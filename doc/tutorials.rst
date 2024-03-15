@@ -394,7 +394,7 @@ Decider:
 
     def execute(self, inputs, outputs, gvm):
         self.logger.debug("Executing decider state")
-        self.logger.debug("state-inputs: %s" % str(inputs))
+        self.logger.debug("state-inputs: {0}".format(str(inputs)))
         # to make decisions based on the outcome of the concurrent child states use:
         # "self.get_outcome_for_state_name(<name_of_state>) for accessing the outcome by specifying the name (not necessarily unique, first match is used) of the state
         # or self.get_outcome_for_state_id(<id_of_state>) for accessing the outcome by specifying the id (unique) of the state
@@ -414,8 +414,8 @@ Starting a minimal RAFCON core (RAFCON API)
 
 This tutorial will show how to set up a minimal RAFCON core and use RAFCON API functionality to run state machines. 
 The following script gives an overview of a basic setup. By saving it in a ``.py`` file, it can simply be executed afterwards.
-Note that the path to the ``config.yaml`` has to be set correctly. By default, it should be under the ``.config`` path, as specified below.
-Similarly, the ``path_to_state_machine`` must point to an already exisitng state machine. In the example below it will execute the "99 Bottles of Beer".
+Note that the path to the ``config.yaml`` has to be set correctly. By default, it should be under the ``.config`` directory, as specified below.
+Similarly, the ``path_to_state_machine`` must point to an already existing state machine. In the example below it will execute the "99 Bottles of Beer".
 
 
 .. code:: python
