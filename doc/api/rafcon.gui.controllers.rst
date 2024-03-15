@@ -85,14 +85,6 @@ MenuBarController (in menu_bar)
     :undoc-members:
     :show-inheritance:
 
-NetworkController (in network_connections)
-------------------------------------------
-
-.. automodule:: rafcon.gui.controllers.network_connections
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 ModificationHistoryTreeController (in modification_history)
 -----------------------------------------------------------
 

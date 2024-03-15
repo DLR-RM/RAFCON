@@ -141,9 +141,6 @@ GUI Configuration
 
 .. _gui_config_example:
 
-Example
-"""""""
-
 A typical config file looks like this:
 
 .. code:: yaml

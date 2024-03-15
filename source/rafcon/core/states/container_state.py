@@ -286,7 +286,8 @@ class ContainerState(State):
         :param state: The sub-state to find a transition for
         :return: The transition for the target state.
         :raises exceptions.RuntimeError: if the execution engine is stopped
-                                        (this will be caught at the end of the run method)
+                (this will be caught at the end of the run method)
+
         """
         transition = None
         while not transition:
@@ -748,9 +749,9 @@ class ContainerState(State):
         :param state_id: the id of the state to remove
         :param recursive: a flag to indicate a recursive disassembling of all substates
         :param force: a flag to indicate forcefully deletion of all states (important for the decider state in the
-                barrier concurrency state)
+            barrier concurrency state)
         :param destroy: a flag which indicates if the state should not only be disconnected from the state but also
-                destroyed, including all its state elements
+            destroyed, including all its state elements
         :raises exceptions.AttributeError: if state.state_id does not
         """
         if state_id not in self.states:
@@ -816,7 +817,7 @@ class ContainerState(State):
         - 'self' (corner case) single state that has linkage with it self and is thereby also origin and target at the same time
         
         :param state_id: State taken into account.
-        :rtype tuple
+        :rtype: tuple
         :return: related_transitions, related_data_flows
         """
         related_transitions = {'external': {'ingoing': [], 'outgoing': [], 'self': []},
@@ -893,7 +894,7 @@ class ContainerState(State):
         
         :param state_ids: List of states taken into account. 
         :param scoped_variables: List of scoped variables taken into account
-        :rtype tuple
+        :rtype: tuple
         :return: related_transitions, related_data_flows
         """
         # find all related transitions
@@ -1073,7 +1074,7 @@ class ContainerState(State):
         """Sets the start state of a container state
 
         :param state: The state_id of a state or a direct reference ot he state (that was already added
-                    to the container) that will be the start state of this container state.
+            to the container) that will be the start state of this container state.
 
         """
         if state is None:
@@ -1289,7 +1290,7 @@ class ContainerState(State):
         """Remove an data ports whose from_key or to_key equals the passed data_port_id
 
         :param int data_port_id: the id of a data_port of which all data_flows should be removed, the id can be a input or
-                            output data port id
+            output data port id
 
         """
         # delete all data flows in parent related to data_port_id and self.state_id = external data flows
@@ -2156,7 +2157,7 @@ class ContainerState(State):
         :param dict data_flows: Dictionary data_flows[data_flow_id] of :class:`rafcon.core.data_flow.DataFlow`
         :raises exceptions.TypeError: if the data_flows parameter has the wrong type
         :raises exceptions.AttributeError: if the keys of the data_flows dictionary and the data_flow_ids of the
-                                            data flows in the dictionary do not match
+            data flows in the dictionary do not match
         """
         if not isinstance(data_flows, dict):
             raise TypeError("data_flows must be of type dict")

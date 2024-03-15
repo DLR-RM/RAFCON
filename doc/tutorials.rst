@@ -410,7 +410,7 @@ Decider:
 .. _tutorial_rafcon_core:
 
 Starting a minimal RAFCON core (RAFCON API)
----------------------------
+-------------------------------------------
 
 This tutorial will show how to set up a minimal RAFCON core and use RAFCON API functionality to run state machines. 
 The following script gives an overview of a basic setup. By saving it in a ``.py`` file, it can simply be executed afterwards.

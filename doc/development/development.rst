@@ -32,7 +32,7 @@ Running and writing tests
 
 
 Helper Function: Convert pixels to cairo units
--------------------------
+----------------------------------------------
 
 .. include:: includes/rendering_helpers.rst
 

@@ -61,7 +61,7 @@ def equal(t1, t2, digit=None):
     :param t1: First element to compare
     :param t2: Second element to compare
     :param int digit: Number of digits to compare
-    :rtype bool
+    :rtype: bool
     :return: True if equal and False if different
     """
 
@@ -89,7 +89,7 @@ def cal_dist_between_2_coord_frame_aligned_boxes(box1_pos, box1_size, box2_pos, 
     :param tuple box1_size: x and y size of box 1
     :param tuple box2_pos: x and y position of box 2
     :param tuple box2_size: x and y size of box 2
-    :return:
+    :return: distance
     """
     box1_x_min, box1_y_min = box1_pos
     box1_x_max, box1_y_max = (box1_pos[0] + box1_size[0], box1_pos[1] + box1_size[1])

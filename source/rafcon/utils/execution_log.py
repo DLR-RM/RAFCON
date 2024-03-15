@@ -20,6 +20,7 @@ logger = log.get_logger(__name__)
 
 def log_to_raw_structure(execution_history_items):
     """
+    Logging with raw structure.
     :param dict execution_history_items: history items, in the simplest case
     directly the opened shelve log file
     :return: 
@@ -302,7 +303,7 @@ def log_to_DataFrame(execution_history_items, data_in_columns=[], data_out_colum
     representation by default, as the different states have different data in-/out-port, scoped_data-
     ports and semantic_data defined. However, you can ask specific data-/scoped_data-ports and semantic
     data to be exported as table column, given they are primitive-valued, by including the port / key
-    names in the *_selected-parameters. These table-columns will obviously only be well-defined for
+    names in the {*}_selected-parameters. These table-columns will obviously only be well-defined for
     states having this kind of port-name-/semantic-key and otherwise will contain a None-like value,
     indicating missing data.
 
