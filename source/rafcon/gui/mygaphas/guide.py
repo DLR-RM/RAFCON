@@ -76,7 +76,7 @@ class GuidedStateMixin(GuideMixin):
         return states_v
 
 
-@InMotion.register(StateView)
+@InMotion.when_type(StateView)
 class GuidedStateInMotion(GuidedStateMixin, GuidedItemInMotion):
 
     def start_move(self, pos):
@@ -99,7 +99,7 @@ class GuidedStateInMotion(GuidedStateMixin, GuidedItemInMotion):
         self.item.moving = False
 
 
-@InMotion.register(NameView)
+@InMotion.when_type(NameView)
 class GuidedNameInMotion(GuidedItemInMotion):
     def move(self, pos):
         super(GuidedNameInMotion, self).move(pos)
@@ -109,7 +109,7 @@ class GuidedNameInMotion(GuidedItemInMotion):
             self.view.canvas.solver.request_resolve_constraint(constraint)
 
 
-@HandleInMotion.register(StateView)
+@HandleInMotion.when_type(StateView)
 class GuidedStateHandleInMotion(GuidedStateMixin, GuidedItemHandleInMotion):
     
     def glue(self, pos, distance=None):

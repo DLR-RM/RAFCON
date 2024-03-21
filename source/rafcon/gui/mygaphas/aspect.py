@@ -25,7 +25,7 @@ from rafcon.gui.mygaphas.items.ports import IncomeView, OutcomeView, InputPortVi
     ScopedVariablePortView
 
 
-@HandleInMotion.register(ConnectionView)
+@HandleInMotion.when_type(ConnectionView)
 class ConnectionHandleInMotion(ItemHandleInMotion):
     """
     Move a handle (role is applied to the handle).
@@ -74,7 +74,7 @@ class ConnectionHandleInMotion(ItemHandleInMotion):
         return None
 
 
-@HandleInMotion.register(TransitionView, TransitionPlaceholderView)
+@HandleInMotion.when_type(TransitionView, TransitionPlaceholderView)
 class TransitionHandleInMotion(ConnectionHandleInMotion):
 
     def _exclude_port(self, port):
@@ -83,7 +83,7 @@ class TransitionHandleInMotion(ConnectionHandleInMotion):
             return True
 
 
-@HandleInMotion.register(DataFlowView, DataFlowPlaceholderView)
+@HandleInMotion.when_type(DataFlowView, DataFlowPlaceholderView)
 class DataFlowHandleInMotion(ConnectionHandleInMotion):
 
     def _exclude_port(self, port):
@@ -119,7 +119,7 @@ class ElementHandleFinder(ItemHandleFinder):
         return None, None
 
 
-@HandleFinder.register(StateView)
+@HandleFinder.when_type(StateView)
 class StateHandleFinder(ElementHandleFinder):
     """Find handles in StateViews"""
     def get_handle_at_point(self, pos, distance=None):
@@ -138,13 +138,13 @@ class StateHandleFinder(ElementHandleFinder):
         return None, None
 
 
-@HandleFinder.register(NameView)
+@HandleFinder.when_type(NameView)
 class NameHandleFinder(ElementHandleFinder):
     """Find handles in NameViews"""
     pass
 
 
-@HandleFinder.register(ConnectionView)
+@HandleFinder.when_type(ConnectionView)
 class SegmentHandleFinder(ItemHandleFinder):
     """
     Find a handle on a line, create a new one if the mouse is located
@@ -185,7 +185,7 @@ class SegmentHandleFinder(ItemHandleFinder):
         return connection_v, handle
 
 
-@HandleSelection.register(ConnectionView)
+@HandleSelection.when_type(ConnectionView)
 class SegmentHandleSelection(ItemHandleSelection):
     """
     In addition to the default behaviour, merge segments if the handle is
