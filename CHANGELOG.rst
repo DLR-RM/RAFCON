@@ -4,6 +4,18 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
+2.1.2
+""""""
+    - Bug fixes:
+        - Fixed bug for logic connectors
+        - Added logo to about dialog
+
+    - Miscellaneous:
+        - Updated pdm.lock
+        - Added minimal rafcon core tutorial in docs
+        - Updated formatting and deprecation for docs
+        - Updated citation formatting
+
 2.1.1
 """"""
     - Bug fixes:
