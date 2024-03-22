@@ -6,7 +6,7 @@ dependencies:
   - pygobject==3.42.0
   - gtk3
   - python=3.9
-  - sphinx
+  - sphinx>=5.0
   - pip>=20.1
   - pip:
     - psutil==5.*
