@@ -12,14 +12,6 @@ Subpackages of ``rafcon.gui.views``
     rafcon.gui.views.state_editor
     rafcon.gui.views.utils
 
-GraphicalEditor (in graphical_editor)
--------------------------------------
-
-.. automodule:: rafcon.gui.views.graphical_editor
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 GraphicalEditor (in graphical_editor_gaphas)
 --------------------------------------------
 

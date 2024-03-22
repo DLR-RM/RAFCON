@@ -31,6 +31,12 @@ Running and writing tests
 .. include:: includes/testing.rst
 
 
+Helper Function: Convert pixels to cairo units
+----------------------------------------------
+
+.. include:: includes/rendering_helpers.rst
+
+
 Code of Conduct
 ---------------
 

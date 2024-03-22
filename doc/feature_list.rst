@@ -117,7 +117,7 @@ Misc Feat
     ==============================================   ==================================================================
     State Machine Versioning                         Via git
     Human Readable File Format                       json and yaml
-    Programmable in Python                           Python 2 (Python 3 in progress)
+    Programmable in Python                           Python 3
     Middleware Independent                           Tested with: ros, links and nodes, sensornet, and DDS
     Core and GUI Separated                           Core can run on micro-controller with slim Python setup
     Extensive Documentation                          Via Restructured Text (rst) and Sphinx

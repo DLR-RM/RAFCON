@@ -1,3 +1,5 @@
+This function can be used when developing with cairo:
+
 .. code-block:: python
 
     def pixel_to_cairo(self, pixel):

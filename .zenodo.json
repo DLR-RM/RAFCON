@@ -1,34 +1,36 @@
 {
-    "creators": [
-        {
-            "affiliation": "German Aerospace Center (DLR)",
-            "name": "Belder, Rico",
-            "orcid": "0000-0002-9733-4108"
-        },
-        {
-            "affiliation": "German Aerospace Center (DLR)",
-            "name": "Brunner, Sebastian Georg",
-            "orcid": "0000-0001-9359-3703"
-        },
-        {
-            "affiliation": "German Aerospace Center (DLR)",
-            "name": "Steinmetz, Franz",
-            "orcid": "0000-0002-1481-9215"
-        }
-    ],
-    "description": "RAFCON uses hierarchical state machines, featuring concurrent state execution, to represent robot programs. It ships with a graphical user interface supporting the creation of state machines and contains IDE like debugging mechanisms. Alternatively, state machines can programmatically be generated using RAFCON's API.",
-    "keywords": [
-        "robot framework",
-        "state machine",
-        "visual programming",
-        "graphical programming",
-        "development",
-        "robotics",
-        "FSM",
-        "GUI"
-    ],
-    "license": {
-        "id": "EPL-1.0"
+  "creators": [
+    {
+      "affiliation": "German Aerospace Center (DLR)",
+      "name": "Belder, Rico",
+      "orcid": "0000-0002-9733-4108"
     },
-    "title": "RAFCON"
+    {
+      "affiliation": "German Aerospace Center (DLR)",
+      "name": "Brunner, Sebastian Georg",
+      "orcid": "0000-0001-9359-3703"
+    },
+    {
+      "affiliation": "German Aerospace Center (DLR)",
+      "name": "Steinmetz, Franz",
+      "orcid": "0000-0002-1481-9215"
+    }
+  ],
+  "description": "RAFCON uses hierarchical state machines, featuring concurrent state execution, to represent robot programs. It ships with a graphical user interface supporting the creation of state machines and contains IDE like debugging mechanisms. Alternatively, state machines can programmatically be generated using RAFCON's API.",
+  "keywords": [
+    "robot framework",
+    "state machine",
+    "visual programming",
+    "graphical programming",
+    "development",
+    "robotics",
+    "FSM",
+    "GUI"
+  ],
+  "license": {
+    "id": "EPL-1.0"
+  },
+  "publication_date": "2024-03-05",
+  "title": "RAFCON",
+  "version": "2.1.1"
 }

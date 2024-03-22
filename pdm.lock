@@ -3,10 +3,9 @@
 
 [metadata]
 groups = ["default", "dev"]
-cross_platform = true
-static_urls = false
-lock_version = "4.3"
-content_hash = "sha256:7cfb38e0308bf11079c9a5c0c246eeb93249480071a358f43f6a34e789da6f8d"
+strategy = ["cross_platform"]
+lock_version = "4.4.1"
+content_hash = "sha256:d1300bd7ca79ad10ffba76e3abea27bf5a25b21a57c581953896e70e3f37d6aa"
 
 [[package]]
 name = "astroid"
@@ -42,6 +41,16 @@ summary = "Classes Without Boilerplate"
 files = [
     {file = "attrs-22.2.0-py3-none-any.whl", hash = "sha256:29e95c7f6778868dbd49170f98f8818f78f3dc5e0e37c0b1f474e3561b240836"},
     {file = "attrs-22.2.0.tar.gz", hash = "sha256:c9227bfc2f01993c03f68db37d1d15c9690188323c067c641f1a35ca58185f99"},
+]
+
+[[package]]
+name = "backports-functools-lru-cache"
+version = "1.6.6"
+requires_python = ">=2.6"
+summary = "Backport of functools.lru_cache"
+files = [
+    {file = "backports.functools_lru_cache-1.6.6-py2.py3-none-any.whl", hash = "sha256:77e27d0ffbb463904bdd5ef8b44363f6cd5ef503e664b3f599a3bf5843ed37cf"},
+    {file = "backports.functools_lru_cache-1.6.6.tar.gz", hash = "sha256:7b70e701ba4db58c0ed8671a9d3391b0abb9bd1bc24d4e90c3480f4baafcc2dc"},
 ]
 
 [[package]]
@@ -248,11 +257,17 @@ files = [
 
 [[package]]
 name = "jsonconversion"
-version = "0.2.13"
-requires_python = ">=2.6"
+version = "1.0.1"
+requires_python = ">=3.7"
 summary = "This python module helps converting arbitrary Python objects into JSON strings and back."
+dependencies = [
+    "numpy<2.0.0,>=1.22.4",
+    "pytest-runner>=6.0.0",
+    "pytest<7.0.0,>=6.0.0",
+]
 files = [
-    {file = "jsonconversion-0.2.13.tar.gz", hash = "sha256:e21318d0dfcfc7e839ce7dd8ccd7c358fca2f0f825bddfdcd8df52782e09a19d"},
+    {file = "jsonconversion-1.0.1-py3-none-any.whl", hash = "sha256:81282f94df8489ed74d1e67d5b128a4c9de64067b88ea8c49359c278b36178f5"},
+    {file = "jsonconversion-1.0.1.tar.gz", hash = "sha256:1bfaa72a471dba0a9254abba9daa8d2b30e9327b8e012992732adae2bc1df3ce"},
 ]
 
 [[package]]
@@ -309,6 +324,7 @@ files = [
     {file = "libsass-0.22.0-cp37-abi3-macosx_10_15_x86_64.whl", hash = "sha256:081e256ab3c5f3f09c7b8dea3bf3bf5e64a97c6995fd9eea880639b3f93a9f9a"},
     {file = "libsass-0.22.0-cp37-abi3-win32.whl", hash = "sha256:89c5ce497fcf3aba1dd1b19aae93b99f68257e5f2026b731b00a872f13324c7f"},
     {file = "libsass-0.22.0-cp37-abi3-win_amd64.whl", hash = "sha256:65455a2728b696b62100eb5932604aa13a29f4ac9a305d95773c14aaa7200aaf"},
+    {file = "libsass-0.22.0-cp38-abi3-macosx_14_0_arm64.whl", hash = "sha256:5fb2297a4754a6c8e25cfe5c015a3b51a2b6b9021b333f989bb8ce9d60eb5828"},
     {file = "libsass-0.22.0.tar.gz", hash = "sha256:3ab5ad18e47db560f4f0c09e3d28cf3bb1a44711257488ac2adad69f4f7f8425"},
 ]
 
@@ -317,12 +333,14 @@ name = "matplotlib"
 version = "2.1.1"
 summary = "Python plotting package"
 dependencies = [
+    "backports-functools-lru-cache",
     "cycler>=0.10",
     "numpy>=1.7.1",
     "pyparsing!=2.0.4,!=2.1.2,!=2.1.6,>=2.0.1",
     "python-dateutil>=2.0",
     "pytz",
     "six>=1.10",
+    "subprocess32",
 ]
 files = [
     {file = "matplotlib-2.1.1.tar.gz", hash = "sha256:659f5e1aa0e0f01488c61eff47560c43b8be511c6a29293d7f3896ae17bd8b23"},
@@ -409,7 +427,7 @@ version = "1.3.5"
 requires_python = ">=3.7.1"
 summary = "Powerful data structures for data analysis, time series, and statistics"
 dependencies = [
-    "numpy>=1.17.3; platform_machine != \"aarch64\" and platform_machine != \"arm64\" and python_version < \"3.10\"",
+    "numpy>=1.17.3; (platform_machine != \"aarch64\" and platform_machine != \"arm64\") and python_version < \"3.10\"",
     "numpy>=1.19.2; platform_machine == \"aarch64\" and python_version < \"3.10\"",
     "numpy>=1.20.0; platform_machine == \"arm64\" and python_version < \"3.10\"",
     "numpy>=1.21.0; python_version >= \"3.10\"",
@@ -487,17 +505,17 @@ files = [
 
 [[package]]
 name = "psutil"
-version = "5.9.5"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "5.9.8"
+requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 summary = "Cross-platform lib for process and system monitoring in Python."
 files = [
-    {file = "psutil-5.9.5-cp36-abi3-macosx_10_9_x86_64.whl", hash = "sha256:3c6f686f4225553615612f6d9bc21f1c0e305f75d7d8454f9b46e901778e7217"},
-    {file = "psutil-5.9.5-cp36-abi3-manylinux_2_12_i686.manylinux2010_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7a7dd9997128a0d928ed4fb2c2d57e5102bb6089027939f3b722f3a210f9a8da"},
-    {file = "psutil-5.9.5-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:89518112647f1276b03ca97b65cc7f64ca587b1eb0278383017c2a0dcc26cbe4"},
-    {file = "psutil-5.9.5-cp36-abi3-win32.whl", hash = "sha256:104a5cc0e31baa2bcf67900be36acde157756b9c44017b86b2c049f11957887d"},
-    {file = "psutil-5.9.5-cp36-abi3-win_amd64.whl", hash = "sha256:b258c0c1c9d145a1d5ceffab1134441c4c5113b2417fafff7315a917a026c3c9"},
-    {file = "psutil-5.9.5-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:c607bb3b57dc779d55e1554846352b4e358c10fff3abf3514a7a6601beebdb30"},
-    {file = "psutil-5.9.5.tar.gz", hash = "sha256:5410638e4df39c54d957fc51ce03048acd8e6d60abc0f5107af51e5fb566eb3c"},
+    {file = "psutil-5.9.8-cp36-abi3-macosx_10_9_x86_64.whl", hash = "sha256:aee678c8720623dc456fa20659af736241f575d79429a0e5e9cf88ae0605cc81"},
+    {file = "psutil-5.9.8-cp36-abi3-manylinux_2_12_i686.manylinux2010_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:8cb6403ce6d8e047495a701dc7c5bd788add903f8986d523e3e20b98b733e421"},
+    {file = "psutil-5.9.8-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d06016f7f8625a1825ba3732081d77c94589dca78b7a3fc072194851e88461a4"},
+    {file = "psutil-5.9.8-cp37-abi3-win32.whl", hash = "sha256:bc56c2a1b0d15aa3eaa5a60c9f3f8e3e565303b465dbf57a1b730e7a2b9844e0"},
+    {file = "psutil-5.9.8-cp37-abi3-win_amd64.whl", hash = "sha256:8db4c1b57507eef143a15a6884ca10f7c73876cdf5d51e713151c1236a0e68cf"},
+    {file = "psutil-5.9.8-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:d16bbddf0693323b8c6123dd804100241da461e41d6e332fb0ba6058f630f8c8"},
+    {file = "psutil-5.9.8.tar.gz", hash = "sha256:6be126e3225486dff286a8fb9a06246a5253f4c7c53b475ea5f5ac934e64194c"},
 ]
 
 [[package]]
@@ -508,14 +526,6 @@ summary = "library with cross-python path, ini-parsing, io, code, log facilities
 files = [
     {file = "py-1.11.0-py2.py3-none-any.whl", hash = "sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378"},
     {file = "py-1.11.0.tar.gz", hash = "sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719"},
-]
-
-[[package]]
-name = "pyaes"
-version = "1.6.1"
-summary = "Pure-Python Implementation of the AES block-cipher and common modes of operation"
-files = [
-    {file = "pyaes-1.6.1.tar.gz", hash = "sha256:02c1b1405c38d3c370b085fb952dd8bea3fadcee6411ad99f312cc129c536d8f"},
 ]
 
 [[package]]
@@ -541,22 +551,10 @@ version = "3.42.0"
 requires_python = ">=3.6, <4"
 summary = "Python bindings for GObject Introspection"
 dependencies = [
-    "pycairo>=1.16.0",
+    "pycairo<2.0,>=1.16",
 ]
 files = [
     {file = "PyGObject-3.42.0.tar.gz", hash = "sha256:b9803991ec0b0b4175e81fee0ad46090fa7af438fe169348a9b18ae53447afcd"},
-]
-
-[[package]]
-name = "pykeyboard"
-version = "0.1.2"
-summary = "Best Keyboard and Pagination for the Pyrogram Library."
-dependencies = [
-    "pyrogram",
-    "tgcrypto",
-]
-files = [
-    {file = "pykeyboard-0.1.2.tar.gz", hash = "sha256:7053ee2aedac6bd4424a9fa3f2deea645f4fdc8fb7e23a79324e9a1f483e4940"},
 ]
 
 [[package]]
@@ -579,14 +577,6 @@ files = [
 ]
 
 [[package]]
-name = "pymouse"
-version = "1.0"
-summary = "Cross-platform mouse control"
-files = [
-    {file = "PyMouse-1.0.tar.gz", hash = "sha256:cf2d7ccd43f73e7115c879970c468a293ad2ffde66cf9adb71a4231a4f20c4a5"},
-]
-
-[[package]]
 name = "pyparsing"
 version = "3.1.1"
 requires_python = ">=3.6.8"
@@ -594,30 +584,6 @@ summary = "pyparsing module - Classes and methods to define and execute parsing 
 files = [
     {file = "pyparsing-3.1.1-py3-none-any.whl", hash = "sha256:32c7c0b711493c72ff18a981d24f28aaf9c1fb7ed5e9667c9e84e3db623bdbfb"},
     {file = "pyparsing-3.1.1.tar.gz", hash = "sha256:ede28a1a32462f5a9705e07aea48001a08f7cf81a021585011deba701581a0db"},
-]
-
-[[package]]
-name = "pyrogram"
-version = "2.0.106"
-requires_python = "~=3.7"
-summary = "Elegant, modern and asynchronous Telegram MTProto API framework in Python for users and bots"
-dependencies = [
-    "pyaes==1.6.1",
-    "pysocks==1.7.1",
-]
-files = [
-    {file = "Pyrogram-2.0.106-py3-none-any.whl", hash = "sha256:32b62b3d93030b1080cbe45b88c0e8790cf4e2179cf3321ede810d48edf97bc7"},
-    {file = "Pyrogram-2.0.106.tar.gz", hash = "sha256:30202995758fcb6e0f91224704ab7fedefea454297724bd70a6a71a23748c16f"},
-]
-
-[[package]]
-name = "pysocks"
-version = "1.7.1"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-summary = "A Python SOCKS client module. See https://github.com/Anorov/PySocks for more information."
-files = [
-    {file = "PySocks-1.7.1-py3-none-any.whl", hash = "sha256:2725bd0a9925919b9b51739eea5f9e2bae91e83288108a9ad338b2e3a4435ee5"},
-    {file = "PySocks-1.7.1.tar.gz", hash = "sha256:3f8804571ebe159c380ac6de37643bb4685970655d3bba243530d6558b799aa0"},
 ]
 
 [[package]]
@@ -668,16 +634,26 @@ files = [
 ]
 
 [[package]]
+name = "pytest-runner"
+version = "6.0.1"
+requires_python = ">=3.7"
+summary = "Invoke py.test as distutils command with dependency resolution"
+files = [
+    {file = "pytest-runner-6.0.1.tar.gz", hash = "sha256:70d4739585a7008f37bf4933c013fdb327b8878a5a69fcbb3316c88882f0f49b"},
+    {file = "pytest_runner-6.0.1-py3-none-any.whl", hash = "sha256:ea326ed6f6613992746062362efab70212089a4209c08d67177b3df1c52cd9f2"},
+]
+
+[[package]]
 name = "pytest-timeout"
-version = "2.1.0"
-requires_python = ">=3.6"
+version = "2.2.0"
+requires_python = ">=3.7"
 summary = "pytest plugin to abort hanging tests"
 dependencies = [
     "pytest>=5.0.0",
 ]
 files = [
-    {file = "pytest-timeout-2.1.0.tar.gz", hash = "sha256:c07ca07404c612f8abbe22294b23c368e2e5104b521c1790195561f37e1ac3d9"},
-    {file = "pytest_timeout-2.1.0-py3-none-any.whl", hash = "sha256:f6f50101443ce70ad325ceb4473c4255e9d74e3c7cd0ef827309dfa4c0d975c6"},
+    {file = "pytest-timeout-2.2.0.tar.gz", hash = "sha256:3b0b95dabf3cb50bac9ef5ca912fa0cfc286526af17afc806824df20c2f72c90"},
+    {file = "pytest_timeout-2.2.0-py3-none-any.whl", hash = "sha256:bde531e096466f49398a59f2dde76fa78429a09a12411466f88a07213e220de2"},
 ]
 
 [[package]]
@@ -806,67 +782,12 @@ files = [
 ]
 
 [[package]]
-name = "tgcrypto"
-version = "1.2.5"
-requires_python = "~=3.7"
-summary = "Fast and Portable Cryptography Extension Library for Pyrogram"
+name = "subprocess32"
+version = "3.5.4"
+requires_python = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, <4"
+summary = "A backport of the subprocess module from Python 3 for use on 2.x."
 files = [
-    {file = "TgCrypto-1.2.5-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:4507102377002966f35f2481830b7529e00c9bbff8c7d1e09634f984af801675"},
-    {file = "TgCrypto-1.2.5-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:38fe25c0d79b41d7a89caba2a78dea0358e17ca73b033cefd16abed680685829"},
-    {file = "TgCrypto-1.2.5-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c035bf8ef89846f67e77e82ea85c089b6ea30631b32e8ac1a6511b9be52ab065"},
-    {file = "TgCrypto-1.2.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f594e2680daf20dbac6bf56862f567ddc3cc8d6a19757ed07faa8320ff7acee4"},
-    {file = "TgCrypto-1.2.5-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:8723a16076e229ffdf537fdb5e638227d10f44ca43e6939db1eab524de6eaed7"},
-    {file = "TgCrypto-1.2.5-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:c1c8d974b8b2d7132364b6f0f6712b92bfe47ab9c5dcee25c70327ff68d22d95"},
-    {file = "TgCrypto-1.2.5-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:89d9c143a1fcdb2562a4aa887152abbe9253e1979d7bebef2b489148e0bbe086"},
-    {file = "TgCrypto-1.2.5-cp310-cp310-win32.whl", hash = "sha256:aa4bc1d11d4a90811c162abd45a5981f171679d1b5bd0322cd7ccd16447366a2"},
-    {file = "TgCrypto-1.2.5-cp310-cp310-win_amd64.whl", hash = "sha256:39145103614c5e38fe938549742d355920f4a0778fa8259eb69c0c85ba4b1d28"},
-    {file = "TgCrypto-1.2.5-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:59597cdb1c87eb1184088563d20b42a8f2e431e9334fed64926079044ad2a4af"},
-    {file = "TgCrypto-1.2.5-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:1283337ae75b02406dd700377b8b783e70033b548492517df6e6c4156b0ed69c"},
-    {file = "TgCrypto-1.2.5-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:1735437df0023a40e5fdd95e6b09ce806ec8f2cd2f8879023818840dfae60cab"},
-    {file = "TgCrypto-1.2.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cfa17a20206532c6d2442c9d7a7f6434120bd75896ad9a3e9b9277477afa084f"},
-    {file = "TgCrypto-1.2.5-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:48da3674474839e5619e7430ff1f98aed9f55369f3cfaef7f65511852869572e"},
-    {file = "TgCrypto-1.2.5-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:b49e982e5b156be821a5235bd9102c00dc506a58607e2c8bd50ac872724a951f"},
-    {file = "TgCrypto-1.2.5-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:9d9f13586065a6d86d05c16409054033a84be208acee29b49f6f194e27b08642"},
-    {file = "TgCrypto-1.2.5-cp311-cp311-win32.whl", hash = "sha256:10dd3870aecb1a783c6eafd3b164b2149dbc93a9ee13feb7e6f5c58f87c24cd0"},
-    {file = "TgCrypto-1.2.5-cp311-cp311-win_amd64.whl", hash = "sha256:a1beec47d6af8b509af7cf266e30f7703208076076594714005b42d2c25225b3"},
-    {file = "TgCrypto-1.2.5-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:c133ddc95ae9c6cd6ad742c4b8c30191214db8dc724268bee59a339e22b2028b"},
-    {file = "TgCrypto-1.2.5-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7f6537f6af3d80be67bd2625a0990ee88c6ae58d33bdb88d99591bd6e97ee7a0"},
-    {file = "TgCrypto-1.2.5-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:bdebbd9cffd10c42a2f60886dcab0272ddd38330d0cf7ccf026230b826573f59"},
-    {file = "TgCrypto-1.2.5-cp37-cp37m-musllinux_1_1_i686.whl", hash = "sha256:45683659ec6475ee8ff60e12167ec19aacfd7527decafe446434fa1a7e6760a7"},
-    {file = "TgCrypto-1.2.5-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:eafad246fd9aa63ff709a6e8c905c24fd7520ef96e33a2c3e1ccdb4fb2b2f331"},
-    {file = "TgCrypto-1.2.5-cp37-cp37m-win32.whl", hash = "sha256:1445217d22101946d38ee7d628cdb3de92db4eb130183a22030c07d7888f21b0"},
-    {file = "TgCrypto-1.2.5-cp37-cp37m-win_amd64.whl", hash = "sha256:b7e8402fe4023dc9666c0bc1b30fcf0d98a294e48d35f311a3eadfe105af04d4"},
-    {file = "TgCrypto-1.2.5-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:56e1ec34e75fa2e3dcf7f74f1017d8e16c1eb8a8e031eaaa06c57f836e0d3bcc"},
-    {file = "TgCrypto-1.2.5-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:ca8814d6cc412775a43a021fce2d23e83a5336e9e9f38d0998d821cdf55c1d50"},
-    {file = "TgCrypto-1.2.5-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:bb82e53f20ce5653573832f3c05fa525cc1769bdd685408b19f26d82d5e9001b"},
-    {file = "TgCrypto-1.2.5-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0133936eac63cc9529b497d759b7d0ca21e491bb42481b40b603ee63bb8c10b7"},
-    {file = "TgCrypto-1.2.5-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:76fe0a3ad838dcf300ac88233cbffc2ad63478eb0ae9fa671694e184d88ec1cd"},
-    {file = "TgCrypto-1.2.5-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:7070c6e063befb6d04eab46e8b1ffbee47a497971be11496d23837fc007e7685"},
-    {file = "TgCrypto-1.2.5-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:ed53d0c4a5e6f75d4b1cab17535afe210cd3120fb88f44a8c4562d43c2a3bb16"},
-    {file = "TgCrypto-1.2.5-cp38-cp38-win32.whl", hash = "sha256:f7ec9f0a571fcc38fbee224943ed9918123f752ac19bae5c195d8322f5b20fab"},
-    {file = "TgCrypto-1.2.5-cp38-cp38-win_amd64.whl", hash = "sha256:362ab28fc75e6b066e5bb15fb5296f75f4238d6c1cbcaaa1e5756cd5c168b74b"},
-    {file = "TgCrypto-1.2.5-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:7885a75db09ce8bdba42d2c332085bfe314f232541a729808c7507ffa261ff9a"},
-    {file = "TgCrypto-1.2.5-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:0d28aa317364a5c27317fe97a48267aa1c65c9aaf589909e97489ebe82a714e3"},
-    {file = "TgCrypto-1.2.5-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:940974e19044dc65bcf7b9c5255173b896dff010142f3833047dc55d59cde21c"},
-    {file = "TgCrypto-1.2.5-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:457c657dd10ffb4bbbb007132a0f6a7bee5080176a98c51f285fedf636b624cb"},
-    {file = "TgCrypto-1.2.5-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:539bdc6b9239fb6a6b134591a998dc7f50d4dcc4fed861f80540682acc0c3802"},
-    {file = "TgCrypto-1.2.5-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:4d70d5517d64ca952896b726d22c8a66594e6f6259ee2cb4fa134c02d0e8c3e0"},
-    {file = "TgCrypto-1.2.5-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:90b6337d3ae4348ed14f89dd2ebf7011fa63d67a48c8a98d955a1e392176c60a"},
-    {file = "TgCrypto-1.2.5-cp39-cp39-win32.whl", hash = "sha256:37c4b9be82716fbc6d2b123caef448eee28683888803db075d842327766f7624"},
-    {file = "TgCrypto-1.2.5-cp39-cp39-win_amd64.whl", hash = "sha256:6e96b3a478fae977228c5750194c20a18cde402bbbea6593de424f84d4a8893b"},
-    {file = "TgCrypto-1.2.5-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:4d93686e6254eb0a32a0a60e849b41a867a2770b27b48f978fd391dce2b83aeb"},
-    {file = "TgCrypto-1.2.5-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7b7fe81fad7c64479c83f31fc10e79fb20a114bca414e5e17f5e0c8b363153f8"},
-    {file = "TgCrypto-1.2.5-pp37-pypy37_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ace308f5842a0d6c04fc1ae92cb4320b4b13bfc711031c1c18d9124697685ba0"},
-    {file = "TgCrypto-1.2.5-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:36a570ecd12a428222b10ea8b5a8e0d83ea8750e4de1d5ea53d068b84341b450"},
-    {file = "TgCrypto-1.2.5-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:ba9e067fd9751b3bbd7c979210431000e44f70001d921237e9c4672bf30f07bc"},
-    {file = "TgCrypto-1.2.5-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:80e2414f1a95087d7e46fb54cb387df66424c4ec156fb1a8d8e1d4aa38eb65cf"},
-    {file = "TgCrypto-1.2.5-pp38-pypy38_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:66c5b5bf701b5efc3e4c5d83439d767a3dd48f17a1d840eda6b4d1918844a8f9"},
-    {file = "TgCrypto-1.2.5-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:5d27d6c414eb4775022b05fdd571090bfd92854115e86184ac1832060fbaa510"},
-    {file = "TgCrypto-1.2.5-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:9b0a088ff2e05b6bbe891da936f62b99bd85202b2b9f4f57f71a408490dd518c"},
-    {file = "TgCrypto-1.2.5-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f245895c7d518342089d15b5dca3cee9ffa5a0f3534db9d5a930f6a27dff4adf"},
-    {file = "TgCrypto-1.2.5-pp39-pypy39_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7dbf607d645c39a577a0f8571039d11ddd2dcdf9656465be75f9e0f540472444"},
-    {file = "TgCrypto-1.2.5-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:d6b0c2dc84e632ce7b3d0b767cfe20967e557ad7d71ea5dbd7df2dd544323181"},
-    {file = "TgCrypto-1.2.5.tar.gz", hash = "sha256:9bc2cac6fb9a12ef5b08f3dd500174fe374d89b660cce981f57e3138559cb682"},
+    {file = "subprocess32-3.5.4.tar.gz", hash = "sha256:eb2937c80497978d181efa1b839ec2d9622cf9600a039a79d0e108d1f9aec79d"},
 ]
 
 [[package]]
@@ -1069,14 +990,15 @@ files = [
 
 [[package]]
 name = "yaml-configuration"
-version = "0.2.5"
+version = "0.2.6"
 requires_python = ">=2.6"
 summary = "A python module to easily read from and write to yaml config files."
 dependencies = [
     "pyyaml>=5.1",
 ]
 files = [
-    {file = "yaml_configuration-0.2.5.tar.gz", hash = "sha256:c82a4e500e4d789db50e3cf15f6b1e24cedf6285197f265b622f9884523932c6"},
+    {file = "yaml_configuration-0.2.6-py3-none-any.whl", hash = "sha256:cc8bc7df52dda33b8773f438ec92e519038a332750db4353dcd530daf11566dd"},
+    {file = "yaml_configuration-0.2.6.tar.gz", hash = "sha256:95b40efb608457ae447902c7353a4555cccbdb634c9c03ab56a8cc80fb858526"},
 ]
 
 [[package]]
