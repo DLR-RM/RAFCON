@@ -4,7 +4,7 @@ channels:
   - zegami
 dependencies:
   - pygobject
-  - gtk
+  - gtk3
   - python=3.9
   - pip>=20.1
   - pip:
