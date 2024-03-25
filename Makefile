@@ -16,7 +16,7 @@ docs: build
 	. venv/bin/activate;\
 	pip3 install pdm
 	pdm export -o requirements.txt --without-hashes;\
-	pip3 install sphinx==4.3.0 rst2pdf==0.98;\
+	pip3 install sphinx==5.0 rst2pdf==0.98;\
 	sphinx-build -v -b html doc build/docs/html
 
 clean:
