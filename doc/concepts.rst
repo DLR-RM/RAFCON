@@ -236,7 +236,7 @@ Subsequently, the events are forwarded via the ExecutionHistory
 to the ConsumerManager. The ConsumerManager distributes the events to different Consumers.
 RAFCON ships with a default Consumer called the FileSystemConsumer.
 If FILE_SYSTEM_EXECUTION_HISTORY_ENABLE is enabled the FileSystemConsumer will write all history on disk into a shelve file.
-The execution_log_viewer.py can then be used to analyze the execution history logs after untime.
+The execution_log_viewer.py can then be used to analyze the execution history logs after runtime.
 
 It is straightforward to create other consumers (e.g. for logging the execution-history via a middleware).
 Therefore, a plugin can be created that just works similar to the FileSystemConsumer.
