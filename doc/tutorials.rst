@@ -437,7 +437,7 @@ Similarly, the ``path_to_state_machine`` must point to an already existing state
         rafcon_start.pre_setup_plugins()
         rafcon_start.setup_environment()
         rafcon_start.setup_configuration("/home/user/.config/rafcon/config.yaml")
-        rafcon_global_config.set_config_value("EXECUTION_LOG_ENABLE", True)
+        rafcon_global_config.set_config_value("FILE_SYSTEM_EXECUTION_HISTORY_ENABLE", True)
             
         print("Set and load state machine ... ")
         path_to_state_machine = '/home/user/rafcon/source/rafcon/share/rafcon/examples/tutorials/99_bottles_of_beer/statemachine.json'
