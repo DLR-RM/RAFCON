@@ -6,6 +6,7 @@ dependencies:
   - pygobject==3.42.0
   - gtk3
   - python=3.9
+  - importlib-metadata=3.6
   - pip>=20.1
   - pip:
     - psutil==5.*
