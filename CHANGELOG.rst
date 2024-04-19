@@ -4,6 +4,19 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
+2.1.3
+""""""
+    - Bug fixes:
+        - Fixed AboutDialog logo image path
+        - Bringing back state editor guide lines
+        - Fixed issue that children states can be dragged out of parent states (same for state titles)
+        - Fixed issue where CTRL+Z in Source Editor or Description would undo twice instead of once
+        - Fixed cramped Linkage Overview widget (now properly displays the logical linkage)
+        - Fixes bug when trying to connect a data port outside of the parent state
+
+    - Miscellaneous:
+        - Updated docs text, configuration and layout for webpage
+
 2.1.2
 """"""
     - Bug fixes:
