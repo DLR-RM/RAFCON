@@ -9,6 +9,7 @@ dependencies:
   - pip>=20.1
   - pip:
     - psutil==5.*
+    - importlib-metadata
     - pylint
     - gaphas>=2.1.0,<2.2.0
     - jsonconversion>=1.0.0
