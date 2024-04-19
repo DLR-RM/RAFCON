@@ -73,8 +73,8 @@ class StateEditorController(ExtendedController):
         self.add_controller('scoped_variables', self.scopes_ctrl)
         self.add_controller('outcomes', StateOutcomesEditorController(model, view.outcomes_view))
 
-        self.add_controller('transitions_ctrl', StateTransitionsEditorController(model, view.transitions_view))
-        self.add_controller('data_flows_ctrl', StateDataFlowsEditorController(model, view.data_flows_view))
+        # self.add_controller('transitions_ctrl', StateTransitionsEditorController(model, view.transitions_view))
+        # self.add_controller('data_flows_ctrl', StateDataFlowsEditorController(model, view.data_flows_view))
 
         self.add_controller('linkage_overview_ctrl', LinkageOverviewController(model, view.linkage_overview))
 
@@ -115,8 +115,8 @@ class StateEditorController(ExtendedController):
         view.outputs_view.show()
         view.scopes_view.show()
         view.outcomes_view.show()
-        view.transitions_view.show()
-        view.data_flows_view.show()
+        # view.transitions_view.show()
+        # view.data_flows_view.show()
 
         # show scoped variables if show content is enabled -> if disabled the tab stays and indicates a container state
         if isinstance(self.model, LibraryStateModel) and not self.model.show_content():
