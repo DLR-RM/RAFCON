@@ -802,7 +802,7 @@ class ConnectionModificationTool(ConnectionTool):
         modify_target = self._end_handle is self._connection_v.to_handle()
         self._handle_temporary_connection(self._current_sink, None, of_target=modify_target)
 
-        if not self._current_sink:  # Reset connection to original status, as it was not released above a port
+        if not self._current_sink or not self._current_sink.port:  # Reset connection to original status, as it was not released above a port
             self._reset_connection()
         else:  # Modify the source/target of the connection
             connection_core_element = self._connection_v.model.core_element
