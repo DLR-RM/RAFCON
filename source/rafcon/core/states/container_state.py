@@ -1252,6 +1252,20 @@ class ContainerState(State):
             while data_flow_id in self._data_flows.keys():
                 data_flow_id = generate_data_flow_id()
         return data_flow_id
+    
+    def get_data_flow_id(self, from_child_state_id, to_child_state_id):
+        """ Return the data flow id based on the unique child state identifiers (6 letters) and the current selected hierarchy state
+
+        :param from_child_state_id: The child state from which the data flow originates
+        :param from_child_state_id: The child state to which the data flow goes
+        :return: The requested data_flow_id
+        :raises exceptions.AttributeError: If data flow does not exist
+        """
+        for data_flow_key in self.data_flows:
+            data_flow = self.data_flows[data_flow_key]
+            if data_flow.from_state == from_child_state_id and data_flow.to_state == to_child_state_id:
+                return data_flow.data_flow_id
+        raise AttributeError("The requested data flow from '%s' to '%s' does not exist!" % (from_child_state_id, to_child_state_id))
 
     @lock_state_machine
     @Observable.observed

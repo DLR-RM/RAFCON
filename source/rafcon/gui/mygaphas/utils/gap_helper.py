@@ -192,7 +192,7 @@ def add_data_flow_to_state(from_port_m, to_port_m, add_data_port=False):
     if isinstance(from_port_m, ScopedVariableModel):
         data_port_type = True
 
-    if add_data_port and (not isinstance(from_state_m.state, ExecutionState) or from_state_m.state.core_element_id != to_state_m.state.core_element_id):
+    if add_data_port:
         try:
             if isinstance(to_state_m.state, LibraryState):
                 logger.error("Data port couldn't be added automatically to: {0}".format(to_state_m.state.name))

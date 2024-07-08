@@ -802,8 +802,28 @@ class ConnectionModificationTool(ConnectionTool):
         modify_target = self._end_handle is self._connection_v.to_handle()
         self._handle_temporary_connection(self._current_sink, None, of_target=modify_target)
 
-        if not self._current_sink or not self._current_sink.port:  # Reset connection to original status, as it was not released above a port
+        if not self._current_sink or not self._connection_v.from_port:  # Reset connection to original status if new connection is not defined properly
             self._reset_connection()
+        elif not self._current_sink.port:   # Try to create a port if it was released above a state
+            self.view.canvas.update_now()
+            if self.motion_handle:
+                    self.motion_handle.stop_move()
+            # Create new connection
+            from_port_model = self._connection_v.from_port.model
+            to_port_model = self._current_sink.item.model
+            if gap_helper.create_new_connection(from_port_model, to_port_model):
+                # Remove placeholder from canvas
+                if self._connection_v:  
+                    self._connection_v.remove_connection_from_ports()
+                    self.view.canvas.remove(self._connection_v)
+                # Delete old connection
+                data_flow_container_state = self._connection_v.from_port.model.parent.state.parent
+                from_state_id = self._connection_v.model.core_element.from_state
+                to_state_id = self._connection_v.model.core_element.to_state
+                data_flow_id = data_flow_container_state.get_data_flow_id(from_state_id, to_state_id)
+                data_flow_container_state.remove_data_flow(data_flow_id)
+            else:
+                self._reset_connection()
         else:  # Modify the source/target of the connection
             connection_core_element = self._connection_v.model.core_element
             try:
