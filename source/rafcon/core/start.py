@@ -333,7 +333,13 @@ def main(optional_args=None):
             time.sleep(1)
 
     logger.info("State machine execution finished!")
+
     plugins.run_hook("post_destruction")
+
+    # Properly destroy all global variables
+    gvm = core_singletons.global_variable_manager
+    gvm.destroy_all_variables()
+
     logging.shutdown()
 
     if user_input.memory_profiling:
