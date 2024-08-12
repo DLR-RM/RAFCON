@@ -299,6 +299,10 @@ def stop_gtk():
 def post_gui_destruction():
     plugins.run_hook("post_destruction")
 
+    # Properly destroy all global variables
+    gvm = core_singletons.global_variable_manager
+    gvm.destroy_all_variables()
+
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
         import rafcon.gui.models.auto_backup
         rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()

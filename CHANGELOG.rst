@@ -4,6 +4,15 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
+2.1.4
+""""""
+    - Bug fixes:
+        - Fixed bug where data port would not reset properly
+        - Fixed bug when relocating an existing data flow
+
+    - Miscellaneous:
+        - Added proper deletion of gvm variables on shutdown
+
 2.1.3
 """"""
     - Bug fixes:

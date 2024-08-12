@@ -310,6 +310,17 @@ class GlobalVariableManager(Observable):
             if g_key and start_key in g_key:
                 output_list.append(g_key)
         return output_list
+    
+    def destroy_all_variables(self):
+        """ Deletes all global variables in a loop and then clears access keys and 
+        type dictionary. Is called on shutdown.
+
+        """
+        for key in list(self.__global_variable_dictionary):
+            self.delete_variable(key)
+        self.reset()
+
+        logger.debug("All global variables were deleted!")
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc3
