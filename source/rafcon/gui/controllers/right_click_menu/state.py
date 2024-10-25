@@ -58,7 +58,7 @@ class StateMachineRightClickMenu(object):
         from rafcon.gui.singleton import main_window_controller
         shortcut_manager = main_window_controller.shortcut_manager
         self.shortcut_manager = shortcut_manager
-        self.accel_group = Gtk.AccelGroup()
+        self.accel_group = shortcut_manager.accel_group
 
     def generate_right_click_menu_state(self):
         menu = Gtk.Menu()
