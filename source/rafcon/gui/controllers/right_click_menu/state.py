@@ -277,6 +277,15 @@ class StateMachineRightClickMenu(object):
 
         sub_menu.append(create_menu_item("Take name from library", constants.BUTTON_EXCHANGE,
                                          partial(self.on_substitute_library_with_template_activate, keep_name=False)))
+        
+        menu.append(Gtk.SeparatorMenuItem())
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+        selected_state_m = selection.get_selected_state()
+        callback_function = partial(self.on_change_background_color, state_model=selected_state_m)
+        menu.append(create_menu_item("Change Background Color",
+                                     constants.BUTTON_CHANGE_BACKGROUND_COLOR,
+                                     callback_function,
+                                     accel_group=accel_group))
 
         return menu
 

@@ -455,7 +455,7 @@ class StateView(Element):
                 inner_nw, inner_se = self.get_state_drawing_area(self)
                 c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
                 if self.background_color:
-                    c.set_source_rgba(self.background_color[0], self.background_color[1], self.background_color[2], 0.5)
+                    c.set_source_rgba(self.background_color[0], self.background_color[1], self.background_color[2], 0.7)
                 else:
                     c.set_source_rgba(*get_col_rgba(state_background_color))
                 c.fill_preserve()
