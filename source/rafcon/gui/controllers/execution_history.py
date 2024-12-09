@@ -73,6 +73,10 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.history_tree.set_model(self.history_tree_store)
         view['history_tree'].set_tooltip_column(self.TOOL_TIP_STORAGE_ID)
 
+        # Variables to lock the execution view when switching state machines in the editor
+        self.lock_view_flag = False
+        self.lock_state_machine_model = None
+
         self.observe_model(state_machine_execution_model)
         self._expansion_state = {}
         self._update_lock = RLock()
@@ -89,11 +93,25 @@ class ExecutionHistoryTreeController(ExtendedController):
         view['reload_button'].connect('clicked', self.reload_history)
         view['clean_button'].connect('clicked', self.clean_history)
         view['open_separately_button'].connect('clicked', self.open_selected_history_separately)
+        view['lock_checkbox'].connect('toggled', self.on_toggle_lock)
+
+    def on_toggle_lock(self, widget, event=None):
+        if self.view['lock_checkbox'].get_active():
+            # Save current state machine model so all the other execution history buttons
+            # will be working with respect to the "locked" state machine execution
+            self.lock_state_machine_model = self.model.get_selected_state_machine_model()
+            self.lock_view_flag = True
+            logger.debug("Locking execution history view")
+        else:
+            self.lock_view_flag = False
+            self.lock_state_machine_model = None
+            logger.debug("Unlocking execution history view")
+            self.update()
 
     def open_selected_history_separately(self, widget, event=None):
         model, row = self.history_tree.get_selection().get_selected()
         if not row:
-            logger.info("Now execution run is selected. "
+            logger.info("No execution run is selected. "
                         "Please select an execution run that should be opened externally")
             return
         item_path = self.history_tree_store.get_path(row)
@@ -109,7 +127,11 @@ class ExecutionHistoryTreeController(ExtendedController):
                 return
         run_id = selected_history_item.run_id if selected_history_item is not None else None
 
-        selected_state_machine = self.model.get_selected_state_machine_model().state_machine
+        # Select the correct state machine 
+        if self.lock_view_flag:
+            selected_state_machine = self.lock_state_machine_model.state_machine
+        else:
+            selected_state_machine = self.model.get_selected_state_machine_model().state_machine
 
         history_id = len(selected_state_machine.execution_histories) - 1 - item_path[0]
         execution_history = selected_state_machine.execution_histories[history_id]
@@ -319,10 +341,11 @@ class ExecutionHistoryTreeController(ExtendedController):
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def notification_selected_sm_changed(self, model, prop_name, info):
         """If a new state machine is selected, make sure expansion state is stored and tree updated"""
-        selected_state_machine_id = self.model.selected_state_machine_id
-        if selected_state_machine_id is None:
-            return
-        self.update()
+        if not self.lock_view_flag:
+            selected_state_machine_id = self.model.selected_state_machine_id
+            if selected_state_machine_id is None:
+                return
+            self.update()
 
     @ExtendedController.observe("state_machines", after=True)
     def notification_sm_changed(self, model, prop_name, info):
@@ -355,7 +378,15 @@ class ExecutionHistoryTreeController(ExtendedController):
         Empties the execution history tree by adjusting the start index and updates tree store and view.
         """
         self.history_tree_store.clear()
-        selected_sm_m = self.model.get_selected_state_machine_model()
+        # Select the correct state machine 
+        if self.lock_view_flag:
+            selected_sm_m = self.lock_state_machine_model
+            # Reset lock view
+            self.lock_view_flag = False
+            self.lock_state_machine_model = None
+            self.view['lock_checkbox'].set_active(False)
+        else:
+            selected_sm_m = self.model.get_selected_state_machine_model()
         if selected_sm_m:
             # the core may continue running without the GUI and for this it needs its execution histories
             if state_machine_execution_engine.finished_or_stopped():
@@ -365,6 +396,10 @@ class ExecutionHistoryTreeController(ExtendedController):
     def reload_history(self, widget, event=None):
         """Triggered when the 'Reload History' button is clicked."""
         self.update()
+        # Reset lock view
+        self.lock_view_flag = False
+        self.lock_state_machine_model = None
+        self.view['lock_checkbox'].set_active(False)
 
     def update(self):
         """

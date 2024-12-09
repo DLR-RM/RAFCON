@@ -43,12 +43,17 @@ class ExecutionHistoryView(View, Gtk.ScrolledWindow):
         clean_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         open_separately_button = Gtk.Button.new_with_label("Open externally")
         open_separately_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        lock_checkbox = Gtk.CheckButton.new_with_label("Lock")
+        lock_checkbox.set_tooltip_text('Locks the execution history')
+        lock_checkbox.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        lock_checkbox.get_style_context().add_class("secondary")
 
         button_box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
         button_box.get_style_context().add_class("widget-toolbar")
         button_box.pack_end(reload_button, False, True, 0)
         button_box.pack_end(clean_button, False, True, 0)
         button_box.pack_end(open_separately_button, False, True, 0)
+        button_box.pack_end(lock_checkbox, False, True, 0)
 
         label.ellipsize_labels_recursively(button_box)
 
@@ -66,3 +71,4 @@ class ExecutionHistoryView(View, Gtk.ScrolledWindow):
         self['reload_button'] = reload_button
         self['clean_button'] = clean_button
         self['open_separately_button'] = open_separately_button
+        self['lock_checkbox'] = lock_checkbox
