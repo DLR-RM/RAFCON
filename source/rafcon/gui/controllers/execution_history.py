@@ -22,6 +22,7 @@
 
 """
 
+import os
 from os import path
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -41,6 +42,7 @@ from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.views.execution_history import ExecutionHistoryView
 from rafcon.gui.singleton import state_machine_execution_model
 from rafcon.gui.config import global_gui_config
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 from rafcon.utils import log
 
@@ -60,7 +62,7 @@ class ExecutionHistoryTreeController(ExtendedController):
     TOOL_TIP_STORAGE_ID = 2
     TOOL_TIP_TEXT = "Right click for more details\n" \
                     "Middle click for external more detailed viewer\n" \
-                    "Double click to select corresponding state"
+                    "Double click to select/open corresponding state"
 
     def __init__(self, model=None, view=None):
         assert isinstance(model, StateMachineManagerModel)
@@ -173,18 +175,19 @@ class ExecutionHistoryTreeController(ExtendedController):
         step as tooltip or fold and unfold the tree by double-click and select respective state for double clicked
         element.
         """
+        # This is left clicking to highlight the state machine in the editor and open hierarchy
         if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
             (model, row) = self.history_tree.get_selection().get_selected()
             if row is not None:
-                histroy_item_path = self.history_tree_store.get_path(row)
-                histroy_item_iter = self.history_tree_store.get_iter(histroy_item_path)
+                history_item_path = self.history_tree_store.get_path(row)
+                history_item_iter = self.history_tree_store.get_iter(history_item_path)
                 # TODO generalize double-click folding and unfolding -> also used in states tree of state machine
-                if histroy_item_path is not None and self.history_tree_store.iter_n_children(histroy_item_iter):
-                    if self.history_tree.row_expanded(histroy_item_path):
-                        self.history_tree.collapse_row(histroy_item_path)
+                if history_item_path is not None and self.history_tree_store.iter_n_children(history_item_iter):
+                    if self.history_tree.row_expanded(history_item_path):
+                        self.history_tree.collapse_row(history_item_path)
                     else:
-                        self.history_tree.expand_to_path(histroy_item_path)
-                sm = self.get_history_item_for_tree_iter(histroy_item_iter).state_reference.get_state_machine()
+                        self.history_tree.expand_to_path(history_item_path)
+                sm = self.get_history_item_for_tree_iter(history_item_iter).state_reference.get_state_machine()
                 if sm:
                     if sm.state_machine_id != self.model.selected_state_machine_id:
                         self.model.selected_state_machine_id = sm.state_machine_id
@@ -194,13 +197,32 @@ class ExecutionHistoryTreeController(ExtendedController):
                     return
                 active_sm_m = self.model.get_selected_state_machine_model()
                 assert active_sm_m.state_machine is sm
-                state_path = self.get_history_item_for_tree_iter(histroy_item_iter).state_reference.get_path()
+                state_path = self.get_history_item_for_tree_iter(history_item_iter).state_reference.get_path()
                 ref_state_m = active_sm_m.get_state_model_by_path(state_path)
-                if ref_state_m and active_sm_m:
+                # Decide if selection is inside a library state and if so open it
+                if active_sm_m.state_machine.file_system_path not in ref_state_m.state.file_system_path:
+                    try:
+                        # Open state machine that includes ref_state_m by iterative search
+                        ref_state_path = ref_state_m.state.file_system_path
+                        folder_levels = len(ref_state_path.split('/')) - 1
+                        folder_path = ref_state_path
+                        for folder_level in range(0, folder_levels):
+                            if 'statemachine.json' in os.listdir(folder_path):
+                                ref_state = gui_helper_state_machine.open_state_machine(folder_path)
+                                break
+                            elif folder_level == folder_levels-1:
+                                raise ValueError("Could not find 'statemachine.json' in given path!")
+                            else:
+                                folder_path = os.path.dirname(folder_path)
+                    except Exception as e:
+                        logger.error("Could not load state machine {0}: {1}".format(ref_state_path, e))
+                    test = 0
+                elif ref_state_m and active_sm_m:
                     active_sm_m.selection.set(ref_state_m)
 
             return True
 
+        # This is middle clicking to open externally
         if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 2:
             x = int(event.x)
             y = int(event.y)
@@ -211,6 +233,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 self.history_tree.set_cursor(path, col, 0)
                 self.open_selected_history_separately(None)
 
+        # This is right clicking to open more information in popup
         if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
             x = int(event.x)
             y = int(event.y)
