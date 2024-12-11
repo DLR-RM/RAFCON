@@ -36,6 +36,7 @@ from rafcon.core.execution.execution_history_items import HistoryItem, StateMach
     ConcurrencyItem, CallType
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.states.execution_state import ExecutionState
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
@@ -202,21 +203,26 @@ class ExecutionHistoryTreeController(ExtendedController):
                 # Decide if selection is inside a library state and if so open it
                 if active_sm_m.state_machine.file_system_path not in ref_state_m.state.file_system_path:
                     try:
+                        # Check if state is an execution state and select correct path
+                        if hasattr(ref_state_m.state, 'state_copy') \
+                        and isinstance(ref_state_m.state.state_copy, ExecutionState):
+                            ref_state_path = ref_state_m.state.lib_os_path
+                        else:
+                            ref_state_path = ref_state_m.state.file_system_path
+                        
                         # Open state machine that includes ref_state_m by iterative search
-                        ref_state_path = ref_state_m.state.file_system_path
                         folder_levels = len(ref_state_path.split('/')) - 1
                         folder_path = ref_state_path
                         for folder_level in range(0, folder_levels):
                             if 'statemachine.json' in os.listdir(folder_path):
-                                ref_state = gui_helper_state_machine.open_state_machine(folder_path)
+                                gui_helper_state_machine.open_state_machine(folder_path)
                                 break
                             elif folder_level == folder_levels-1:
                                 raise ValueError("Could not find 'statemachine.json' in given path!")
                             else:
                                 folder_path = os.path.dirname(folder_path)
                     except Exception as e:
-                        logger.error("Could not load state machine {0}: {1}".format(ref_state_path, e))
-                    test = 0
+                        logger.error("Could not load state machine {0}: {1}".format(ref_state_m.state.file_system_path, e))
                 elif ref_state_m and active_sm_m:
                     active_sm_m.selection.set(ref_state_m)
 
