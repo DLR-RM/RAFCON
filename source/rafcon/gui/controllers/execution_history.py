@@ -98,6 +98,18 @@ class ExecutionHistoryTreeController(ExtendedController):
         view['open_separately_button'].connect('clicked', self.open_selected_history_separately)
         view['lock_checkbox'].connect('toggled', self.on_toggle_lock)
 
+    def reset_lock_view(self):
+        self.lock_view_flag = False
+        self.lock_state_machine_model = None
+        self.view['lock_checkbox'].set_active(False)
+
+    def check_locked_view(self):
+        if self.lock_state_machine_model and self.lock_state_machine_model.state_machine == None:
+            logger.warn("Removing execution history lock because state machine was closed.")
+            self.reset_lock_view()
+            return False
+        return True
+
     def on_toggle_lock(self, widget, event=None):
         if self.view['lock_checkbox'].get_active():
             # Save current state machine model so all the other execution history buttons
@@ -106,12 +118,13 @@ class ExecutionHistoryTreeController(ExtendedController):
             self.lock_view_flag = True
             logger.debug("Locking execution history view")
         else:
-            self.lock_view_flag = False
-            self.lock_state_machine_model = None
+            self.reset_lock_view()
             logger.debug("Unlocking execution history view")
             self.update()
 
     def open_selected_history_separately(self, widget, event=None):
+        if not self.check_locked_view():
+            return
         model, row = self.history_tree.get_selection().get_selected()
         if not row:
             logger.info("No execution run is selected. "
@@ -178,6 +191,8 @@ class ExecutionHistoryTreeController(ExtendedController):
         """
         # This is left clicking to highlight the state machine in the editor and open hierarchy
         if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
+            if not self.check_locked_view():
+                return
             (model, row) = self.history_tree.get_selection().get_selected()
             if row is not None:
                 history_item_path = self.history_tree_store.get_path(row)
@@ -230,6 +245,8 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         # This is middle clicking to open externally
         if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 2:
+            if not self.check_locked_view():
+                return
             x = int(event.x)
             y = int(event.y)
             pthinfo = self.history_tree.get_path_at_pos(x, y)
@@ -370,11 +387,10 @@ class ExecutionHistoryTreeController(ExtendedController):
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def notification_selected_sm_changed(self, model, prop_name, info):
         """If a new state machine is selected, make sure expansion state is stored and tree updated"""
-        if not self.lock_view_flag:
-            selected_state_machine_id = self.model.selected_state_machine_id
-            if selected_state_machine_id is None:
-                return
-            self.update()
+        selected_state_machine_id = self.model.selected_state_machine_id
+        if selected_state_machine_id is None:
+            return
+        self.update()
 
     @ExtendedController.observe("state_machines", after=True)
     def notification_sm_changed(self, model, prop_name, info):
@@ -407,13 +423,11 @@ class ExecutionHistoryTreeController(ExtendedController):
         Empties the execution history tree by adjusting the start index and updates tree store and view.
         """
         self.history_tree_store.clear()
-        # Select the correct state machine 
+        self.check_locked_view()
+        # Select the correct state machine
         if self.lock_view_flag:
             selected_sm_m = self.lock_state_machine_model
-            # Reset lock view
-            self.lock_view_flag = False
-            self.lock_state_machine_model = None
-            self.view['lock_checkbox'].set_active(False)
+            self.reset_lock_view()
         else:
             selected_sm_m = self.model.get_selected_state_machine_model()
         if selected_sm_m:
@@ -424,19 +438,19 @@ class ExecutionHistoryTreeController(ExtendedController):
 
     def reload_history(self, widget, event=None):
         """Triggered when the 'Reload History' button is clicked."""
-        self.update()
-        # Reset lock view
-        self.lock_view_flag = False
-        self.lock_state_machine_model = None
-        self.view['lock_checkbox'].set_active(False)
+        self.reset_lock_view()
+        self.update() 
 
     def update(self):
         """
         rebuild the tree view of the history item tree store
         :return:
         """
-        # with self._update_lock:
         with self._update_lock:
+            # Decide if execution view is locked
+            self.check_locked_view()
+            if self.lock_view_flag:
+                return
             self._store_expansion_state()
             self.history_tree_store.clear()
             selected_sm_m = self.model.get_selected_state_machine_model()
