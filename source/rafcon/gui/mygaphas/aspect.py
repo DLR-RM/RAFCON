@@ -69,7 +69,7 @@ class ConnectionHandleInMotion(ItemHandleInMotion):
                 return sink
         state_l = view.get_state_at_point(pos, distance=distance)
         state_v = state_l
-        if state_v is not None and not state_v.model.state.is_root_state:
+        if state_v is not None:
             return ConnectionSink(state_v, None)
         return None
 
