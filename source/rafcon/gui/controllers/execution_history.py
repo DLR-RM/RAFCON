@@ -22,6 +22,7 @@
 
 """
 
+import os
 from os import path
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -35,12 +36,14 @@ from rafcon.core.execution.execution_history_items import HistoryItem, StateMach
     ConcurrencyItem, CallType
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.states.execution_state import ExecutionState
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.views.execution_history import ExecutionHistoryView
 from rafcon.gui.singleton import state_machine_execution_model
 from rafcon.gui.config import global_gui_config
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 from rafcon.utils import log
 
@@ -60,7 +63,7 @@ class ExecutionHistoryTreeController(ExtendedController):
     TOOL_TIP_STORAGE_ID = 2
     TOOL_TIP_TEXT = "Right click for more details\n" \
                     "Middle click for external more detailed viewer\n" \
-                    "Double click to select corresponding state"
+                    "Double click to select/open corresponding state"
 
     def __init__(self, model=None, view=None):
         assert isinstance(model, StateMachineManagerModel)
@@ -72,6 +75,10 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.history_tree = view['history_tree']
         self.history_tree.set_model(self.history_tree_store)
         view['history_tree'].set_tooltip_column(self.TOOL_TIP_STORAGE_ID)
+
+        # Variables to lock the execution view when switching state machines in the editor
+        self.lock_view_flag = False
+        self.lock_state_machine_model = None
 
         self.observe_model(state_machine_execution_model)
         self._expansion_state = {}
@@ -89,11 +96,38 @@ class ExecutionHistoryTreeController(ExtendedController):
         view['reload_button'].connect('clicked', self.reload_history)
         view['clean_button'].connect('clicked', self.clean_history)
         view['open_separately_button'].connect('clicked', self.open_selected_history_separately)
+        view['lock_checkbox'].connect('toggled', self.on_toggle_lock)
+
+    def reset_lock_view(self):
+        self.lock_view_flag = False
+        self.lock_state_machine_model = None
+        self.view['lock_checkbox'].set_active(False)
+
+    def check_locked_view(self):
+        if self.lock_state_machine_model and self.lock_state_machine_model.state_machine == None:
+            logger.warn("Removing execution history lock because state machine was closed.")
+            self.reset_lock_view()
+            return False
+        return True
+
+    def on_toggle_lock(self, widget, event=None):
+        if self.view['lock_checkbox'].get_active():
+            # Save current state machine model so all the other execution history buttons
+            # will be working with respect to the "locked" state machine execution
+            self.lock_state_machine_model = self.model.get_selected_state_machine_model()
+            self.lock_view_flag = True
+            logger.debug("Locking execution history view")
+        else:
+            self.reset_lock_view()
+            logger.debug("Unlocking execution history view")
+            self.update()
 
     def open_selected_history_separately(self, widget, event=None):
+        if not self.check_locked_view():
+            return
         model, row = self.history_tree.get_selection().get_selected()
         if not row:
-            logger.info("Now execution run is selected. "
+            logger.info("No execution run is selected. "
                         "Please select an execution run that should be opened externally")
             return
         item_path = self.history_tree_store.get_path(row)
@@ -109,7 +143,11 @@ class ExecutionHistoryTreeController(ExtendedController):
                 return
         run_id = selected_history_item.run_id if selected_history_item is not None else None
 
-        selected_state_machine = self.model.get_selected_state_machine_model().state_machine
+        # Select the correct state machine 
+        if self.lock_view_flag:
+            selected_state_machine = self.lock_state_machine_model.state_machine
+        else:
+            selected_state_machine = self.model.get_selected_state_machine_model().state_machine
 
         history_id = len(selected_state_machine.execution_histories) - 1 - item_path[0]
         execution_history = selected_state_machine.execution_histories[history_id]
@@ -151,18 +189,21 @@ class ExecutionHistoryTreeController(ExtendedController):
         step as tooltip or fold and unfold the tree by double-click and select respective state for double clicked
         element.
         """
+        # This is left clicking to highlight the state machine in the editor and open hierarchy
         if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
+            if not self.check_locked_view():
+                return
             (model, row) = self.history_tree.get_selection().get_selected()
             if row is not None:
-                histroy_item_path = self.history_tree_store.get_path(row)
-                histroy_item_iter = self.history_tree_store.get_iter(histroy_item_path)
+                history_item_path = self.history_tree_store.get_path(row)
+                history_item_iter = self.history_tree_store.get_iter(history_item_path)
                 # TODO generalize double-click folding and unfolding -> also used in states tree of state machine
-                if histroy_item_path is not None and self.history_tree_store.iter_n_children(histroy_item_iter):
-                    if self.history_tree.row_expanded(histroy_item_path):
-                        self.history_tree.collapse_row(histroy_item_path)
+                if history_item_path is not None and self.history_tree_store.iter_n_children(history_item_iter):
+                    if self.history_tree.row_expanded(history_item_path):
+                        self.history_tree.collapse_row(history_item_path)
                     else:
-                        self.history_tree.expand_to_path(histroy_item_path)
-                sm = self.get_history_item_for_tree_iter(histroy_item_iter).state_reference.get_state_machine()
+                        self.history_tree.expand_to_path(history_item_path)
+                sm = self.get_history_item_for_tree_iter(history_item_iter).state_reference.get_state_machine()
                 if sm:
                     if sm.state_machine_id != self.model.selected_state_machine_id:
                         self.model.selected_state_machine_id = sm.state_machine_id
@@ -172,14 +213,40 @@ class ExecutionHistoryTreeController(ExtendedController):
                     return
                 active_sm_m = self.model.get_selected_state_machine_model()
                 assert active_sm_m.state_machine is sm
-                state_path = self.get_history_item_for_tree_iter(histroy_item_iter).state_reference.get_path()
+                state_path = self.get_history_item_for_tree_iter(history_item_iter).state_reference.get_path()
                 ref_state_m = active_sm_m.get_state_model_by_path(state_path)
-                if ref_state_m and active_sm_m:
+                # Decide if selection is inside a library state and if so open it
+                if active_sm_m.state_machine.file_system_path not in ref_state_m.state.file_system_path:
+                    try:
+                        # Check if state is an execution state and select correct path
+                        if hasattr(ref_state_m.state, 'state_copy') \
+                        and isinstance(ref_state_m.state.state_copy, ExecutionState):
+                            ref_state_path = ref_state_m.state.lib_os_path
+                        else:
+                            ref_state_path = ref_state_m.state.file_system_path
+                        
+                        # Open state machine that includes ref_state_m by iterative search
+                        folder_levels = len(ref_state_path.split('/')) - 1
+                        folder_path = ref_state_path
+                        for folder_level in range(0, folder_levels):
+                            if 'statemachine.json' in os.listdir(folder_path):
+                                gui_helper_state_machine.open_state_machine(folder_path)
+                                break
+                            elif folder_level == folder_levels-1:
+                                raise ValueError("Could not find 'statemachine.json' in given path!")
+                            else:
+                                folder_path = os.path.dirname(folder_path)
+                    except Exception as e:
+                        logger.error("Could not load state machine {0}: {1}".format(ref_state_m.state.file_system_path, e))
+                elif ref_state_m and active_sm_m:
                     active_sm_m.selection.set(ref_state_m)
 
             return True
 
+        # This is middle clicking to open externally
         if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 2:
+            if not self.check_locked_view():
+                return
             x = int(event.x)
             y = int(event.y)
             pthinfo = self.history_tree.get_path_at_pos(x, y)
@@ -189,6 +256,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 self.history_tree.set_cursor(path, col, 0)
                 self.open_selected_history_separately(None)
 
+        # This is right clicking to open more information in popup
         if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
             x = int(event.x)
             y = int(event.y)
@@ -355,7 +423,13 @@ class ExecutionHistoryTreeController(ExtendedController):
         Empties the execution history tree by adjusting the start index and updates tree store and view.
         """
         self.history_tree_store.clear()
-        selected_sm_m = self.model.get_selected_state_machine_model()
+        self.check_locked_view()
+        # Select the correct state machine
+        if self.lock_view_flag:
+            selected_sm_m = self.lock_state_machine_model
+            self.reset_lock_view()
+        else:
+            selected_sm_m = self.model.get_selected_state_machine_model()
         if selected_sm_m:
             # the core may continue running without the GUI and for this it needs its execution histories
             if state_machine_execution_engine.finished_or_stopped():
@@ -364,15 +438,19 @@ class ExecutionHistoryTreeController(ExtendedController):
 
     def reload_history(self, widget, event=None):
         """Triggered when the 'Reload History' button is clicked."""
-        self.update()
+        self.reset_lock_view()
+        self.update() 
 
     def update(self):
         """
         rebuild the tree view of the history item tree store
         :return:
         """
-        # with self._update_lock:
         with self._update_lock:
+            # Decide if execution view is locked
+            self.check_locked_view()
+            if self.lock_view_flag:
+                return
             self._store_expansion_state()
             self.history_tree_store.clear()
             selected_sm_m = self.model.get_selected_state_machine_model()

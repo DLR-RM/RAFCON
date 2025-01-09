@@ -282,6 +282,8 @@ class StateMachineModel(MetaModel, Hashable):
                     raise ValueError("Invalid path: State with id '{}' not found in state with id {}".format(
                         state_id, current_state_model.state.state_id))
             elif isinstance(current_state_model, LibraryStateModel):
+                if not current_state_model.state_copy:
+                    current_state_model.initiate_library_root_state_model()
                 if state_id == current_state_model.state_copy.state.state_id:
                     current_state_model = current_state_model.state_copy
                 else:

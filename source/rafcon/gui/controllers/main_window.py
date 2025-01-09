@@ -218,13 +218,15 @@ class MainWindowController(ExtendedController):
             last_pane_id = next(reversed(constants.PANE_ID.values()))
             self.view[last_pane_id].disconnect(self._max_position_notification_id)
 
-        super(MainWindowController, self).destroy()
         # The sidebars have no corresponding controller that could destroy the views what cause the connected methods
         # to stay connected to (hold references on) the main window controller. So, we do this here. TODO D-solve it
         self.shortcut_manager.destroy()
         self.left_bar_child.destroy()
         self.right_bar_child.destroy()
         self.console_child.destroy()
+
+        # Afterwards destroy all other controllers
+        super(MainWindowController, self).destroy()
 
     @staticmethod
     def update_widget_runtime_config(widget, event, name):
