@@ -28,6 +28,7 @@ import rafcon.gui.singleton
 from rafcon.core import interface, id_generator
 from rafcon.core.singleton import state_machine_manager, state_machine_execution_engine, library_manager
 from rafcon.core.state_machine import StateMachine
+from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.library_state import LibraryState
@@ -554,6 +555,22 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
 
     state_machine_m = state_machine_manager_model.get_selected_state_machine_model()
     sm_path = state_machine_m.state_machine.file_system_path
+
+    # Delete legacy root-state folder of old structure (<2.2.0) for execution states
+    if isinstance(state_machine_m.state_machine.root_state, ExecutionState) \
+        and not os.path.isfile(os.path.join(sm_path, storage.FILE_NAME_CORE_DATA)) \
+            and not len(os.listdir(sm_path)) == 0:
+        try:
+            # Load old state machine info to get old folder structure
+            state_machine_info_old = storage_utils.load_objects_from_json(os.path.join(sm_path, storage.STATEMACHINE_FILE))
+            if "root_state_storage_id" in state_machine_info_old:
+                root_state_storage_id = state_machine_info_old['root_state_storage_id']
+            else:
+                root_state_storage_id = state_machine_info_old['root_state_id']
+            # Remove the old folder
+            shutil.rmtree(os.path.join(sm_path, root_state_storage_id))
+        except:
+            logger.warn("Couldn't delete legacy root-state folder for current execution state")
 
     storage.save_state_machine_to_path(state_machine_m.state_machine, copy_path if as_copy else sm_path,
                                        delete_old_state_machine=delete_old_state_machine, as_copy=as_copy)
@@ -1430,7 +1447,7 @@ def get_root_state_file_path(sm_file_system_path):
             return
         if 'root_state_id' not in sm_dict and 'root_state_storage_id' not in sm_dict:
             return os.path.join(sm_file_system_path, storage.FILE_NAME_CORE_DATA)
-        else:  # deprecated, new state machines (>=0.15) have the root state located in the base path
+        else:  # deprecated, new state machines (>=2.2.0) have the root state located in the base path
             root_state_folder = sm_dict['root_state_id'] if 'root_state_id' in sm_dict else sm_dict['root_state_storage_id']
             return os.path.join(sm_file_system_path, root_state_folder, storage.FILE_NAME_CORE_DATA)
 

@@ -320,7 +320,7 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     else:
         root_state_storage_id = state_machine_dict['root_state_storage_id']
 
-    if root_state_storage_id:  # deprecated, new state machines (>=0.15) have the root state located in the base path
+    if root_state_storage_id:  # deprecated, new state machines (>=2.2.0) have the root state located in the base path
         root_state_path = os.path.join(base_path, root_state_storage_id)
     else:
         root_state_path = base_path
