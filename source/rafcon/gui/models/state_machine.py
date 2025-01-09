@@ -387,7 +387,9 @@ class StateMachineModel(MetaModel, Hashable):
         else:
             meta_file_json = os.path.join(self.state_machine.file_system_path, storage.FILE_NAME_META_DATA_SM)
 
-        storage_utils.write_dict_to_json(self.meta, meta_file_json)
+        # Only save sm_meta_data file if it is not empty
+        if self.meta:
+            storage_utils.write_dict_to_json(self.meta, meta_file_json)
 
         self.root_state.store_meta_data(copy_path)
 
