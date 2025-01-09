@@ -20,15 +20,17 @@ logger = log.get_logger(__name__)
 
 def log_to_raw_structure(execution_history_items):
     """
+    Logging with raw structure.
     :param dict execution_history_items: history items, in the simplest case
-           directly the opened shelve log file
-    :return: start_item, the StateMachineStartItem of the log file
-             previous, a dict mapping history_item_id --> history_item_id of previous history item
-             next_, a dict mapping history_item_id --> history_item_id of the next history item (except if
-                    next item is a concurrent execution branch)
-             concurrent, a dict mapping history_item_id --> []list of concurrent next history_item_ids
-                         (if present)
-             grouped, a dict mapping run_id --> []list of history items with this run_id
+    directly the opened shelve log file
+    :return: 
+    - start_item, the StateMachineStartItem of the log file
+    - previous, a dict mapping history_item_id --> history_item_id of previous history item
+    - next, a dict mapping history_item_id --> history_item_id of the next history item
+    (except if next item is a concurrent execution branch)
+    - concurrent, a dict mapping history_item_id --> []list of concurrent next history_item_ids
+    (if present)
+    - grouped, a dict mapping run_id --> []list of history items with this run_id
     :rtype: tuple
     """
     previous = {}
@@ -80,21 +82,19 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
     is based on the log structure in which all Items which belong together have the same run_id.
     The collapsed items hold input as well as output data (direct and scoped), and the outcome
     the state execution.
-    :param dict execution_history_items: history items, in the simplest case
-           directly the opened shelve log file
+    :param dict execution_history_items: history items, in the simplest case directly the opened
+    shelve log file
     :param bool throw_on_pickle_error: flag if an error is thrown if an object cannot be un-pickled
     :param bool include_erroneous_data_ports: flag if to include erroneous data ports
-    :param bool full_next: flag to indicate if the next relationship has also to be created at the end
-           of container states
-    :return: start_item, the StateMachineStartItem of the log file
-             next_, a dict mapping run_id --> run_id of the next executed state on the same
-                    hierarchy level
-             concurrent, a dict mapping run_id --> []list of run_ids of the concurrent next
-                         executed states (if present)
-             hierarchy, a dict mapping run_id --> run_id of the next executed state on the
-                        deeper hierarchy level (the start state within that HierarchyState)
-             items, a dict mapping run_id --> collapsed representation of the execution of
-                    the state with that run_id
+    :param bool full_next: flag to indicate if the next relationship has also to be created at the end 
+    of container states
+    :return:
+    - start_item, the StateMachineStartItem of the log file
+    - next, a dict mapping run_id --> run_id of the next executed state on the same hierarchy level
+    - concurrent, a dict mapping run_id --> []list of run_ids of the concurrent next executed states (if present)
+    - hierarchy, a dict mapping run_id --> run_id of the next executed state on the
+    deeper hierarchy level (the start state within that HierarchyState)
+    - items, a dict mapping run_id --> collapsed representation of the execution of the state with that run_id
     :rtype: tuple
     """
 
@@ -303,7 +303,7 @@ def log_to_DataFrame(execution_history_items, data_in_columns=[], data_out_colum
     representation by default, as the different states have different data in-/out-port, scoped_data-
     ports and semantic_data defined. However, you can ask specific data-/scoped_data-ports and semantic
     data to be exported as table column, given they are primitive-valued, by including the port / key
-    names in the *_selected-parameters. These table-columns will obviously only be well-defined for
+    names in the {*}_selected-parameters. These table-columns will obviously only be well-defined for
     states having this kind of port-name-/semantic-key and otherwise will contain a None-like value,
     indicating missing data.
 

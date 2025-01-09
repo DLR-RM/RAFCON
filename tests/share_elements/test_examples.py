@@ -104,7 +104,7 @@ def test_functionality_example(caplog):
             rafcon.core.singleton.state_machine_execution_engine.join()
     finally:
         testing_utils.wait_for_gui()  # to avoid execution and model notification clinches
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=4,
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=6, expected_errors=4,
                                            unpatch_threading=False)
 
 

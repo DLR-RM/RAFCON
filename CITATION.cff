@@ -1,10 +1,10 @@
 # YAML 1.2
 ---
-cff-version: "1.0.3"
+cff-version: "1.2.0"
 message: "If you use this software, please cite it using these metadata."
 title: RAFCON
-version: 2.0.0  # Handled by bump2version
-date-released: 2019-07-29
+version: 2.1.4  # Handled by bump2version
+date-released: 2024-08-12
 license: EPL-1.0
 doi: "10.5281/zenodo.1493058"
 authors:
@@ -13,19 +13,19 @@ authors:
     family-names: Belder
     given-names: Rico
     orcid: "https://orcid.org/0000-0002-9733-4108"
-    email: "rico.belder@dlr.de"
+    email: rico.belder@dlr.de
   -
     affiliation: "German Aerospace Center (DLR)"
     family-names: Brunner
     given-names: "Sebastian Georg"
     orcid: "https://orcid.org/0000-0001-9359-3703"
-    email: "sebastian.brunner@dlr.de"
+    email: sebastian.brunner@dlr.de
   -
     affiliation: "German Aerospace Center (DLR)"
     family-names: Steinmetz
     given-names: Franz
     orcid: "https://orcid.org/0000-0002-1481-9215"
-    email: "franz.steinmetz@dlr.de"
+    email: franz.steinmetz@dlr.de
 repository-code: "https://github.com/DLR-RM/RAFCON/"
 url: "https://dlr-rm.github.io/RAFCON/"
 abstract: "RAFCON uses hierarchical state machines, featuring concurrent state execution, to represent robot programs. It ships with a graphical user interface supporting the creation of state machines and contains IDE like debugging mechanisms. Alternatively, state machines can programmatically be generated using RAFCON's API."

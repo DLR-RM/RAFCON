@@ -3,13 +3,15 @@ channels:
   - conda-forge
   - zegami
 dependencies:
-  - pygobject
-  - gtk
-  - python=3.6
+  - pygobject==3.42.0
+  - gtk3
+  - python=3.9
+  - importlib-metadata=3.6
+  - pip>=20.1
   - pip:
     - psutil==5.*
     - pylint
-    - git+https://github.com/gaphor/gaphas.git@1.0.0#egg=gaphas
-    - git+https://github.com/DLR-RM/python-jsonconversion.git@0.2.10#egg=jsonconversion
-    - git+https://github.com/DLR-RM/python-yaml-configuration.git@master#egg=yaml_configuration
+    - gaphas>=2.1.0,<2.2.0
+    - jsonconversion>=1.0.0
+    - yaml_configuration>=0.2.5,<0.3.0
     - https://files.pythonhosted.org/packages/e3/d6/52994712b7d985a58614233fb3c317abaa6a91525d0c5e9f1be93ace03f6/python-gtkmvc3-dlr-1.0.1.tar.gz#egg=python-gtkmvc3-dlr

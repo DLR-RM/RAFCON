@@ -286,7 +286,8 @@ class ContainerState(State):
         :param state: The sub-state to find a transition for
         :return: The transition for the target state.
         :raises exceptions.RuntimeError: if the execution engine is stopped
-                                        (this will be caught at the end of the run method)
+                (this will be caught at the end of the run method)
+
         """
         transition = None
         while not transition:
@@ -748,9 +749,9 @@ class ContainerState(State):
         :param state_id: the id of the state to remove
         :param recursive: a flag to indicate a recursive disassembling of all substates
         :param force: a flag to indicate forcefully deletion of all states (important for the decider state in the
-                barrier concurrency state)
+            barrier concurrency state)
         :param destroy: a flag which indicates if the state should not only be disconnected from the state but also
-                destroyed, including all its state elements
+            destroyed, including all its state elements
         :raises exceptions.AttributeError: if state.state_id does not
         """
         if state_id not in self.states:
@@ -810,14 +811,13 @@ class ContainerState(State):
         The method creates dictionaries for all 'internal' and 'external' (first dict-key) connections of the state.
         Both dictionaries contain sub dicts with 3 (external)/4 (internal) fields 'enclosed', 'ingoing', 'outgoing' and
         'self'.
-         - 'enclosed' means the handed state.states cover origin and target of those linkage
-         - 'ingoing' means the handed state is target of those linkage
-         - 'outgoing' means the handed state is origin of those linkage
-         - 'self' (corner case) single state that has linkage with it self and is thereby also origin and target at 
-           the same time
+        - 'enclosed' means the handed state.states cover origin and target of those linkage
+        - 'ingoing' means the handed state is target of those linkage
+        - 'outgoing' means the handed state is origin of those linkage
+        - 'self' (corner case) single state that has linkage with it self and is thereby also origin and target at the same time
         
         :param state_id: State taken into account.
-        :rtype tuple
+        :rtype: tuple
         :return: related_transitions, related_data_flows
         """
         related_transitions = {'external': {'ingoing': [], 'outgoing': [], 'self': []},
@@ -888,13 +888,13 @@ class ContainerState(State):
         
         The method creates dictionaries with connections for a set of states and scoped variables.
         Both dictionaries have 3 fields (as first dict-key), 'enclosed', 'ingoing' and 'outgoing'
-         - 'enclosed' means the given sets cover origin and target of those linkage
-         - 'ingoing' means the given sets is target of those linkage
-         - 'ingoing' means the given sets is origin of those linkage
+        - 'enclosed' means the given sets cover origin and target of those linkage
+        - 'ingoing' means the given sets is target of those linkage
+        - 'ingoing' means the given sets is origin of those linkage
         
         :param state_ids: List of states taken into account. 
         :param scoped_variables: List of scoped variables taken into account
-        :rtype tuple
+        :rtype: tuple
         :return: related_transitions, related_data_flows
         """
         # find all related transitions
@@ -1074,7 +1074,7 @@ class ContainerState(State):
         """Sets the start state of a container state
 
         :param state: The state_id of a state or a direct reference ot he state (that was already added
-                    to the container) that will be the start state of this container state.
+            to the container) that will be the start state of this container state.
 
         """
         if state is None:
@@ -1252,6 +1252,20 @@ class ContainerState(State):
             while data_flow_id in self._data_flows.keys():
                 data_flow_id = generate_data_flow_id()
         return data_flow_id
+    
+    def get_data_flow_id(self, from_child_state_id, to_child_state_id):
+        """ Return the data flow id based on the unique child state identifiers (6 letters) and the current selected hierarchy state
+
+        :param from_child_state_id: The child state from which the data flow originates
+        :param from_child_state_id: The child state to which the data flow goes
+        :return: The requested data_flow_id
+        :raises exceptions.AttributeError: If data flow does not exist
+        """
+        for data_flow_key in self.data_flows:
+            data_flow = self.data_flows[data_flow_key]
+            if data_flow.from_state == from_child_state_id and data_flow.to_state == to_child_state_id:
+                return data_flow.data_flow_id
+        raise AttributeError("The requested data flow from '%s' to '%s' does not exist!" % (from_child_state_id, to_child_state_id))
 
     @lock_state_machine
     @Observable.observed
@@ -1290,7 +1304,7 @@ class ContainerState(State):
         """Remove an data ports whose from_key or to_key equals the passed data_port_id
 
         :param int data_port_id: the id of a data_port of which all data_flows should be removed, the id can be a input or
-                            output data port id
+            output data port id
 
         """
         # delete all data flows in parent related to data_port_id and self.state_id = external data flows
@@ -2157,7 +2171,7 @@ class ContainerState(State):
         :param dict data_flows: Dictionary data_flows[data_flow_id] of :class:`rafcon.core.data_flow.DataFlow`
         :raises exceptions.TypeError: if the data_flows parameter has the wrong type
         :raises exceptions.AttributeError: if the keys of the data_flows dictionary and the data_flow_ids of the
-                                            data flows in the dictionary do not match
+            data flows in the dictionary do not match
         """
         if not isinstance(data_flows, dict):
             raise TypeError("data_flows must be of type dict")

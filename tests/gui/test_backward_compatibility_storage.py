@@ -2,7 +2,7 @@ import pytest
 import os
 import sys
 import hashlib
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 # general tool elements
 from tests import utils as testing_utils
@@ -100,8 +100,8 @@ def test_unchanged_storage_format(caplog):
         gui_already_started=False
     )
     try:
-        current_rafcon_version = StrictVersion(rafcon.__version__).version
-        current_minor = "{}.{}".format(current_rafcon_version[0], current_rafcon_version[1])
+        current_rafcon_version = Version(rafcon.__version__)
+        current_minor = "{}.{}".format(current_rafcon_version.major, current_rafcon_version.minor)
         for filename in os.listdir(path):
             if filename.startswith(current_minor):
                 old_state_machine_path = os.path.join(path, filename)

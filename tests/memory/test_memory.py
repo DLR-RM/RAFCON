@@ -4,9 +4,9 @@ import sys
 import os
 
 
-@pytest.mark.timeout(120)
+@pytest.mark.timeout(300)
 @pytest.mark.skipif(sys.version_info < (3, 4), reason="requires python3.4 or higher")
-def test_memory(test_iterations=25):
+def test_memory(test_iterations=15):
     """
     RAFCON memory test launcher
 

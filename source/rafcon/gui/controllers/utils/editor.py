@@ -78,7 +78,7 @@ class EditorController(ExtendedController):
         if react_to_event(self.view, self.view.textview, event) and hasattr(buffer, 'can_undo') and buffer.can_undo():
             logger.debug('Run undo on {}'.format(self.__class__.__name__))
             return buffer.undo()
-        return False
+        return True
 
     def _redo(self, *event, **kwargs):
         if not self.view:
@@ -87,7 +87,7 @@ class EditorController(ExtendedController):
         if react_to_event(self.view, self.view.textview, event) and hasattr(buffer, 'can_redo') and buffer.can_redo():
             logger.debug('Run redo on {}'.format(self.__class__.__name__))
             return buffer.redo()
-        return False
+        return True
 
     def _apply(self, *event, **kwargs):
 

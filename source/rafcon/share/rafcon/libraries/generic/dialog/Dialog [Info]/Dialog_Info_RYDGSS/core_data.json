@@ -35,6 +35,9 @@
         }
     }, 
     "description": "Message dialog to inform user\n\nThis message dialog with headline and subtext can only be confirmed (there is a single button with the specified label). The library finishes, with the button is clicked.", 
+    "income": {
+        "__jsonqualname__": "rafcon.core.state_elements.logical_port.Income"
+    }, 
     "input_data_ports": {
         "1": {
             "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
@@ -67,17 +70,17 @@
     "name": "Dialog [Info]", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "done", 
             "outcome_id": 0
         }

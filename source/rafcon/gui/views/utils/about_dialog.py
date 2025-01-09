@@ -12,8 +12,9 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gi.repository import GObject
+from gi.repository import GdkPixbuf
 import rafcon
+from rafcon.gui.design_config import global_design_config
 
 
 class AboutDialogView(Gtk.AboutDialog):
@@ -26,4 +27,6 @@ class AboutDialogView(Gtk.AboutDialog):
                           "Annika Wollschläger", "Benno Voggenreiter", "Matthias Büttner", "Mahmoud Akl"))
         self.set_copyright("DLR")
         self.set_license("Eclipse Public License 1.0")
+        splash_screen_path = global_design_config.get_config_value("LOGO_FOLDER")+'/RAFCON_Logo_Farbe_RGB_negativ_small.png'
+        self.set_logo(GdkPixbuf.Pixbuf.new_from_file(splash_screen_path))
         self.set_website("https://github.com/DLR-RM/RAFCON")

@@ -1,6 +1,10 @@
 version: 2
 
 formats: all
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "mambaforge-22.9"
 conda:
   environment: doc/conda_environment.yml
 sphinx:

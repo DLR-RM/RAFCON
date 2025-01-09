@@ -76,6 +76,9 @@ def test_execution_log(caplog):
         assert isinstance(execution_history[2], CallItem)
         assert isinstance(execution_history[3], ReturnItem)
 
+        # Close the shelve file to prevent accessibility issues
+        ss.close()
+
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     except ImportError:  # if pandas is not installed
         print("test_execution_log skipped as pandas is not installed")
@@ -143,6 +146,9 @@ def test_execution_log_without_memory(caplog):
         execution_history = state_machine.execution_histories[0]
 
         assert len(execution_history) == 0
+
+        # Close the shelve file to prevent accessibility issues
+        ss.close()
 
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     except ImportError:  # if pandas is not installed

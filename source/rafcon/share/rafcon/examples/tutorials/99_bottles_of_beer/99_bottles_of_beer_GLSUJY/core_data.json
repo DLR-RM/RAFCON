@@ -1,0 +1,115 @@
+{
+    "__jsonqualname__": "rafcon.core.states.hierarchy_state.HierarchyState", 
+    "data_flows": {
+        "27": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 27, 
+            "from_key": 31, 
+            "from_state": "NDIVLD", 
+            "to_key": 35, 
+            "to_state": "SFZGMH"
+        }, 
+        "28": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 28, 
+            "from_key": 31, 
+            "from_state": "NDIVLD", 
+            "to_key": 29, 
+            "to_state": "GLSUJY"
+        }, 
+        "33": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 33, 
+            "from_key": 29, 
+            "from_state": "GLSUJY", 
+            "to_key": 30, 
+            "to_state": "NDIVLD"
+        }, 
+        "38": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 38, 
+            "from_key": 29, 
+            "from_state": "GLSUJY", 
+            "to_key": 37, 
+            "to_state": "PXTKIH"
+        }
+    }, 
+    "description": null, 
+    "income": {
+        "__jsonqualname__": "rafcon.core.state_elements.logical_port.Income"
+    }, 
+    "input_data_ports": {}, 
+    "name": "99_bottles_of_beer", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "the end", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {}, 
+    "scoped_variables": {
+        "29": {
+            "__jsonqualname__": "rafcon.core.state_elements.scope.ScopedVariable", 
+            "data_port_id": 29, 
+            "data_type": {
+                "__type__": "__builtin__.int"
+            }, 
+            "default_value": 99, 
+            "name": "bottles"
+        }
+    }, 
+    "state_id": "GLSUJY", 
+    "transitions": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": null, 
+            "from_state": null, 
+            "to_outcome": null, 
+            "to_state": "PXTKIH", 
+            "transition_id": 1
+        }, 
+        "7": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "SFZGMH", 
+            "to_outcome": 0, 
+            "to_state": "GLSUJY", 
+            "transition_id": 7
+        }, 
+        "8": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "PXTKIH", 
+            "to_outcome": null, 
+            "to_state": "NDIVLD", 
+            "transition_id": 8
+        }, 
+        "9": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 1, 
+            "from_state": "SFZGMH", 
+            "to_outcome": null, 
+            "to_state": "PXTKIH", 
+            "transition_id": 9
+        }, 
+        "10": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "NDIVLD", 
+            "to_outcome": null, 
+            "to_state": "SFZGMH", 
+            "transition_id": 10
+        }
+    }
+}

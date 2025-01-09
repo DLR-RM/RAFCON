@@ -59,6 +59,9 @@
         }
     }, 
     "description": "Message dialog with 3 options\n\nA message dialog with headline \"text\" and subtext \"subtext\" is shown. \"Option 1\" defines the text for the first button, and so on. If the user clicks on the first button, outcome \"option 1\" is used, and so on.", 
+    "income": {
+        "__jsonqualname__": "rafcon.core.state_elements.logical_port.Income"
+    }, 
     "input_data_ports": {
         "1": {
             "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
@@ -109,27 +112,27 @@
     "name": "Dialog [3 options]", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "option 1", 
             "outcome_id": 0
         }, 
         "1": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "option 2", 
             "outcome_id": 1
         }, 
         "2": {
-            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
             "name": "option 3", 
             "outcome_id": 2
         }

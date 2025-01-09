@@ -1,3 +1,5 @@
+.. _RAFCON_API:
+
 RAFCON API: The ``rafcon`` package
 ==================================
 
@@ -9,6 +11,8 @@ state-machine class and many more.
 
 The rafcon.gui sub-module contains all parts needed for the GUI using GTK. It uses the
 Model-View-Controller-architecture (MVC).
+
+A tutorial on how to start the core in a minimal example with a python script is given in :ref:`tutorial_rafcon_core`.
 
 Finally, rafcon.utils hold several helping modules, for example for logging.
 

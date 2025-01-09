@@ -19,6 +19,8 @@ import rafcon.core.singleton
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_execution_engine import StateMachineExecutionEngineModel
 
+# noinspection PyUnresolvedReferences
+from rafcon.gui.mygaphas import guide
 import rafcon.gui.singleton
 
 from rafcon.utils import log

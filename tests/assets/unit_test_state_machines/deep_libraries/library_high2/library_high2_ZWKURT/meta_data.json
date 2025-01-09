@@ -6,15 +6,6 @@
     "data_flow5": {}, 
     "gui": {
         "editor_gaphas": {
-            "income": {
-                "rel_pos": {
-                    "__jsonqualname__": "__builtin__.tuple", 
-                    "items": [
-                        2.3468564674423185, 
-                        36.30121979242193
-                    ]
-                }
-            }, 
             "name": {
                 "rel_pos": {
                     "__jsonqualname__": "__builtin__.tuple", 
@@ -44,6 +35,19 @@
                     216.54738151445767, 
                     117.34282337211593
                 ]
+            }
+        }
+    }, 
+    "income": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        2.3468564674423185, 
+                        36.30121979242193
+                    ]
+                }
             }
         }
     }, 

@@ -81,17 +81,23 @@ class DataFlow(StateElement):
         default_string = "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s, id: %s" % \
                (self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id)
         if self.parent:
-            from_port = None
-            if self.from_state == self.parent.state_id:
-                from_port = self.parent.get_data_port_by_id(self.from_key)
-            else:
-                from_port = self.parent.states[self.from_state].get_data_port_by_id(self.from_key)
+            try:
+                from_port = None
+                if self.from_state == self.parent.state_id:
+                    from_port = self.parent.get_data_port_by_id(self.from_key)
+                else:
+                    from_port = self.parent.states[self.from_state].get_data_port_by_id(self.from_key)
+            except:
+                pass
 
-            to_port = None
-            if self.to_state == self.parent.state_id:
-                to_port = self.parent.get_data_port_by_id(self.to_key)
-            else:
-                to_port = self.parent.states[self.to_state].get_data_port_by_id(self.to_key)
+            try:
+                to_port = None
+                if self.to_state == self.parent.state_id:
+                    to_port = self.parent.get_data_port_by_id(self.to_key)
+                else:
+                    to_port = self.parent.states[self.to_state].get_data_port_by_id(self.to_key)
+            except:
+                pass
 
             if from_port and to_port:
                 return "Data flow - from_state: %s, from_port_key: %s, from_port_name: %s, " \
