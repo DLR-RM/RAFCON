@@ -154,7 +154,7 @@ def check_state_machine_storage(state_machine, path, missing_elements, existing_
     # check if optional gui-meta-data exists
     if check_meta_data:
         # gtk gui meta data
-        file_path = os.path.join(path, storage.FILE_NAME_META_DATA)
+        file_path = os.path.join(path, storage.FILE_NAME_META_DATA_SM)
         check_file(file_path, "meta data", missing_elements, existing_elements)
 
     if state_machine.root_state:
@@ -173,17 +173,32 @@ def check_state_storage(state, parent_path, missing_elements, existing_elements=
 
     # check state script exists
     if isinstance(state, ExecutionState):
-        file_path = os.path.join(parent_path, get_storage_id_for_state(state), storage.SCRIPT_FILE)
+        if os.path.isfile(os.path.join(parent_path, storage.FILE_NAME_CORE_DATA)):
+            # This means new folder structure (>=2.2.0)
+            file_path = os.path.join(parent_path, storage.SCRIPT_FILE)
+        else:
+            # This means old folder structure (<2.2.0)
+            file_path = os.path.join(parent_path, get_storage_id_for_state(state), storage.SCRIPT_FILE)
         check_file(file_path, "script", missing_elements, existing_elements)
 
     # check state-meta data exists (transitions and so on)
-    file_path = os.path.join(parent_path, get_storage_id_for_state(state), storage.FILE_NAME_CORE_DATA)
+    if os.path.isfile(os.path.join(parent_path, storage.FILE_NAME_CORE_DATA)):
+        # This means new folder structure (>=2.2.0)
+        file_path = os.path.join(parent_path, storage.FILE_NAME_CORE_DATA)
+    else:
+        # This means old folder structure (<2.2.0)
+        file_path = os.path.join(parent_path, get_storage_id_for_state(state), storage.FILE_NAME_CORE_DATA)
     check_file(file_path, "core data", missing_elements, existing_elements)
 
     # check if optional gui-meta-data exists
     if check_meta_data:
         # gtk gui meta data
-        file_path = os.path.join(parent_path, get_storage_id_for_state(state), storage.FILE_NAME_META_DATA)
+        if os.path.isfile(os.path.join(parent_path, storage.FILE_NAME_CORE_DATA)):
+            # This means new folder structure (>=2.2.0)
+            file_path = os.path.join(parent_path, storage.FILE_NAME_META_DATA_SM)
+        else:
+            # This means old folder structure (<2.2.0)
+            file_path = os.path.join(parent_path, get_storage_id_for_state(state), storage.FILE_NAME_META_DATA)
         check_file(file_path, "meta data", missing_elements, existing_elements)
 
     if isinstance(state, ContainerState):
