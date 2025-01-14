@@ -556,10 +556,12 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
     state_machine_m = state_machine_manager_model.get_selected_state_machine_model()
     sm_path = state_machine_m.state_machine.file_system_path
 
-    # Delete legacy root-state folder of old structure (<2.2.0) for execution states
-    if isinstance(state_machine_m.state_machine.root_state, ExecutionState) \
-        and not os.path.isfile(os.path.join(sm_path, storage.FILE_NAME_CORE_DATA)) \
-            and not len(os.listdir(sm_path)) == 0:
+    # Delete legacy root-state folder of old structure (<2.2.0) for existing execution states
+    if not as_copy \
+        and os.path.isdir(sm_path) \
+            and not len(os.listdir(sm_path)) == 0 \
+                and isinstance(state_machine_m.state_machine.root_state, ExecutionState) \
+                    and not os.path.isfile(os.path.join(sm_path, storage.FILE_NAME_CORE_DATA)):    
         try:
             # Load old state machine info to get old folder structure
             state_machine_info_old = storage_utils.load_objects_from_json(os.path.join(sm_path, storage.STATEMACHINE_FILE))
