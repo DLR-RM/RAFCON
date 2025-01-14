@@ -106,13 +106,14 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     @staticmethod
     def state_machine_to_dict(state_machine):
+        from rafcon.core.states.execution_state import ExecutionState
         from rafcon.core.storage.storage import get_storage_id_for_state
         dict_representation = {
-            'root_state_storage_id': get_storage_id_for_state(state_machine.root_state),
             'state_machine_version': state_machine.version,
             'used_rafcon_version': rafcon.__version__,
             'creation_time': state_machine.creation_time,
         }
+
         return dict_representation
 
     def start(self):

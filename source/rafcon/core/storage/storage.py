@@ -48,6 +48,7 @@ LIBRARY_NOT_FOUND_DUMMY_STATE_NAME = "LIBRARY NOT FOUND DUMMY STATE"
 
 #: File names for various purposes
 FILE_NAME_META_DATA = 'meta_data.json'
+FILE_NAME_META_DATA_SM = 'sm_meta_data.json'
 FILE_NAME_CORE_DATA = 'core_data.json'
 FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
@@ -250,7 +251,7 @@ def save_state_recursively(state, base_path, parent_path, as_copy=False):
     from rafcon.core.states.execution_state import ExecutionState
     from rafcon.core.states.container_state import ContainerState
 
-    state_path = os.path.join(parent_path, get_storage_id_for_state(state))
+    state_path = state.get_storage_path()
     state_path_full = os.path.join(base_path, state_path)
     if not os.path.exists(state_path_full):
         os.makedirs(state_path_full)
@@ -311,13 +312,19 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
             logger.warning(note_about_possible_incompatibility)
 
     state_machine = StateMachine.from_dict(state_machine_dict, state_machine_id)
-    if "root_state_storage_id" not in state_machine_dict:
+    if "root_state_storage_id" not in state_machine_dict and "root_state_id" not in state_machine_dict:
+        root_state_storage_id = ""
+    elif "root_state_storage_id" not in state_machine_dict:
         root_state_storage_id = state_machine_dict['root_state_id']
         state_machine.supports_saving_state_names = False
     else:
         root_state_storage_id = state_machine_dict['root_state_storage_id']
 
-    root_state_path = os.path.join(base_path, root_state_storage_id)
+    if root_state_storage_id:  # deprecated, new state machines (>=2.2.0) have the root state located in the base path
+        root_state_path = os.path.join(base_path, root_state_storage_id)
+    else:
+        root_state_path = base_path
+
     state_machine.file_system_path = base_path
     dirty_states = []
     state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path,

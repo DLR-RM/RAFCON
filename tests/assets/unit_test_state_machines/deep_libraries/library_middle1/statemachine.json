@@ -1,6 +1,5 @@
 {
     "creation_time": "2018-05-28 08:30:03", 
-    "root_state_storage_id": "library_middle_1_DONOWT", 
     "state_machine_version": null, 
-    "used_rafcon_version": "2.1.1a1"
+    "used_rafcon_version": "2.1.4a1"
 }

@@ -603,10 +603,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             else:
                 return self.parent.get_storage_path(state_identifier + PATH_SEPARATOR + appendix)
         else:
+            # the root state is located in the root state machine folder
             if appendix is None:
-                return state_identifier
+                return ""
             else:
-                return state_identifier + PATH_SEPARATOR + appendix
+                return appendix
 
     def get_state_machine(self):
         """Get a reference of the state_machine the state belongs to
@@ -650,7 +651,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         The path is not fully secure because the all state ids are not globally unique.
         """
-        return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
+        return os.path.join(RAFCON_TEMP_PATH_STORAGE, self.get_storage_path())
 
     @lock_state_machine
     @Observable.observed

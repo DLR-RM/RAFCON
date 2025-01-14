@@ -139,7 +139,7 @@ class StateMachineStartItem(HistoryItem):
         self.os_environment = dict(os.environ)
 
     def __str__(self):
-        return "StateMachineStartItem with name %s (time: %s)" % (self.sm_dict['root_state_storage_id'], self.timestamp)
+        return "StateMachineStartItem (time: {})".format(self.timestamp)
 
     def to_dict(self, pickled=True):
         record = HistoryItem.to_dict(self, pickled=pickled)

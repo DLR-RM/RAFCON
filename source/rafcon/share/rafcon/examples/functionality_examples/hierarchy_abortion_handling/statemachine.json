@@ -1,7 +1,5 @@
 {
     "creation_time": "2015-06-03 16:10:51", 
-    "last_update": "2018-07-11 12:05:28", 
-    "root_state_storage_id": "error_propagation_test_BNXYRR", 
     "state_machine_version": "None", 
-    "used_rafcon_version": "0.12.15a1"
+    "used_rafcon_version": "2.1.4a1"
 }
