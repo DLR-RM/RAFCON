@@ -168,12 +168,17 @@ def check_state_storage(state, parent_path, missing_elements, existing_elements=
     from rafcon.core.storage.storage import get_storage_id_for_state
 
     # check state folder exists
-    folder_path = os.path.join(parent_path, get_storage_id_for_state(state))
+    if not os.path.isdir(os.path.join(parent_path, get_storage_id_for_state(state))):
+        # This means new folder structure (>=2.2.0)
+        folder_path = parent_path
+    else:
+        # This means old folder structure (<2.2.0)
+        folder_path = os.path.join(parent_path, get_storage_id_for_state(state))
     check_folder(folder_path, "state_path", missing_elements, existing_elements)
 
     # check state script exists
     if isinstance(state, ExecutionState):
-        if os.path.isfile(os.path.join(parent_path, storage.FILE_NAME_CORE_DATA)):
+        if not os.path.isdir(os.path.join(parent_path, get_storage_id_for_state(state))):
             # This means new folder structure (>=2.2.0)
             file_path = os.path.join(parent_path, storage.SCRIPT_FILE)
         else:
@@ -182,7 +187,7 @@ def check_state_storage(state, parent_path, missing_elements, existing_elements=
         check_file(file_path, "script", missing_elements, existing_elements)
 
     # check state-meta data exists (transitions and so on)
-    if os.path.isfile(os.path.join(parent_path, storage.FILE_NAME_CORE_DATA)):
+    if not os.path.isdir(os.path.join(parent_path, get_storage_id_for_state(state))):
         # This means new folder structure (>=2.2.0)
         file_path = os.path.join(parent_path, storage.FILE_NAME_CORE_DATA)
     else:
@@ -225,9 +230,9 @@ def check_that_all_files_are_there(state_machine, base_path=None, check_meta_dat
         logger.debug(30*"#")
         for path in missing_elements:
             if old_without_base is not None and path.replace(base_path, "") in old_without_base:
-                logger.debug(path, " ... but exists in ", old_base_path)
+                logger.debug("{} ... but exists in {}".format(path, old_base_path))
             else:
-                logger.debug(path, " ... but does not exist before")
+                logger.debug("{} ... but does not exist before".format(path))
     else:
         logger.debug(30*"#")
         logger.debug("All Files and Folders where Found of state machine %s with root_state.state_id %s" % \
@@ -239,8 +244,9 @@ def check_that_all_files_are_there(state_machine, base_path=None, check_meta_dat
 
 def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
     from rafcon.core.states.container_state import ContainerState
+    from rafcon.core.storage.storage import get_storage_id_for_state
 
-    def check_state(state, state_id=None, state_machine=False):
+    def check_state(state, state_id=None, state_machine=False, skip_warning=False):
         # handle handed state machine
         if state_machine:
             folder = state.file_system_path # state is a state machine
@@ -254,10 +260,10 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
 
         # check that there is exact one child state folder with this state_id in this folder
         elements_found = [elem for elem in os.listdir(folder) if state_id in elem]
-        if len(elements_found) > 1:
+        if len(elements_found) > 1 and not skip_warning:
             logger.warning("Too many folders {2} for state_id: {0} in folder {1}".format(state_id, folder,
                                                                                          elements_found))
-        elif len(elements_found) < 1:
+        elif len(elements_found) < 1 and not skip_warning:
             logger.warning("Too less folders {2} for state_id: {0} in folder {1}".format(state_id, folder,
                                                                                          elements_found))
 
@@ -266,7 +272,12 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
             for state_id in current_state.states:
                 check_state(current_state, state_id)
 
-    check_state(sm_m.state_machine, state_machine=True)
+    if not os.path.isdir(os.path.join(sm_m.state_machine.file_system_path, get_storage_id_for_state(sm_m.state_machine.root_state))):
+        # This means new folder structure (>=2.2.0)
+        check_state(sm_m.state_machine, state_machine=True, skip_warning=True)
+    else:
+        # This means old folder structure (<2.2.0)
+        check_state(sm_m.state_machine, state_machine=True)
 
 
 @pytest.mark.parametrize('gui', [
