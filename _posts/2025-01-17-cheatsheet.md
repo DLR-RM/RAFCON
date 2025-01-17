@@ -9,7 +9,7 @@ We are excited to share our brand-new [RAFCON Cheatsheet (PDF)][sheat_pdf_link]
 
 ![visualized here (JPG)](images/cheatsheet/rafcon_cheatsheet.jpg)
 
-You can find the file with high resolution file [here][sheat_pdf_link].
+You can find the file with high resolution [here][sheat_pdf_link].
 
 It covers essential shortcuts and commands to streamline your workflow.
 
