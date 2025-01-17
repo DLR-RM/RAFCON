@@ -1,7 +1,5 @@
 {
     "creation_time": "2015-07-28 10:41:34", 
-    "last_update": "2018-07-11 12:08:28", 
-    "root_state_storage_id": "99_Little_Bugs_OTNPAN", 
     "state_machine_version": "None", 
-    "used_rafcon_version": "0.12.15a1"
+    "used_rafcon_version": "2.1.4a1"
 }

@@ -66,6 +66,7 @@ class ExecutionEngine(Observable):
         self.state_counter_lock = Lock()
         self.new_execution_command_handled = True
         self.stop_state_machine_after_finishing_step = False
+        self.running_only_selected_state = False
 
     @Observable.observed
     def pause(self):
@@ -418,6 +419,7 @@ class ExecutionEngine(Observable):
                     # "run-(only)-selected-state" feature, now we just add one FORWARD_OVER step
                     if self._status.execution_mode is StateMachineExecutionStatus.RUN_ONLY_SELECTED_STATE:
                         self.stop_state_machine_after_finishing_step = True
+                        self.running_only_selected_state = True
                     self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OVER
                     self.run_to_states.remove(state_path)
                     # add the container state to self.run_to_states

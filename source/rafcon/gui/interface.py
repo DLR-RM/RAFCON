@@ -156,6 +156,35 @@ def create_folder(query, default_name=None, default_path=None, current_folder=No
 
         path = dialog.get_filename()
 
+        # Check if trying to save inside another state machine
+        parent_folder_path = os.path.dirname(path)
+        if 'statemachine.json' in os.listdir(parent_folder_path):
+            popup = Gtk.Dialog(title='Invalid state machine path', transient_for=dialog, flags=0)
+            popup.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
+            text = 'You are trying to save the state machine inside another state machine:\n'\
+                   '"{}"\n\n'\
+                   'This would lead to an invalid library path structure.\n'\
+                   'Please choose a different path!'\
+                   .format(os.path.basename(parent_folder_path))
+            label = Gtk.Label(label=text)
+            label.set_margin_start(20)
+            label.set_margin_end(20)
+            label.set_margin_top(15)
+            label.set_margin_bottom(15)
+            popup.vbox.pack_start(label, True, True, 0)
+            label.show()
+            popup.set_transient_for(dialog)
+            response = popup.run()
+            popup.destroy()
+
+            # Delete the folder that was created during selection
+            os.rmdir(path)
+
+            # Set path to the parent of the state machine
+            path = os.path.dirname(parent_folder_path)
+            dialog.set_current_folder(path)
+            continue
+
         # Give a warning if the path already contains files
         files_in_path = os.listdir(path)
         if files_in_path:

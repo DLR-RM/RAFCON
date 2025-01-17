@@ -1,7 +1,5 @@
 {
     "creation_time": "2015-04-29 06:02:12", 
-    "last_update": "2018-07-11 12:04:46", 
-    "root_state_storage_id": "backward_test_preemption_GLSUJY", 
     "state_machine_version": "None", 
-    "used_rafcon_version": "0.12.15a1"
+    "used_rafcon_version": "2.1.4a1"
 }

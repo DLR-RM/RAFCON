@@ -105,11 +105,12 @@ def create_new_connection(from_port_m, to_port_m):
     elif isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) and \
             isinstance(to_port_m, (DataPortModel, ScopedVariableModel)):
         return add_data_flow_to_state(from_port_m, to_port_m)
-    elif isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) and not isinstance(to_port_m, (DataPortModel, ScopedVariableModel)):
+    elif isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) and not \
+          isinstance(to_port_m, (DataPortModel, ScopedVariableModel)):
         return add_data_flow_to_state(from_port_m, to_port_m, add_data_port=True)
     # Both ports are not None
     elif from_port_m and to_port_m:
-        logger.error("Connection of non-compatible ports: {0} and {1}".format(type(from_port_m), type(to_port_m)))
+        logger.warning("Connection of non-compatible ports: {0} and {1}".format(type(from_port_m), type(to_port_m)))
 
     return False
 
@@ -178,7 +179,10 @@ def add_data_flow_to_state(from_port_m, to_port_m, add_data_port=False):
     elif not from_state_m.state.is_root_state and not to_state_m.state.is_root_state \
             and from_state_m.parent.state.state_id and to_state_m.parent.state.state_id:
         responsible_parent_m = from_state_m.parent
-        data_port_type = not data_port_type
+        if from_state_m.parent.state.state_id is not to_state_m.parent.state.state_id:
+            pass
+        else:
+            data_port_type = not data_port_type
     # from parent to descendant
     elif isinstance(from_state_m, ContainerStateModel) and is_descendant(from_state_m.state, to_state_m.state):
         responsible_parent_m = descendant_states
@@ -219,11 +223,17 @@ def add_data_flow_to_state(from_port_m, to_port_m, add_data_port=False):
                 else:
                     responsible_parent_m[i + 1].add_data_flow(responsible_parent_m[i].state_id, current_data_port_id, responsible_parent_m[i + 1].state_id, previous_data_port_id)
                 previous_data_port_id = current_data_port_id
-        else:
+        else: 
             responsible_parent_m.state.add_data_flow(from_state_id, from_port_id, to_state_id, to_port_id)
         return True
-    except (ValueError, AttributeError, TypeError) as e:
+    except (ValueError, AttributeError, TypeError) as e: 
         logger.error("Data flow couldn't be added: {0}".format(e))
+        # remove corresponding data ports if dataflow is invalid
+        if add_data_port:
+            if to_state_m.state.input_data_ports and list(to_state_m.state.input_data_ports)[-1] is to_port_id:
+                to_state_m.state.remove_input_data_port(to_port_id, force=False, destroy=True)
+            elif to_state_m.state.output_data_ports and list(to_state_m.state.output_data_ports)[-1] is to_port_id:
+                to_state_m.state.remove_output_data_port(to_port_id, force=False, destroy=True)
         return False
 
 

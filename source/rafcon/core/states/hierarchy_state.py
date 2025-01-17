@@ -107,7 +107,10 @@ class HierarchyState(ContainerState):
                     self.state_execution_status = StateExecutionStatus.EXECUTE_CHILDREN
                 self.backward_execution = False  # TODO: why is this line needed?
                 if self.preempted:
-                    if self.last_transition and self.last_transition.from_outcome == -2:
+                    if singleton.state_machine_execution_engine.running_only_selected_state:
+                        singleton.state_machine_execution_engine.running_only_selected_state = False
+                        break
+                    elif self.last_transition and self.last_transition.from_outcome == -2:
                         logger.debug("Execute preemption handling for '{0}'".format(self.child_state))
                     else:
                         break
@@ -121,6 +124,10 @@ class HierarchyState(ContainerState):
                     break
 
                 self._execute_current_child()
+
+                # Stop after the desired state was executed if run only selected state
+                if execution_mode == StateMachineExecutionStatus.RUN_ONLY_SELECTED_STATE:
+                    break
 
                 if self.backward_execution:
                     break_loop = self._handle_backward_execution_after_child_execution()

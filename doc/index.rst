@@ -43,7 +43,12 @@ Have a look at our `website <https://dlr-rm.github.io/RAFCON/getting_started.htm
    development/development.rst
    api/rafcon.rst
 
+There is also a cheatsheet, high-resolution can be downloaded from the github repository:
 
+.. figure:: _static/rafcon_cheatsheet.jpg
+   :width: 90 %
+   :alt: RAFCON Cheatsheet
+   :align: center
 
 Indices and tables
 ==================
