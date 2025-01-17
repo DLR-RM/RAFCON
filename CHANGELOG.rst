@@ -4,6 +4,27 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
+2.2.0
+""""""
+- Features:
+  - Now using flat storage for state machines (removed first layer in folder structure)
+  - Automatic conversion to new structure when re-saving existing state machines
+  - Only storing meta_data for root_state if available
+  - Added custom color for library states
+  - Prevent saving a state machine inside another via GUI
+  - Added locking current view feature in execution history GUI
+  - Added open library from execution history feature in GUI
+
+- Bug fixes:
+  - Fixed bug in "run only selected state"
+  - Fixed bug when destroying gtk controllers
+  - Fixed bug in automatic dataport generation for GUI
+  - Fixed bug in automaticly setting dataport for invalid data flows
+
+- Miscellaneous:
+  - Added cheat-sheet to documentation and GitHub
+  - Updated package versions to support python>3.10
+
 2.1.4
 """"""
     - Bug fixes:
