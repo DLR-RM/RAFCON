@@ -1,0 +1,19 @@
+---
+layout: post
+title:  "RAFCON Cheatsheet"
+date:   2025-01-17 14:54:00 +0100
+categories: docs cheatsheet
+author: Florian Lay
+---
+We are excited to share our brand-new [RAFCON Cheatsheet (PDF)](https://github.com/DLR-RM/RAFCON/blob/develop/doc/_static/rafcon_cheatsheet.pdf)
+
+![visualized here (JPG)](images/cheatsheet/rafcon_cheatsheet.jpg)
+
+It covers essential shortcuts and commands to streamline your workflow.
+
+Check it out and let us know what you think!
+
+
+
+
+
