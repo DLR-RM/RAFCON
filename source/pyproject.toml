@@ -5,7 +5,7 @@ authors = [
     {name = "Franz Steinmetz <franz.steinmetz@dlr.de"},
 ]
 license = {text = "EPL-1.0"}
-requires-python = ">=3.7,<4.0"
+requires-python = ">=3.9,<4.0"
 dependencies = [
     "yaml-configuration<1.0.0,>=0.2.5",
     "numpy==1.19.5; python_version < \"3.7\"",
