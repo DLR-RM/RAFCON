@@ -35,11 +35,13 @@ dependencies = [
     "jsonconversion (>=1.1.0,<2.0.0)",
     "psutil (>=5.0.0,<6.0.0)",
     "pycairo (>=1.11.0,<2.0.0)",
-    "pylint (>=2.11.0,<3.0.0)",
+    "pylint (>=3.0.0,<4.0.0) ; python_version >= '3.11'",
+    "pylint (>=2.11.0,<3.0.0) ; python_version < '3.11'",
     "simplegeneric (>=0.5.0,<1.0.0)",
     "numpy (>=2.0,<3.0) ; python_version >= '3.11'",
     "numpy (>=1.26,<2.0) ; python_version < '3.11'",
     "pandas (>=1.2.0,<2.0.0)",
+    "yaml_configuration (>=0.2.5,<0.3.0)",
 ]
 license = {text = "EPL"}
 requires-python = ">=3.9"
