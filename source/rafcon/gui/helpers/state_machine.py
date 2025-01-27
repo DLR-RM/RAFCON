@@ -573,6 +573,11 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
             shutil.rmtree(os.path.join(sm_path, root_state_storage_id))
         except:
             logger.warn("Couldn't delete legacy root-state folder for current execution state")
+    
+    # Delete remaining script.py if a execution state is resaved as a hierarchy state
+    if not isinstance(state_machine_m.state_machine.root_state, ExecutionState) \
+        and os.path.isfile(os.path.join(sm_path, storage.SCRIPT_FILE)):
+        os.remove(os.path.join(sm_path, storage.SCRIPT_FILE))
 
     storage.save_state_machine_to_path(state_machine_m.state_machine, copy_path if as_copy else sm_path,
                                        delete_old_state_machine=delete_old_state_machine, as_copy=as_copy)
