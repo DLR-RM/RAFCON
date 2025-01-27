@@ -4,6 +4,15 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
+2.2.1
+""""""
+    - Bug fixes:
+        - Fixed bug where switching an execution state to a hierarchy state would not remove script.py
+
+    - Miscellaneous:
+        - Resolved numpy conflict with different python versions (3.9 and >3.10)
+        - Updated versioning of dependencies
+
 2.2.0
 """"""
     - Features:

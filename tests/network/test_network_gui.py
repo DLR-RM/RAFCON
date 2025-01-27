@@ -537,5 +537,6 @@ def test_network_gui():
 
 
 if __name__ == '__main__':
-    test_network_gui()
+    pass
+    # test_network_gui()          # commented out because a plugin is required
     # pytest.main([__file__])

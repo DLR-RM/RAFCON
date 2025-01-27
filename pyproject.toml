@@ -1,6 +1,6 @@
 [project]
 name = "rafcon"
-version = "2.2.0" # Handled by bump2version
+version = "2.2.1" # Handled by bump2version
 description = "Develop your robotic tasks with hierarchical state machines using an intuitive graphical user interface"
 keywords = ["state machine", "robotic", "FSM", "development", "GUI", "visual programming"]
 readme = "README.rst"
@@ -27,19 +27,21 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    "PyGObject>=3.42.0",
-    "wrapt>=1.14.0",
-    "astroid>=3.0.0",
-    "gaphas>=2.1.0,<2.2.0",
-    "jsonconversion>=1.0.2",
-    "psutil>=5.0.0,<6.0.0",
-    "pycairo>=1.11.0",
-    "pylint>=2.11.0",
-    "simplegeneric>=0.5.0,<1.0.0",
-    "yaml_configuration>=0.2.5,<0.3.0",
-    "numpy>=2.0.0",
-    "pandas==1.1.5; python_full_version < \"3.7.1\"",
-    "pandas<2.0.0,>=1.2.0; python_full_version >= \"3.7.1\"",
+    "PyGObject( >=3.42.0,<4.0.0)",
+    "wrapt (>=1.14.0,<2.0.0)",
+    "astroid (>=3.0.0,<4.0.0) ; python_version >= '3.11'",
+    "astroid (>=2.15.8,<3.0.0) ; python_version < '3.11'",
+    "gaphas (>=2.1.0,<2.2.0)",
+    "jsonconversion (>=1.1.0,<2.0.0)",
+    "psutil (>=5.0.0,<6.0.0)",
+    "pycairo (>=1.11.0,<2.0.0)",
+    "pylint (>=3.0.0,<4.0.0) ; python_version >= '3.11'",
+    "pylint (>=2.11.0,<3.0.0) ; python_version < '3.11'",
+    "simplegeneric (>=0.5.0,<1.0.0)",
+    "numpy (>=2.0,<3.0) ; python_version >= '3.11'",
+    "numpy (>=1.26,<2.0) ; python_version < '3.11'",
+    "pandas (>=1.2.0,<2.0.0)",
+    "yaml_configuration (>=0.2.5,<0.3.0)",
 ]
 license = {text = "EPL"}
 requires-python = ">=3.9"
@@ -49,21 +51,22 @@ Homepage = "https://github.com/DLR-RM/RAFCON"
 
 [tool.pdm.dev-dependencies]
 dev = [
-    "attrs>=22.2.0",
-    "graphviz>=0.18.2",
-    "matplotlib>=3.9.0",
-    "monitoring>=0.9.12",
-    "objgraph>=3.5.0",
-    "pyuserinput>=0.1.11",
-    "pytest-faulthandler>=1.6.0",
-    "pytest-mock>=1.9.0,<3",
+    "attrs >=22.2.0",
+    "graphviz >=0.18.2",
+    "matplotlib (>=3.10,<4.0) ; python_version >= '3.11'",
+    "matplotlib (>=3.9,<3.10) ; python_version < '3.11'",
+    "monitoring >=0.9.12",
+    "objgraph >=3.5.0",
+    "profiling (>=0.1.3) ; python_version < '3.11'",
+    "pyuserinput >=0.1.11",
+    "pytest-faulthandler >=1.6.0",
+    "pytest-mock (>=1.9.0,<3)",
     "pytest-timeout",
-    "pytest>=6.0.0,<7.0.0",
-    "pyuserinput",
+    "pytest (>=6.0.0,<7.0.0)",
     "libsass",
     "coverage",
-    "tox>=3.28.0",
-    "bump2version>=1.0.1",
+    "tox >=3.28.0",
+    "bump2version >=1.0.1",
 ]
 
 [tool.pdm.build]
