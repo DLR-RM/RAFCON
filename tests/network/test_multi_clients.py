@@ -240,6 +240,7 @@ def test_multi_clients():
 
 
 if __name__ == '__main__':
-    test_multi_clients()
+    pass
+    # test_multi_clients()          # commented out because a plugin is required
     # pytest.main([__file__])
 

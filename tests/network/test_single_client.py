@@ -412,6 +412,7 @@ def test_single_client():
 
 
 if __name__ == '__main__':
-    test_single_client()
+    pass
+    # test_single_client()          # commented out because a plugin is required
     # pytest.main([__file__])
 
