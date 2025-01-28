@@ -19,7 +19,7 @@ class ExecutionLogTreeView(View):
 
         self.paned.set_position(300)
 
-        self.text_view = Gtk.TextView(buffer=None)
+        self.text_view = Gtk.TextView(buffer=Gtk.TextBuffer())
         self.scrollable_textview.add(self.text_view)
 
         self.tree_view = Gtk.TreeView()
