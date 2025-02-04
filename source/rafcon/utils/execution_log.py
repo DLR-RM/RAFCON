@@ -388,10 +388,12 @@ def log_to_ganttplot(execution_history_items, only_execution_states=False):
             # Filtering library states that are single ExecutionStates:
             # Extend the path_by_name string with a '/' which is the pattern for sub-state machines.
             # If the extended string does not exists, it is an ExecutionState (or empty hierarchy state).
-            path_by_name_extended = path_by_name[idx] + '/'
-            path_in_list = any(path_by_name_extended in s for s in path_by_name)
-            if not path_in_list:
-                execution_state_mask[idx] = True
+            # TODO: This takes very long for larger state machines. Need to rework.
+            if only_execution_states:
+                path_by_name_extended = path_by_name[idx] + '/'
+                path_in_list = any(path_by_name_extended in s for s in path_by_name)
+                if not path_in_list:
+                    execution_state_mask[idx] = True
 
     # Create a unique list of states (over all hierarchies), filtered by name
     if only_execution_states:
