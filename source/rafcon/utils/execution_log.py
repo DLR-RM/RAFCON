@@ -369,23 +369,74 @@ def log_to_ganttplot(execution_history_items):
     import matplotlib.pyplot as plt
     import matplotlib.dates as dates
     import numpy as np
+    from matplotlib.patches import Patch
 
     d = log_to_DataFrame(execution_history_items)
 
-    # de-duplicate states and make mapping from state to idx
-    unique_states, idx = np.unique(d.path_by_name, return_index=True)
-    ordered_unique_states = np.array(d.path_by_name)[np.sort(idx)]
-    name2idx = {k: i for i, k in enumerate(ordered_unique_states)}
+    # TODO: Right now, d.path_by_name returns the given names, not the library names
+    # this will lead to not truly unique state machines...
+    # We could maybe use d.path which is the IDs but then we need to match back the names
 
+    # Create a unique list of states (over all hierarchies), filtered by name
+    state_names_cropped = np.vectorize(lambda x: x.split('/')[-1])(d.path_by_name)
+    unique_states, idx_unique = np.unique(state_names_cropped, return_index=True)
+    ordered_unique_states = np.array(state_names_cropped)[np.sort(idx_unique)]
+
+    # Reverse the order so that the hierarchies are shown top down
+    ordered_unique_states = ordered_unique_states[::-1]
+    name2idx_unique = {k: i for i, k in enumerate(ordered_unique_states)}
+
+    # Get the timing information for each executed state machine
     calldate = dates.date2num(d.timestamp_call.dt.to_pydatetime())
     returndate = dates.date2num(d.timestamp_return.dt.to_pydatetime())
 
-    state2color = {'HierarchyState': 'k',
-                   'ExecutionState': 'g',
-                   'BarrierConcurrencyState': 'y',
-                   'PreemptiveConcurrencyState': 'y'}
+    # Use colors from config file here to match RAFCON layout (uses "colors-dark.json" config)
+    from rafcon.gui.config import global_gui_config as gui_config
+    state2color = {'HierarchyState': gui_config.gtk_colors['BLACK'].to_floats(),                    # black
+                   'LibraryState': gui_config.gtk_colors['STATE_BORDER'].to_floats(),               # grey
+                   'ExecutionState': gui_config.gtk_colors['STATE_SELECTED_BORDER'].to_floats(),    # blue
+                   'BarrierConcurrencyState': gui_config.gtk_colors['DATA_PORT'].to_floats(),       # yellow
+                   'PreemptiveConcurrencyState': gui_config.gtk_colors['DATA_PORT'].to_floats()}    # yellow
 
-    fig, ax = plt.subplots(1, 1)
-    ax.barh(bottom=[name2idx[k] for k in d.path_by_name], width=returndate-calldate,
-            left=calldate, align='center', color=[state2color[s] for s in d.state_type], lw=0.0)
-    plt.yticks(list(range(len(ordered_unique_states))), ordered_unique_states)
+    # Assemble plot
+    fig, ax = plt.subplots(1, 2)
+
+    # Subplot 1: Show unique states over execution
+    all_states_mapped = [name2idx_unique[k] for k in state_names_cropped]
+    timespans = returndate-calldate
+    ax[0].barh(y=all_states_mapped, width=timespans, left=calldate, align='center', 
+               color=[state2color[s] for s in d.state_type])
+    ax[0].xaxis.set_major_formatter(dates.DateFormatter('%H:%M:%S.%f'))
+    ax[0].tick_params(axis='x', rotation=45)
+    ax[0].set_yticks(list(range(len(ordered_unique_states))), ordered_unique_states)
+    ax[0].set_title('Unique States over Execution', fontsize=14, fontweight='bold')
+    ax[0].set_xlabel('Time of Day [h:m:s]')
+
+    # Create legend where concurrency states are combined as one state type
+    legend_elements = [Patch(color=state2color['HierarchyState'], label='HierarchyState'),
+                       Patch(color=state2color['LibraryState'], label='LibraryState'),
+                       Patch(color=state2color['ExecutionState'], label='ExecutionState'),
+                       Patch(color=state2color['BarrierConcurrencyState'], label='ConcurrencyState')]
+    ax[0].legend(handles=legend_elements, loc='lower left')
+
+    # Subplot 2: Show accumulated state time ordered by size
+    accumulated_time = np.zeros(len(ordered_unique_states))
+    for index, state in enumerate(all_states_mapped):
+        accumulated_time[state] += timespans[index]
+    state_types = np.array(d.state_type)[np.sort(idx_unique)]
+    state_types = state_types[::-1]
+
+    # Sort by accumulated time for better overview
+    idx_accum = np.argsort(accumulated_time)
+    colors_accum = [state2color[s] for s in state_types[idx_accum]]
+    ax[1].barh(y=ordered_unique_states[idx_accum], width=accumulated_time[idx_accum],
+               align='center', color=colors_accum)
+    ax[1].xaxis.set_major_formatter(dates.DateFormatter('%H:%M:%S.%f'))
+    ax[1].tick_params(axis='x', rotation=45)
+    ax[1].set_yticks(list(range(len(ordered_unique_states[idx_accum]))), ordered_unique_states[idx_accum])
+    ax[1].set_title('Sorted Accumulated State Times', fontsize=14, fontweight='bold')
+    ax[1].set_xlabel('Time [h:m:s]')
+    ax[1].grid(True)
+
+    # Show the plot in a new window using matplotlib
+    plt.show()
