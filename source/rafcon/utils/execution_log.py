@@ -362,7 +362,7 @@ def log_to_DataFrame(execution_history_items, data_in_columns=[], data_out_colum
     return df_timed
 
 
-def log_to_ganttplot(execution_history_items):
+def log_to_ganttplot(execution_history_items, only_execution_states=False):
     """
     Example how to use the DataFrame representation
     """
@@ -371,14 +371,31 @@ def log_to_ganttplot(execution_history_items):
     import numpy as np
     from matplotlib.patches import Patch
 
-    d = log_to_DataFrame(execution_history_items)
+    # Collect all available execution data
+    data = log_to_DataFrame(execution_history_items)
 
-    # TODO: Right now, d.path_by_name returns the given names, not the library names
-    # this will lead to not truly unique state machines...
-    # We could maybe use d.path which is the IDs but then we need to match back the names
+    # Create a mask to distinguish ExecutionStates from others
+    path_by_name = np.array(data.path_by_name)
+    execution_state_mask = np.array(data.state_type == 'ExecutionState')
+
+    # Use library state names instead of given names to properly filter unique states
+    state_names_cropped = np.array(data.state_name)
+    library_state_name = np.array(data.library_state_name)
+    for idx, library in enumerate(library_state_name):
+        if library:
+            state_names_cropped[idx] = library_state_name[idx]
+
+            # Filtering library states that are single ExecutionStates:
+            # Extend the path_by_name string with a '/' which is the pattern for sub-state machines.
+            # If the extended string does not exists, it is an ExecutionState (or empty hierarchy state).
+            path_by_name_extended = path_by_name[idx] + '/'
+            path_in_list = any(path_by_name_extended in s for s in path_by_name)
+            if not path_in_list:
+                execution_state_mask[idx] = True
 
     # Create a unique list of states (over all hierarchies), filtered by name
-    state_names_cropped = np.vectorize(lambda x: x.split('/')[-1])(d.path_by_name)
+    if only_execution_states:
+        state_names_cropped = state_names_cropped[execution_state_mask]
     unique_states, idx_unique = np.unique(state_names_cropped, return_index=True)
     ordered_unique_states = np.array(state_names_cropped)[np.sort(idx_unique)]
 
@@ -387,8 +404,8 @@ def log_to_ganttplot(execution_history_items):
     name2idx_unique = {k: i for i, k in enumerate(ordered_unique_states)}
 
     # Get the timing information for each executed state machine
-    calldate = dates.date2num(d.timestamp_call.dt.to_pydatetime())
-    returndate = dates.date2num(d.timestamp_return.dt.to_pydatetime())
+    calldate = dates.date2num(data.timestamp_call.dt.to_pydatetime())
+    returndate = dates.date2num(data.timestamp_return.dt.to_pydatetime())
 
     # Use colors from config file here to match RAFCON layout (uses "colors-dark.json" config)
     from rafcon.gui.config import global_gui_config as gui_config
@@ -402,39 +419,52 @@ def log_to_ganttplot(execution_history_items):
     fig, ax = plt.subplots(1, 2)
 
     # Subplot 1: Show unique states over execution
-    all_states_mapped = [name2idx_unique[k] for k in state_names_cropped]
+    all_states_mapped = np.array([name2idx_unique[k] for k in state_names_cropped])
     timespans = returndate-calldate
-    ax[0].barh(y=all_states_mapped, width=timespans, left=calldate, align='center', 
-               color=[state2color[s] for s in d.state_type])
+    colors_plot = np.array([state2color[s] for s in data.state_type])
+    title_subplot1 = f'Unique States ({len(np.unique(all_states_mapped))}) over Execution'
+    if only_execution_states:
+        timespans = timespans[execution_state_mask]
+        calldate = calldate[execution_state_mask]
+        colors_plot = colors_plot[execution_state_mask]
+        title_subplot1 = f'Unique ExecutionStates ({len(np.unique(all_states_mapped))}) over Execution'
+    ax[0].barh(y=all_states_mapped,
+               width=timespans,
+               left=calldate,
+               align='center',
+               color=colors_plot)
     ax[0].xaxis.set_major_formatter(dates.DateFormatter('%H:%M:%S.%f'))
     ax[0].tick_params(axis='x', rotation=45)
     ax[0].set_yticks(list(range(len(ordered_unique_states))), ordered_unique_states)
-    ax[0].set_title('Unique States over Execution', fontsize=14, fontweight='bold')
+    ax[0].set_title(title_subplot1, fontsize=12, fontweight='bold')
     ax[0].set_xlabel('Time of Day [h:m:s]')
 
     # Create legend where concurrency states are combined as one state type
-    legend_elements = [Patch(color=state2color['HierarchyState'], label='HierarchyState'),
-                       Patch(color=state2color['LibraryState'], label='LibraryState'),
-                       Patch(color=state2color['ExecutionState'], label='ExecutionState'),
-                       Patch(color=state2color['BarrierConcurrencyState'], label='ConcurrencyState')]
-    ax[0].legend(handles=legend_elements, loc='lower left')
+    if not only_execution_states:
+        legend_elements = [Patch(color=state2color['HierarchyState'], label='HierarchyState'),
+                           Patch(color=state2color['LibraryState'], label='LibraryState'),
+                           Patch(color=state2color['ExecutionState'], label='ExecutionState'),
+                           Patch(color=state2color['BarrierConcurrencyState'], label='ConcurrencyState')]
+        ax[0].legend(handles=legend_elements, loc='lower left')
 
     # Subplot 2: Show accumulated state time ordered by size
     accumulated_time = np.zeros(len(ordered_unique_states))
     for index, state in enumerate(all_states_mapped):
         accumulated_time[state] += timespans[index]
-    state_types = np.array(d.state_type)[np.sort(idx_unique)]
+    state_types = np.array(data.state_type)[np.sort(idx_unique)]
     state_types = state_types[::-1]
 
     # Sort by accumulated time for better overview
     idx_accum = np.argsort(accumulated_time)
-    colors_accum = [state2color[s] for s in state_types[idx_accum]]
+    colors_accum = np.array([state2color[s] for s in state_types[idx_accum]])
+    if only_execution_states:
+        colors_accum = state2color['ExecutionState']
     ax[1].barh(y=ordered_unique_states[idx_accum], width=accumulated_time[idx_accum],
                align='center', color=colors_accum)
     ax[1].xaxis.set_major_formatter(dates.DateFormatter('%H:%M:%S.%f'))
     ax[1].tick_params(axis='x', rotation=45)
     ax[1].set_yticks(list(range(len(ordered_unique_states[idx_accum]))), ordered_unique_states[idx_accum])
-    ax[1].set_title('Sorted Accumulated State Times', fontsize=14, fontweight='bold')
+    ax[1].set_title('Sorted Accumulated State Times', fontsize=12, fontweight='bold')
     ax[1].set_xlabel('Time [h:m:s]')
     ax[1].grid(True)
 
