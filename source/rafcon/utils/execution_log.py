@@ -247,6 +247,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             for l in ['outcome_name', 'outcome_id']:
                 execution_item[l] = return_item[l]
             for l in ['timestamp']:
+                # TODO -jer: Here we gain access to the spend time
                 execution_item[l+'_call'] = call_item[l]
                 execution_item[l+'_return'] = return_item[l]
 
@@ -260,6 +261,10 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                         if not k.startswith('!'):  # ! indicates storage error
                             try:
                                 r[k] = pickle.loads(v)
+                            # TODO -jer: Need to handle this properly (see below)
+                            except ModuleNotFoundError as moderr:
+                                logger.warning(moderr)
+                                r[k] = None
                             except Exception as e:
                                 if throw_on_pickle_error:
                                     raise
@@ -279,10 +284,11 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 
                 return r
 
-            execution_item['data_ins'] = unpickle_data(call_item['input_output_data'])
-            execution_item['data_outs'] = unpickle_data(return_item['input_output_data'])
-            execution_item['scoped_data_ins'] = unpickle_data(call_item['scoped_data'])
-            execution_item['scoped_data_outs'] = unpickle_data(return_item['scoped_data'])
+            # TODO -jer: We need to handle cases where we don't have the libraries needed for the stored data (see also above)
+            execution_item['data_ins'] = None #unpickle_data(call_item['input_output_data'])
+            execution_item['data_outs'] = None #unpickle_data(return_item['input_output_data'])
+            execution_item['scoped_data_ins'] = None #unpickle_data(call_item['scoped_data'])
+            execution_item['scoped_data_outs'] = None #unpickle_data(return_item['scoped_data'])
             # backward compatibility
             if isinstance(execution_item['semantic_data'], Vividict):
                 execution_item['semantic_data'] = execution_item['semantic_data']

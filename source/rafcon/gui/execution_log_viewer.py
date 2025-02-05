@@ -21,6 +21,10 @@ def main():
 
     Gtk.main()
 
+    # TODO -jer: Information is stored here
+    log_tree_ctrl._ExtendedController__child_controllers['widget_ctrl'].create_ganttplot()
+    test = 0
+
 
 if __name__ == "__main__":
     main()

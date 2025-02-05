@@ -44,9 +44,17 @@ class ExecutionLogTreeController(ExtendedController):
                                                   throw_on_pickle_error=False,
                                                   include_erroneous_data_ports=True)
         # create a TreeStore with one string column to use as the model
+        
+        # # TODO -jer: We place this function call here right now for developing
+        # log_helper.log_to_ganttplot(self.hist_items, only_execution_states=False)
+
         self.tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
         self.item_iter = {}
         view.tree_view.set_model(self.tree_store)
+
+    # TODO -jer: This should be some function later that will be used from the main script in source/rafcon/gui
+    def create_ganttplot(self):
+        log_helper.log_to_ganttplot(self.hist_items, only_execution_states=False)
 
     def register_view(self, view):
 
