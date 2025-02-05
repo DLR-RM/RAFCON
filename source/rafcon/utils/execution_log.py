@@ -385,7 +385,7 @@ def log_to_ganttplot(execution_history_items, only_execution_states=False):
         if library:
             state_names_cropped[idx] = library_state_name[idx]
 
-            # Filtering library states that are single ExecutionStates:
+            # Finding library states that are single ExecutionStates:
             # Extend the path_by_name string with a '/' which is the pattern for sub-state machines.
             # If the extended string does not exists, it is an ExecutionState (or empty hierarchy state).
             # TODO: This takes very long for larger state machines. Need to rework.
@@ -428,7 +428,7 @@ def log_to_ganttplot(execution_history_items, only_execution_states=False):
     if only_execution_states:
         timespans = timespans[execution_state_mask]
         calldate = calldate[execution_state_mask]
-        colors_plot = colors_plot[execution_state_mask]
+        colors_plot = state2color['ExecutionState']
         title_subplot1 = f'Unique ExecutionStates ({len(np.unique(all_states_mapped))}) over Execution'
     ax[0].barh(y=all_states_mapped,
                width=timespans,
@@ -440,6 +440,7 @@ def log_to_ganttplot(execution_history_items, only_execution_states=False):
     ax[0].set_yticks(list(range(len(ordered_unique_states))), ordered_unique_states)
     ax[0].set_title(title_subplot1, fontsize=12, fontweight='bold')
     ax[0].set_xlabel('Time of Day [h:m:s]')
+    ax[0].grid(True)
 
     # Create legend where concurrency states are combined as one state type
     if not only_execution_states:
@@ -451,8 +452,10 @@ def log_to_ganttplot(execution_history_items, only_execution_states=False):
 
     # Subplot 2: Show accumulated state time ordered by size
     accumulated_time = np.zeros(len(ordered_unique_states))
+    calls_per_state = np.zeros(len(ordered_unique_states))
     for index, state in enumerate(all_states_mapped):
         accumulated_time[state] += timespans[index]
+        calls_per_state[state] += 1
     state_types = np.array(data.state_type)[np.sort(idx_unique)]
     state_types = state_types[::-1]
 
@@ -461,8 +464,17 @@ def log_to_ganttplot(execution_history_items, only_execution_states=False):
     colors_accum = np.array([state2color[s] for s in state_types[idx_accum]])
     if only_execution_states:
         colors_accum = state2color['ExecutionState']
-    ax[1].barh(y=ordered_unique_states[idx_accum], width=accumulated_time[idx_accum],
-               align='center', color=colors_accum)
+    ax[1].barh(y=ordered_unique_states[idx_accum], 
+               width=accumulated_time[idx_accum],
+               align='center', 
+               color=colors_accum)
+    for index, value in enumerate(accumulated_time[idx_accum]):
+        value_sec = float(value*24*60*60)
+        value_per_execution = float(value_sec/calls_per_state[idx_accum[index]])
+        ax[1].text(value, index,
+                   str(f"{round(value_sec,3)}s / {int(calls_per_state[idx_accum[index]])} = "\
+                       f"{round(value_per_execution,3)}s"),
+                   va='center', ha='left')
     ax[1].xaxis.set_major_formatter(dates.DateFormatter('%H:%M:%S.%f'))
     ax[1].tick_params(axis='x', rotation=45)
     ax[1].set_yticks(list(range(len(ordered_unique_states[idx_accum]))), ordered_unique_states[idx_accum])
