@@ -22,7 +22,7 @@ def main():
     Gtk.main()
 
     # TODO -jer: Information is stored here
-    log_tree_ctrl._ExtendedController__child_controllers['widget_ctrl'].create_ganttplot()
+    log_tree_ctrl._ExtendedController__child_controllers['widget_ctrl'].create_ganttplot(only_execution_states=True)
     test = 0
 
 

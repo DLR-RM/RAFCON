@@ -53,8 +53,8 @@ class ExecutionLogTreeController(ExtendedController):
         view.tree_view.set_model(self.tree_store)
 
     # TODO -jer: This should be some function later that will be used from the main script in source/rafcon/gui
-    def create_ganttplot(self):
-        log_helper.log_to_ganttplot(self.hist_items, only_execution_states=False)
+    def create_ganttplot(self, only_execution_states=False):
+        log_helper.log_to_ganttplot(self.hist_items, only_execution_states=only_execution_states)
 
     def register_view(self, view):
 

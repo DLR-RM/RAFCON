@@ -446,7 +446,7 @@ def log_to_ganttplot(execution_history_items, only_execution_states=False):
     ax[0].set_yticks(list(range(len(ordered_unique_states))), ordered_unique_states)
     ax[0].set_title(title_subplot1, fontsize=12, fontweight='bold')
     ax[0].set_xlabel('Time of Day [h:m:s]')
-    ax[0].grid(True)
+    # ax[0].grid(True)
 
     # Create legend where concurrency states are combined as one state type
     if not only_execution_states:
