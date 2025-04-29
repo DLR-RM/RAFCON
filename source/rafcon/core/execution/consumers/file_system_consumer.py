@@ -57,7 +57,7 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
         if not os.path.exists(base_dir):
             os.makedirs(base_dir)
         shelve_name = os.path.join(base_dir, '%s_rafcon_execution_log_%s.shelve' %
-                                   (str(datetime.datetime.now()),
+                                   (datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S.%f'),
                                     root_state_name.replace(' ', '-')))
         return shelve_name
 
