@@ -113,18 +113,49 @@ class LibraryManager(Observable):
         self._skipped_states = []
         self._skipped_library_roots = []
 
-        # 1. Load libraries from config.yaml
-        for library_root_key, library_root_path in config.global_config.get_config_value("LIBRARY_PATHS").items():
+        # Track if any valid library paths were found from config
+        valid_library_paths_found = False
+
+        # Load libraries from config.yaml
+        library_paths_config = config.global_config.get_config_value("LIBRARY_PATHS")
+        for library_root_key, library_root_path in library_paths_config.items():
             library_root_path = self._clean_path(library_root_path)
             if os.path.exists(library_root_path):
                 logger.debug("Adding library root key '{0}' from path '{1}'".format(
                     library_root_key, library_root_path))
                 self._load_libraries_from_root_path(library_root_key, library_root_path)
+                valid_library_paths_found = True
             else:
                 logger.warning("Configured path for library root key '{}' does not exist: {}".format(
                     library_root_key, library_root_path))
+        
+        # Check if all library paths were invalid and reload with defaults
+        if library_paths_config and not valid_library_paths_found:
+            logger.info("All configured library paths are invalid. Falling back to default library paths.")
+            # Remove LIBRARY_PATHS from keys_not_to_fill_up to allow merging with defaults
+            if 'LIBRARY_PATHS' in config.global_config.keys_not_to_fill_up:
+                config.global_config.keys_not_to_fill_up.remove('LIBRARY_PATHS')
+            
+            # Get default library paths from the default config
+            default_config_dict = yaml.safe_load(config.global_config.default_config)
+            default_library_paths = default_config_dict.get('LIBRARY_PATHS', {})
+            
+            # Update the config with default library paths
+            config.global_config._config_dict['LIBRARY_PATHS'] = default_library_paths
+            logger.info("Reverted to default library paths: {}".format(list(default_library_paths.keys())))
+            
+            # load the default library paths
+            for library_root_key, library_root_path in default_library_paths.items():
+                library_root_path = self._clean_path(library_root_path)
+                if os.path.exists(library_root_path):
+                    logger.debug("Adding library root key '{0}' from path '{1}'".format(
+                        library_root_key, library_root_path))
+                    self._load_libraries_from_root_path(library_root_key, library_root_path)
+                else:
+                    logger.warning("Default library path for root key '{}' does not exist: {}".format(
+                        library_root_key, library_root_path))
 
-        # 2. Load libraries from RAFCON_LIBRARY_PATH
+        # Load libraries from RAFCON_LIBRARY_PATH
         library_path_env = os.environ.get('RAFCON_LIBRARY_PATH', '')
         library_paths = set(library_path_env.split(os.pathsep))
         for library_root_path in library_paths:
