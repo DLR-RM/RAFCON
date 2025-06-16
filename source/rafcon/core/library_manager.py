@@ -21,6 +21,7 @@ import os
 import shutil
 import copy
 import warnings
+import yaml
 from collections import OrderedDict
 from rafcon.design_patterns.singleton import Singleton
 from rafcon.design_patterns.observer.observable import Observable
