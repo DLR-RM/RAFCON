@@ -189,7 +189,7 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
         # Show text in correct orientation
         c.save()
         c.rotate(text_angle)
-            if scale_factor > 0.00001:  # Prevent division by very small numbers
+        if scale_factor > 0.00001:  # Prevent division by very small numbers
             c.scale(1. / scale_factor, 1. / scale_factor)
             # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
             if label_position is SnappedSide.RIGHT:
@@ -251,7 +251,7 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
             # Show text in correct orientation
             c.save()
             c.rotate(text_angle)
-                    if scale_factor > 0.00001:  # Prevent division by very small numbers
+            if scale_factor > 0.00001:  # Prevent division by very small numbers
                 c.scale(1. / scale_factor, 1. / scale_factor)
                 # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
                 if label_position is SnappedSide.RIGHT:
