@@ -241,9 +241,6 @@ def set_label_markup(label, text, is_icon=False, size=None, letter_spacing=None)
 
     # font
     if size:
-        # Clamp font size
-        if isinstance(size, (int, float)):
-            size = max(0.1, min(size, 1000))
         size_tag = size
     else:
         size_tag = ''
