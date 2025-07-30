@@ -383,6 +383,9 @@ def create_splash_screen():
 
 
 def main():
+    # Setup Pango warning filter for Ubuntu systems
+    from rafcon.gui.utils.warning_filters import setup_pango_warning_filter
+    setup_pango_warning_filter()
 
     # check if all env variables are set
     if not os.environ.get("HOME", False):

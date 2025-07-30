@@ -36,6 +36,7 @@ from rafcon.gui.mygaphas.utils.enums import SnappedSide
 from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.gui.mygaphas.utils import gap_draw_helper
 from rafcon.gui.mygaphas.utils.cache.image_cache import ImageCache
+from rafcon.gui.mygaphas.utils.text_rendering import should_render_text, clamp_zoom_scale
 
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 from rafcon.gui.helpers.meta_data import contains_geometric_info
@@ -416,10 +417,17 @@ class StateView(Element):
 
         upper_left_corner = (nw.x.value, nw.y.value)
         current_zoom = self.view.get_zoom_factor()
-        from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters, clear=self.background_changed)
+        
+        # Force cache update for small states at high zoom
+        force_cache = current_zoom > 100 and (width < 100 or height < 100)
+        
+        from_cache, image, zoom = self._image_cache.get_cached_image(
+            width, height, current_zoom, parameters, 
+            clear=self.background_changed or force_cache
+        )
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
-        if from_cache:
+        if from_cache and not force_cache:
             self._image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
@@ -497,37 +505,64 @@ class StateView(Element):
         width = self.width
         height = self.height
 
-        # c.set_antialias(Antialias.GOOD)
+        # Check zoom level early
+        zoom_factor = 1.0
+        if self._view is not None:
+            zoom_factor = self._view.get_zoom_factor()
+
+        # Don't render symbols at extreme zoom levels
+        # This prevents font-related issues with icons
+        if zoom_factor > 50:
+            # Skip symbols at extreme zoom
+            return
+
+        # Cap dimensions
+        max_dimension = 500
+        safe_width = min(width, max_dimension)
+        safe_height = min(height, max_dimension)
 
         layout = PangoCairo.create_layout(cairo_context)
 
         def set_font_description():
-            set_label_markup(layout, symbol, is_icon=True, size=font_size)
+            # Cap font size to prevent warnings when creating the font
+            safe_font_size = min(font_size, 500)
+            set_label_markup(layout, symbol, is_icon=True, size=safe_font_size)
 
+        # Use capped dimensions for cache lookup
         if symbol in self.__symbol_size_cache and \
-                self.__symbol_size_cache[symbol]['width'] == width and \
-                self.__symbol_size_cache[symbol]['height'] == height:
+                self.__symbol_size_cache[symbol]['width'] == safe_width and \
+                self.__symbol_size_cache[symbol]['height'] == safe_height:
             font_size = self.__symbol_size_cache[symbol]['size']
+            # Cap cached font size
+            font_size = min(font_size, 1000)
             set_font_description()
 
         else:
             font_size = 30
             set_font_description()
 
-            pango_size = (width * SCALE, height * SCALE)
+            # Use capped dimensions for pango calculations
+            pango_size = (safe_width * SCALE, safe_height * SCALE)
             while layout.get_size()[0] > pango_size[0] * constants.ICON_STATE_FILL_FACTOR or \
                     layout.get_size()[1] > pango_size[1] * constants.ICON_STATE_FILL_FACTOR:
                 font_size *= 0.9
                 set_font_description()
 
-            self.__symbol_size_cache[symbol] = {'width': width, 'height': height, 'size': font_size}
+            self.__symbol_size_cache[symbol] = {'width': safe_width, 'height': safe_height, 'size': font_size}
 
         c.move_to(width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
                   height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
-        PangoCairo.update_layout(cairo_context, layout)
-        PangoCairo.show_layout(cairo_context, layout)
+        
+        # Only render if font size within limits
+        effective_font_size = font_size * zoom_factor
+        if 0.1 < effective_font_size < 16000:
+            try:
+                PangoCairo.update_layout(cairo_context, layout)
+                PangoCairo.show_layout(cairo_context, layout)
+            except cairo.Error:
+                pass
 
     def get_transitions(self):
         transitions = []
@@ -961,9 +996,23 @@ class NameView(Element):
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
         if min(view_width, view_height) < constants.MINIMUM_NAME_SIZE_FOR_DISPLAY and not context.draw_all:
             return
+            
         font_transparency = self.transparency
 
         c = context.cairo
+        current_zoom = self.view.get_zoom_factor()
+        
+        # Clear cache at zoom boundaries
+        clear_cache = False
+        if hasattr(self, '_last_zoom_for_text'):
+            zoom_boundaries = [1000, 10000, 30000]
+            for boundary in zoom_boundaries:
+                if (self._last_zoom_for_text < boundary <= current_zoom) or \
+                   (current_zoom < boundary <= self._last_zoom_for_text):
+                    clear_cache = True
+                    break
+        self._last_zoom_for_text = current_zoom
+        
         parameters = {
             'name': self.name,
             'selected': context.selected,
@@ -975,8 +1024,7 @@ class NameView(Element):
         factor = width / BASE_WIDTH
         upper_left_corner = (factor, factor)
         # upper_left_corner = (0, 0)
-        current_zoom = self.view.get_zoom_factor()
-        from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
+        from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters, clear=clear_cache)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
             self._image_cache.copy_image_to_context(c, upper_left_corner)
@@ -1008,33 +1056,54 @@ class NameView(Element):
             layout.set_text(self.name, -1)
 
             def set_font_description(font_size):
+                # Simply create the font with the given size
+                # The capping should already be done in max_font_size calculation
                 font = FontDescription(font_name + " " + str(font_size))
                 layout.set_font_description(font)
 
             font_name = constants.INTERFACE_FONT
 
-            zoom_scale = BASE_WIDTH / width
+            zoom_scale = clamp_zoom_scale(BASE_WIDTH / width)
+                
+            # Additional fix for library states: Use actual view zoom to determine if we need special handling
+            # At extreme zoom levels (>5000), reduce the zoom_scale to keep text readable
+            if current_zoom > 5000:
+                # Scale down the zoom_scale based on how extreme the zoom is
+                zoom_reduction = min(current_zoom / 5000, 20)  # Cap reduction at 20x
+                zoom_scale = min(zoom_scale / zoom_reduction, 10.0)
+                
             scaled_height = height * zoom_scale
             font_size_parameters = {"text": self.name, "height": scaled_height}
             font_size = self.view.value_cache.get_value("font_size", font_size_parameters)
 
             if font_size:
-                set_font_description(font_size)
+                # Cap cached font size
+                current_font_size = min(font_size, 1000.0)
+                set_font_description(current_font_size)
             else:
                 available_size = (BASE_WIDTH * SCALE, scaled_height * SCALE)
                 word_count = len(self.name.split(" "))
                 # Set max font size to available height
                 max_font_size = scaled_height * 0.9
+                # Cap max font size, account for inverse scaling
+                inverse_scale = 1.0 / zoom_scale
+                # Cap max font size so that after scaling it won't exceed safe limits
+                max_safe_before_scaling = 1000.0 / inverse_scale
+                max_font_size = min(max_font_size, max_safe_before_scaling)
                 # Calculate minimum size that is still to be drawn
                 min_name_height = max_font_size / 10.
                 # Calculate line height if all words are wrapped
                 line_height = max_font_size / word_count
                 # Use minimum if previous values and add safety margin
                 min_font_size = min(line_height * 0.5, min_name_height)
+                # Ensure min is not larger than max
+                min_font_size = min(min_font_size, max_font_size)
 
                 # Iteratively calculate font size by always choosing the average of the maximum and minimum size
                 working_font_size = None
                 current_font_size = (max_font_size + min_font_size) / 2.
+                # Safety check
+                current_font_size = min(current_font_size, max_safe_before_scaling)
                 set_font_description(current_font_size)
 
                 while True:
@@ -1058,8 +1127,16 @@ class NameView(Element):
                             set_font_description(current_font_size)
                         break
                     current_font_size = (max_font_size + min_font_size) / 2.
+                    current_font_size = min(current_font_size, max_safe_before_scaling)
                     set_font_description(current_font_size)
-                self.view.value_cache.store_value("font_size", current_font_size, font_size_parameters)
+                # Check effective size after cairo scaling
+                inverse_scale = 1.0 / zoom_scale
+                effective_size = current_font_size * inverse_scale
+                if effective_size > 1000:
+                    safe_font_size = 1000 / inverse_scale
+                    self.view.value_cache.store_value("font_size", safe_font_size, font_size_parameters)
+                else:
+                    self.view.value_cache.store_value("font_size", current_font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
             cairo_context.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
@@ -1067,9 +1144,18 @@ class NameView(Element):
             # The pango layout has a fixed width and needs to be fitted to the context size
             cairo_context.scale(1. / zoom_scale, 1. / zoom_scale)
 
-            PangoCairo.update_layout(cairo_context, layout)
-            PangoCairo.show_layout(cairo_context, layout)
-            c.restore()
+            # Skip text at extreme zoom
+            if should_render_text(current_font_size, zoom_scale, current_zoom):
+                try:
+                    PangoCairo.update_layout(cairo_context, layout)
+                    PangoCairo.show_layout(cairo_context, layout)
+                except cairo.Error:
+                    pass
+            
+            try:
+                c.restore()
+            except cairo.Error:
+                pass
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)

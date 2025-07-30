@@ -94,6 +94,12 @@ class ZoomTool(gaphas.tool.ZoomTool):
             factor = 0.9
             if event.get_scroll_direction()[1] == Gdk.ScrollDirection.UP:
                 factor = 1. / factor
+            
+            current_zoom = view._matrix[0]
+            new_zoom = current_zoom * factor
+            if new_zoom < 0.0001 or new_zoom > 100000:
+                return True
+            
             view._matrix.translate(-ox, -oy)
             view._matrix.scale(factor, factor)
             view._matrix.translate(+ox, +oy)

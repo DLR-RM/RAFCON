@@ -36,6 +36,7 @@ from rafcon.gui.mygaphas.connector import RectanglePointPort
 from rafcon.gui.mygaphas.utils import gap_draw_helper
 from rafcon.gui.mygaphas.utils.enums import SnappedSide, Direction
 from rafcon.gui.mygaphas.utils.cache.image_cache import ImageCache
+from rafcon.gui.mygaphas.utils.text_rendering import should_render_text
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -795,9 +796,20 @@ class ScopedVariablePortView(PortView):
         c.rel_move_to(-extents[0], -extents[1])
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(self.text_color, transparency))
-        PangoCairo.update_layout(cairo_context, layout)
-        PangoCairo.show_layout(cairo_context, layout)
-        c.restore()
+        
+        zoom = self.parent.view.get_zoom_factor() if hasattr(self, 'parent') and hasattr(self.parent, 'view') else 1.0
+        
+        if should_render_text(font_size, scale_factor, zoom):
+            try:
+                PangoCairo.update_layout(cairo_context, layout)
+                PangoCairo.show_layout(cairo_context, layout)
+            except cairo.Error:
+                pass
+        
+        try:
+            c.restore()
+        except cairo.Error:
+            pass
 
         return name_size_with_margin
 

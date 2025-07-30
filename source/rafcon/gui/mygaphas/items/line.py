@@ -355,8 +355,47 @@ class PerpLine(Line):
         return isinstance(port, (OutcomeView, OutputPortView))
 
     def point(self, pos):
-        distance = super(PerpLine, self).point(pos)
-        return distance - self.line_width / 1.5
+        try:
+            distance = super(PerpLine, self).point(pos)
+            return distance - self.line_width / 1.5
+        except TypeError:
+            # Gaphas compatibility - calculate distance manually
+            hpos = [h.pos for h in self._handles]
+            if len(hpos) < 2:
+                return float('inf')
+            
+            min_distance = float('inf')
+            for i in range(len(hpos) - 1):
+                p1 = hpos[i]
+                p2 = hpos[i + 1]
+                x1, y1 = p1.x, p1.y
+                x2, y2 = p2.x, p2.y
+                px, py = pos
+                
+                dx = x2 - x1
+                dy = y2 - y1
+                dpx = px - x1
+                dpy = py - y1
+                dot = dpx * dx + dpy * dy
+                len_sq = dx * dx + dy * dy
+                
+                if len_sq == 0:
+                    dist = ((px - x1) ** 2 + (py - y1) ** 2) ** 0.5
+                else:
+                    param = dot / len_sq
+                    
+                    if param < 0:
+                        dist = ((px - x1) ** 2 + (py - y1) ** 2) ** 0.5
+                    elif param > 1:
+                        dist = ((px - x2) ** 2 + (py - y2) ** 2) ** 0.5
+                    else:
+                        nearest_x = x1 + param * dx
+                        nearest_y = y1 + param * dy
+                        dist = ((px - nearest_x) ** 2 + (py - nearest_y) ** 2) ** 0.5
+                
+                min_distance = min(min_distance, dist)
+            
+            return max(0, min_distance - self.line_width / 1.5)
 
     def _keep_handle_in_parent_state(self, handle):
         canvas = self.canvas
