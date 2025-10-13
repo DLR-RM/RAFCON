@@ -4,6 +4,19 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
+2.2.2
+""""""
+    - Bug fixes:
+        - Fixed bug when writing execution history timestamps for concurrency states
+        - Preventing unwanted modification of user config files
+        - Prevent blank display and crashes at higher zoom levels
+
+    - Miscellaneous:
+        - Added clamping of font sizes when zooming
+        - Added Ubuntu specific Pango warning filter
+        - Minor updates in version descriptions
+        - Improved naming of execution log files to not use spaces or ":"
+
 2.2.1
 """"""
     - Bug fixes:

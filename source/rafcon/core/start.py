@@ -166,6 +166,8 @@ def setup_configuration(config_path):
     """
     if config_path is not None:
         config_path, config_file = filesystem.separate_folder_path_and_file_name(config_path)
+        if config_path == '':
+            config_path = '.'
         global_config.load(config_file=config_file, path=config_path)
     else:
         global_config.load(path=config_path)

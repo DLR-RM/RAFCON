@@ -44,7 +44,7 @@ Collaborative working
 Installation preparations
 -------------------------
 
-Before installing RAFCON, Python >=3.7, pip and setuptools are required on your system. Most of the other dependencies
+Before installing RAFCON, Python >=3.9, pip and setuptools are required on your system. Most of the other dependencies
 are automatically resolved by pip/setuptools, but not all of them. Those need be be installed manually, too:
 
 Installation requirements
@@ -59,7 +59,7 @@ Installation requirements
 General requirements
 ^^^^^^^^^^^^^^^^^^^^
 
-* Python >=3.7
+* Python >=3.9
 * pip (recent version required: v23 known to be working)
 * pdm (recent version required: v2.9.3 known to be working)
 

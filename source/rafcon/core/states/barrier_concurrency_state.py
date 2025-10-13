@@ -12,12 +12,13 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
-
+# Johannes Ernst <j.ernst@dlr.de>
 """
 .. module:: barrier_concurrency_state
    :synopsis: A module to represent a barrier concurrency state for the state machine
 
 """
+import time
 
 from rafcon.design_patterns.observer.observable import Observable
 
@@ -112,16 +113,32 @@ class BarrierConcurrencyState(ConcurrencyState):
             #######################################################
             # wait for all child threads to finish
             #######################################################
-            for history_index, state in enumerate(self.states.values()):
-                # skip the decider state
+            # Create a dictionary to track which states of the concurrency finished
+            concurrent_states_done = {}
+            for state in self.states.values():
                 if state is not decider_state:
-                    self.join_state(state, history_index, concurrency_history_item)
-                    self.add_state_execution_output_to_scoped_data(state.output_data, state)
-                    self.update_scoped_variables_with_output_dictionary(state.output_data, state)
-                    # save the errors of the child state executions for the decider state
-                    if 'error' in state.output_data:
-                        child_errors[state.state_id] = (state.name, state.output_data['error'])
-                    final_outcomes_dict[state.state_id] = (state.name, state.final_outcome)
+                    concurrent_states_done[state.core_element_id] = False
+
+            # Loop until all child threads finished
+            while not all(concurrent_states_done.values()):
+                for history_index, state_id in enumerate(concurrent_states_done):
+                    # Increase history index by 1 because 0 is the decider (provides consistency to prior version)
+                    history_index += 1
+                    if not concurrent_states_done[state_id]:
+                        state = self.states[state_id]
+                        if not state.thread.is_alive():
+                            self.join_state(state, history_index+1, concurrency_history_item)
+                            self.add_state_execution_output_to_scoped_data(state.output_data, state)
+                            self.update_scoped_variables_with_output_dictionary(state.output_data, state)
+                            # Save the errors of the child state executions for the decider state
+                            if 'error' in state.output_data:
+                                child_errors[state.state_id] = (state.name, state.output_data['error'])
+                            final_outcomes_dict[state.state_id] = (state.name, state.final_outcome)
+                            concurrent_states_done[state_id] = True
+                        else:
+                            # Wait a tiny bit to allow other gui stuff to happen (more robust)
+                            time.sleep(0.001)
+
             #######################################################
             # handle backward execution case
             #######################################################

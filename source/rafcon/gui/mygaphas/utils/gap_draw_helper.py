@@ -12,6 +12,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from math import pi
+import cairo
 
 from gi.repository.Pango import SCALE, FontDescription
 from gi.repository import PangoCairo
@@ -108,6 +109,11 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
     if isinstance(c, CairoBoundingBoxContext):
         cairo_context = c._cairo
 
+    if hasattr(port, 'parent') and hasattr(port.parent, 'view'):
+        zoom = port.parent.view.get_zoom_factor()
+        if zoom > 1000:
+            return (0, 0, 0, 0) if only_extent_calculations else None
+
     text = port.name
     label_color = get_col_rgba(port.fill_color, transparency)
     text_color = port.text_color
@@ -183,14 +189,21 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
         # Show text in correct orientation
         c.save()
         c.rotate(text_angle)
-        c.scale(1. / scale_factor, 1. / scale_factor)
-        # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
-        if label_position is SnappedSide.RIGHT:
-            c.rel_move_to(-real_text_size[0], -real_text_size[1])
-        c.set_source_rgba(*get_col_rgba(text_color, transparency))
-        PangoCairo.update_layout(cairo_context, layout)
-        PangoCairo.show_layout(cairo_context, layout)
-        c.restore()
+        if scale_factor > 0.00001:  # Prevent division by very small numbers
+            c.scale(1. / scale_factor, 1. / scale_factor)
+            # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
+            if label_position is SnappedSide.RIGHT:
+                c.rel_move_to(-real_text_size[0], -real_text_size[1])
+            c.set_source_rgba(*get_col_rgba(text_color, transparency))
+            try:
+                PangoCairo.update_layout(cairo_context, layout)
+                PangoCairo.show_layout(cairo_context, layout)
+            except Exception:
+                pass  # Skip rendering if it fails
+        try:
+            c.restore()
+        except cairo.Error:
+            pass  # Context corrupted, skip restore
 
     if show_additional_value:
         value_text = limit_value_string_length(additional_value)
@@ -238,14 +251,21 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
             # Show text in correct orientation
             c.save()
             c.rotate(text_angle)
-            c.scale(1. / scale_factor, 1. / scale_factor)
-            # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
-            if label_position is SnappedSide.RIGHT:
-                c.rel_move_to(-value_text_size[0] - margin * scale_factor, -real_text_size[1])
-            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['SCOPED_VARIABLE_TEXT']))
-            PangoCairo.update_layout(cairo_context, value_layout)
-            PangoCairo.show_layout(cairo_context, value_layout)
-            c.restore()
+            if scale_factor > 0.00001:  # Prevent division by very small numbers
+                c.scale(1. / scale_factor, 1. / scale_factor)
+                # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
+                if label_position is SnappedSide.RIGHT:
+                    c.rel_move_to(-value_text_size[0] - margin * scale_factor, -real_text_size[1])
+                c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['SCOPED_VARIABLE_TEXT']))
+                try:
+                    PangoCairo.update_layout(cairo_context, value_layout)
+                    PangoCairo.show_layout(cairo_context, value_layout)
+                except Exception:
+                    pass  # Skip rendering if it fails
+            try:
+                c.restore()
+            except cairo.Error:
+                pass  # Context corrupted, skip restore
 
         label_extents = min(label_extents[0], value_extents[0]), min(label_extents[1], value_extents[1]), \
                         max(label_extents[2], value_extents[2]), max(label_extents[3], value_extents[3])
