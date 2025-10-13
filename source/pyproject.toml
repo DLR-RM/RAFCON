@@ -18,7 +18,7 @@ dependencies = [
     "jsonconversion<1.0.0,>=0.2.13",
 ]
 name = "rafcon-core"
-version = "2.2.1" # Handled by bump2version
+version = "2.2.2" # Handled by bump2version
 description = "Develop your robotic tasks with hierarchical state machines"
 keywords = [
     "state machine",
