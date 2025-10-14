@@ -4,6 +4,12 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
+2.2.3
+""""""
+    - Miscellaneous:
+        - Pinned version of PyGObject
+        - Relaxed other version dependencies
+
 2.2.2
 """"""
     - Bug fixes:
