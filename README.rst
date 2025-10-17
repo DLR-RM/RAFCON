@@ -52,16 +52,18 @@ Installation requirements
 
 .. code-block:: bash
 
-   sudo apt-get install python-dev python-pip build-essential glade python-gi-cairo
-   sudo -H pip install --upgrade pip
-   sudo -H pip install --upgrade setuptools
+   sudo apt update
+   sudo apt install python3-dev python3-pip python3-setuptools 
+   sudo apt install libcairo2-dev pkg-config libgirepository1.0-dev gir1.2-gtk-3.0
+
+   pip install setuptools
 
 General requirements
 ^^^^^^^^^^^^^^^^^^^^
 
 * Python >=3.9
-* pip (recent version required: v23 known to be working)
-* pdm (recent version required: v2.9.3 known to be working)
+* pip (recent version required)
+* pdm (recent version required)
 
 
 Installing RAFCON
@@ -73,12 +75,7 @@ Installing RAFCON
 
 The ``--user`` flag is optional. If not set, RAFCON is installed globally (in this case you normaly need to have root privileges).
 
-If during the installation the error ``ImportError: No module named cairo`` occurs, please install pycairo directly
-via:
-
-.. code-block:: bash
-
-   pip install --user "pycairo==1.19.1"
+If you run into any problems installing and starting RAFCON, **please let us know in the issues**! 
 
 Of course you can also directly use the RAFCON sources from GitHub.
 
