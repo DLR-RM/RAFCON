@@ -35,7 +35,7 @@ dependencies = [
     "pycairo (>=1.11.0,<2.0.0)",
     "pylint (>=2.11.0,<4.0.0)",
     "simplegeneric (>=0.5.0,<1.0.0)",
-    "numpy (>=1.26,<3.0)",
+    "numpy (>=1.23,<3.0)",
     "pandas (>=1.2.0,<2.0.0)",
     "yaml_configuration (>=0.2.5,<0.3.0)",
 ]
