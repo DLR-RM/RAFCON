@@ -38,6 +38,9 @@ dependencies = [
     "numpy (>=1.23,<3.0)",
     "pandas (>=1.2.0,<2.0.0)",
     "yaml_configuration (>=0.2.5,<0.3.0)",
+
+    # Add setuptools for distutils if python>=3.12
+    "setuptools; python_version >= '3.12'",
 ]
 license = {text = "EPL"}
 requires-python = ">=3.9"
