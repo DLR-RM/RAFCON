@@ -23,7 +23,7 @@ import logging
 import logging.config
 import json
 import warnings
-from pkg_resources import resource_filename
+import importlib.resources as importlib_resources
 
 # a dictionary to hold all loggers created so far
 existing_loggers = {}
@@ -90,7 +90,7 @@ add_logging_level('VERBOSE', logging.DEBUG - 5)
 
 
 # Load config from RAFCON_LOGGING_CONF if available, otherwise the default logging.conf
-logging_conf_path = os.environ.get("RAFCON_LOGGING_CONF", resource_filename(rafcon_root, "logging.conf"))
+logging_conf_path = os.environ.get("RAFCON_LOGGING_CONF", str(importlib_resources.files(rafcon_root) / 'logging.conf'))
 with open(logging_conf_path) as logging_conf_file:
     try:
         logging_config = json.load(logging_conf_file)

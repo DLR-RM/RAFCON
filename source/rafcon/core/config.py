@@ -19,7 +19,7 @@
 
 import os
 import yaml
-from pkg_resources import resource_string
+import importlib.resources as importlib_resources
 from rafcon.design_patterns.observer.observable import Observable
 
 from yaml_configuration.config import DefaultConfig, ConfigError
@@ -29,7 +29,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 CONFIG_FILE = "config.yaml"
-DEFAULT_CONFIG = str(resource_string(__name__, CONFIG_FILE).decode("utf-8"))
+DEFAULT_CONFIG = importlib_resources.read_text(__name__, CONFIG_FILE)
 RELATIVE_PATH_KEYWORD = "$RELATIVE_PATH"
 
 

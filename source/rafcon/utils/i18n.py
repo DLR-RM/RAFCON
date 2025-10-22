@@ -15,7 +15,7 @@ from os.path import join, splitext
 import locale
 import gettext
 
-from pkg_resources import resource_filename
+import importlib.resources as importlib_resources
 
 
 def setup_l10n(logger=None):
@@ -31,7 +31,7 @@ def setup_l10n(logger=None):
     except locale.Error as e:
         logger and logger.warning("Cannot setup translations: {}".format(e))
 
-    localedir = resource_filename('rafcon', 'locale')
+    localedir = str(importlib_resources.files('rafcon') / 'locale')
 
     # Install gettext globally: Allows to use _("my string") without further imports
     gettext.install('rafcon', localedir)

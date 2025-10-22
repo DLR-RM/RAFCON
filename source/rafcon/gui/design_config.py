@@ -14,7 +14,7 @@
 
 """
 
-from pkg_resources import resource_string
+import importlib.resources as importlib_resources
 from yaml_configuration.config import ConfigError
 from rafcon.core.config import ObservableConfig
 from rafcon.utils import log
@@ -22,7 +22,7 @@ logger = log.get_logger(__name__)
 
 CONFIG_FILE = "design_config.yaml"
 
-DEFAULT_CONFIG = str(resource_string(__name__, CONFIG_FILE).decode("utf-8"))
+DEFAULT_CONFIG = importlib_resources.read_text(__name__, CONFIG_FILE)
 
 
 class DesignConfig(ObservableConfig):

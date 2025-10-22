@@ -10,12 +10,12 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from pkg_resources import get_distribution, DistributionNotFound
+from importlib.metadata import version, PackageNotFoundError
 
 
 try:
-    __version__ = get_distribution("rafcon").version
-except DistributionNotFound:
+    __version__ = version("rafcon")
+except PackageNotFoundError:
     # the version cannot be found via pip which means rafcon was not installed yet on the system.
     # thus try to parse it from the version.py file directly
 

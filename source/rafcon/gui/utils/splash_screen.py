@@ -14,7 +14,6 @@ import os
 from gi.repository import Gtk
 from gi.repository import GdkPixbuf
 import random
-from pkg_resources import resource_filename, resource_listdir
 
 import rafcon.gui
 from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
