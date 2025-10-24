@@ -14,7 +14,7 @@
 
 """
 
-import importlib.resources as importlib_resources
+from pathlib import Path
 from yaml_configuration.config import ConfigError
 from rafcon.core.config import ObservableConfig
 from rafcon.utils import log
@@ -22,7 +22,7 @@ logger = log.get_logger(__name__)
 
 CONFIG_FILE = "design_config.yaml"
 
-DEFAULT_CONFIG = importlib_resources.read_text(__name__, CONFIG_FILE)
+DEFAULT_CONFIG = Path(__file__).with_name(CONFIG_FILE).read_text()
 
 
 class DesignConfig(ObservableConfig):
