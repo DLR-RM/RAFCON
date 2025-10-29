@@ -127,7 +127,7 @@ class BarrierConcurrencyState(ConcurrencyState):
                     if not concurrent_states_done[state_id]:
                         state = self.states[state_id]
                         if not state.thread.is_alive():
-                            self.join_state(state, history_index+1, concurrency_history_item)
+                            self.join_state(state, history_index, concurrency_history_item)
                             self.add_state_execution_output_to_scoped_data(state.output_data, state)
                             self.update_scoped_variables_with_output_dictionary(state.output_data, state)
                             # Save the errors of the child state executions for the decider state
