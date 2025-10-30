@@ -1,6 +1,6 @@
 [project]
 name = "rafcon"
-version = "2.2.3" # Handled by bump2version
+version = "2.3.0" # Handled by bump2version
 description = "Develop your robotic tasks with hierarchical state machines using an intuitive graphical user interface"
 keywords = ["state machine", "robotic", "FSM", "development", "GUI", "visual programming"]
 readme = "README.rst"
@@ -37,7 +37,7 @@ dependencies = [
     "simplegeneric (>=0.5.0,<1.0.0)",
     "numpy (>=1.23,<3.0)",
     "pandas (>=1.2.0,<2.0.0)",
-    "yaml_configuration (>=0.2.5,<0.3.0)",
+    "yaml_configuration (>=0.2.5,<0.4.0)",
 
     # Add setuptools for distutils if python>=3.12
     "setuptools; python_version >= '3.12'",
