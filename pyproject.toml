@@ -1,6 +1,6 @@
 [project]
 name = "rafcon"
-version = "2.2.3" # Handled by bump2version
+version = "2.3.0" # Handled by bump2version
 description = "Develop your robotic tasks with hierarchical state machines using an intuitive graphical user interface"
 keywords = ["state machine", "robotic", "FSM", "development", "GUI", "visual programming"]
 readme = "README.rst"
@@ -27,7 +27,6 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    "PyGObject( >=3.42.0,<3.51.0)",
     "wrapt (>=1.14.0,<2.0.0)",
     "astroid (>=2.15.8,<4.0.0)",
     "gaphas (>=2.1.0,<2.2.0)",
@@ -36,15 +35,21 @@ dependencies = [
     "pycairo (>=1.11.0,<2.0.0)",
     "pylint (>=2.11.0,<4.0.0)",
     "simplegeneric (>=0.5.0,<1.0.0)",
-    "numpy (>=1.26,<3.0)",
+    "numpy (>=1.23,<3.0)",
     "pandas (>=1.2.0,<2.0.0)",
-    "yaml_configuration (>=0.2.5,<0.3.0)",
+    "yaml_configuration (>=0.2.5,<0.4.0)",
+
+    # Add setuptools for distutils if python>=3.12
+    "setuptools; python_version >= '3.12'",
 ]
 license = {text = "EPL"}
 requires-python = ">=3.9"
 
 [project.urls]
 Homepage = "https://github.com/DLR-RM/RAFCON"
+
+[project.optional-dependencies]
+gtk = ["PyGObject (>=3.42.0,<3.51.0)"]
 
 [tool.pdm.dev-dependencies]
 dev = [

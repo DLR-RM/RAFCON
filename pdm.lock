@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform"]
 lock_version = "4.5.0"
-content_hash = "sha256:5c7b52fc1e14485150c6965b28a6c44cb3c80edf8562f4f4ac0c3fdf799161a0"
+content_hash = "sha256:ea4f64bf068754e723765bf40004fa02370c652451e55d0a32d60742138aabc8"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
@@ -458,15 +458,15 @@ files = [
 
 [[package]]
 name = "jsonconversion"
-version = "1.1.0"
+version = "1.2.0"
 requires_python = ">=3.9"
 summary = "This python module helps converting arbitrary Python objects into JSON strings and back."
 dependencies = [
-    "numpy>=1.26.0",
+    "numpy<3.0,>=1.26",
 ]
 files = [
-    {file = "jsonconversion-1.1.0-py3-none-any.whl", hash = "sha256:e32a275abe7d15cecb79cbd9cb30fc3b95ea4af97027061b0f73204a9b5cec58"},
-    {file = "jsonconversion-1.1.0.tar.gz", hash = "sha256:6adead0a65fba908fe738aeee1a8a36b0e5bf973402c7defbb6c44fe23749684"},
+    {file = "jsonconversion-1.2.0-py3-none-any.whl", hash = "sha256:c646a026fb8acbb3736bbf90a556554f2ba72d30c34f10191fa3ed71fa337fa5"},
+    {file = "jsonconversion-1.2.0.tar.gz", hash = "sha256:e2b3fb3db929c28b62b8ea5ed0f2bcc5f36a8634fa9258075461eab1883ea074"},
 ]
 
 [[package]]
@@ -1156,6 +1156,16 @@ files = [
 ]
 
 [[package]]
+name = "setuptools"
+version = "80.9.0"
+requires_python = ">=3.9"
+summary = "Easily download, build, install, upgrade, and uninstall Python packages"
+files = [
+    {file = "setuptools-80.9.0-py3-none-any.whl", hash = "sha256:062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922"},
+    {file = "setuptools-80.9.0.tar.gz", hash = "sha256:f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c"},
+]
+
+[[package]]
 name = "simplegeneric"
 version = "0.8.1"
 summary = "Simple generic functions (similar to Python's own len(), pickle.dump(), etc.)"
@@ -1396,15 +1406,15 @@ files = [
 
 [[package]]
 name = "yaml-configuration"
-version = "0.2.6"
+version = "0.3.1"
 requires_python = ">=2.6"
 summary = "A python module to easily read from and write to yaml config files."
 dependencies = [
     "pyyaml>=5.1",
 ]
 files = [
-    {file = "yaml_configuration-0.2.6-py3-none-any.whl", hash = "sha256:cc8bc7df52dda33b8773f438ec92e519038a332750db4353dcd530daf11566dd"},
-    {file = "yaml_configuration-0.2.6.tar.gz", hash = "sha256:95b40efb608457ae447902c7353a4555cccbdb634c9c03ab56a8cc80fb858526"},
+    {file = "yaml_configuration-0.3.1-py3-none-any.whl", hash = "sha256:30f37e3b5bf2b19b58f802636a55b583d14e054bab71c171366a1e34aaafff56"},
+    {file = "yaml_configuration-0.3.1.tar.gz", hash = "sha256:c1afab8574df720ad31c69e6e2a5d94a76212c63a860b0fb6324693a00ff475e"},
 ]
 
 [[package]]

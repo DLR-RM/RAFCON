@@ -10,8 +10,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 
-from pkg_resources import resource_filename
+import importlib.resources as importlib_resources
 
 
 def get_glade_path(glade_file):
-    return resource_filename(__name__, glade_file)
+    return str(importlib_resources.files(__name__) / glade_file)

@@ -27,7 +27,7 @@ except ModuleNotFoundError:
     from pylint.reporters.json_reporter import JSONReporter
 from io import StringIO
 from astroid import MANAGER
-from pkg_resources import resource_filename
+import importlib.resources as importlib_resources
 
 import rafcon
 from rafcon.core.states.library_state import LibraryState
@@ -171,8 +171,9 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
         # clear astroid module cache, see http://stackoverflow.com/questions/22241435/pylint-discard-cached-file-state
         MANAGER.astroid_cache.clear()
-        lint_config_file = resource_filename(rafcon.__name__, "pylintrc")
-        args = ["--rcfile={}".format(lint_config_file)]  # put your own here
+        lint_config_file = importlib_resources.files(rafcon.__name__) / 'pylintrc'
+        with importlib_resources.as_file(lint_config_file) as path:
+            args = ["--rcfile={}".format(path)]  # put your own here
         with contextlib.closing(StringIO()) as dummy_buffer:
             json_report = JSONReporter(dummy_buffer.getvalue())
             try:
