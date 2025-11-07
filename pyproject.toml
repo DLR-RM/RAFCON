@@ -39,6 +39,7 @@ dependencies = [
     "pandas (>=1.2.0,<2.0.0)",
     "yaml_configuration (>=0.2.5,<0.4.0)",
     "PyGObject (>=3.42.0,<3.51.0)",
+    "packaging (>=16)",
 
     # Add setuptools for distutils if python>=3.12
     "setuptools; python_version >= '3.12'",
