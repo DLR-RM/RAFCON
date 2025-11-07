@@ -69,23 +69,11 @@ General requirements
 Installing RAFCON
 -----------------
 
-First make sure GTK (PyGObject, needed for the GUI) is installed in the target environment for RAFCON by opening a python environment and checking if importing gi works:
-
-.. code-block:: bash
-
-   import gi
-
-If gi imports successfully, simply install RAFCON with:
+Simply install RAFCON with:
 
 .. code-block:: bash
 
    pip install rafcon --user
-
-If it is not installed, please use the GTK install option:
-
-.. code-block:: bash
-
-   pip install rafcon[gtk] --user
 
 The ``--user`` flag is optional. If not set, RAFCON is installed globally (in this case you normaly need to have root privileges).
 
