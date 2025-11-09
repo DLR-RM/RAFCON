@@ -11,23 +11,12 @@
 
 import rafcon.gui.interface
 
-from rafcon.utils import log
-logger = log.get_logger(__name__)
-
 try:
     import gi
-
-    # try GTK 4 first (Ubuntu 22.04+)
-    try:
-        gi.require_version("Gtk", "4.0")
-        gi.require_version("PangoCairo", "1.0")
-        gi.require_version("GtkSource", "5")
-        logger.info("Using GTK 4 / GtkSourceView 5")
-    except (ValueError, ImportError):
-        gi.require_version("Gtk", "3.0")
-        gi.require_version("PangoCairo", "1.0")
-        gi.require_version("GtkSource", "3.0")
-        logger.info("Using GTK 3 / GtkSourceView 3")
-
+    gi.require_version('Gtk', '3.0')
+    gi.require_version('PangoCairo', '1.0')
+    gi.require_version('GtkSource', '3.0')
 except (ImportError, ValueError) as e:
+    from rafcon.utils import log
+    logger = log.get_logger(__name__)
     logger.warning("Could not import all packages required for opening the GUI: {}".format(e))
