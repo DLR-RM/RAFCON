@@ -57,8 +57,6 @@ Installation requirements (tested under Ubuntu 24.04)
    sudo apt install libcairo2-dev pkg-config libgirepository1.0-dev 
    sudo apt install gir1.2-gtk-3.0 gir1.2-gtksource-3.0
 
-   pip install setuptools
-
 General requirements
 ^^^^^^^^^^^^^^^^^^^^
 
