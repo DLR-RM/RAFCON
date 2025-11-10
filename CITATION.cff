@@ -3,8 +3,8 @@
 cff-version: "1.2.0"
 message: "If you use this software, please cite it using these metadata."
 title: RAFCON
-version: 2.3.0  # Handled by bump2version
-date-released: 2025-10-30
+version: 2.3.1  # Handled by bump2version
+date-released: 2025-11-10
 license: EPL-1.0
 doi: "10.5281/zenodo.1493058"
 authors:

@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform"]
 lock_version = "4.5.0"
-content_hash = "sha256:ea4f64bf068754e723765bf40004fa02370c652451e55d0a32d60742138aabc8"
+content_hash = "sha256:8fb9b739ffe3119a5bef842a211bdd6981028df3e8363931acac43e1ed2af063"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
@@ -943,14 +943,14 @@ files = [
 
 [[package]]
 name = "pygobject"
-version = "3.50.1"
+version = "3.50.2"
 requires_python = "<4.0,>=3.9"
 summary = "Python bindings for GObject Introspection"
 dependencies = [
     "pycairo>=1.16",
 ]
 files = [
-    {file = "pygobject-3.50.1.tar.gz", hash = "sha256:a4df4e7adef7f4f01685a763d138eac9396585bfc68a7d31bbe4fbca2de0d7cb"},
+    {file = "pygobject-3.50.2.tar.gz", hash = "sha256:ece6b860aab77cb649fdfc6e88d8a83765e7a62f7ffd39a628d6e2a0d397a7ff"},
 ]
 
 [[package]]
