@@ -47,16 +47,15 @@ Installation preparations
 Before installing RAFCON, Python >=3.9, pip and setuptools are required on your system. Most of the other dependencies
 are automatically resolved by pip/setuptools, but not all of them. Those need be be installed manually, too:
 
-Installation requirements
+Installation requirements (tested under Ubuntu 24.04)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
    sudo apt update
    sudo apt install python3-dev python3-pip python3-setuptools 
-   sudo apt install libcairo2-dev pkg-config libgirepository1.0-dev gir1.2-gtk-3.0
-
-   pip install setuptools
+   sudo apt install libcairo2-dev pkg-config libgirepository1.0-dev 
+   sudo apt install gir1.2-gtk-3.0 gir1.2-gtksource-3.0
 
 General requirements
 ^^^^^^^^^^^^^^^^^^^^
@@ -66,26 +65,21 @@ General requirements
 * pdm (recent version required)
 
 
-Installing RAFCON
+Installing RAFCON (tested under Ubuntu 24.04)
 -----------------
 
-First make sure GTK (PyGObject, needed for the GUI) is installed in the target environment for RAFCON by opening a python environment and checking if importing gi works:
+It is recommended to install RAFCON inside a virtual environment.
+Once created, make sure setuptools is installed:
 
 .. code-block:: bash
 
-   import gi
+   pip install setuptools
 
-If gi imports successfully, simply install RAFCON with:
+Then, simply install RAFCON with:
 
 .. code-block:: bash
 
    pip install rafcon --user
-
-If it is not installed, please use the GTK install option:
-
-.. code-block:: bash
-
-   pip install rafcon[gtk] --user
 
 The ``--user`` flag is optional. If not set, RAFCON is installed globally (in this case you normaly need to have root privileges).
 

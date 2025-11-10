@@ -4,6 +4,13 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
+2.2.3
+""""""
+    - Miscellaneous:
+        - Moved optional PyGObject dependency to required
+        - Added missing "packaging" dependency
+        - Updated install instructions
+
 2.3.0
 """"""
     - Features:
@@ -16,7 +23,7 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
         - Lowered minimal numpy version for better compatibility
         - Replaced deprecated pkg_resources
         - Added setuptools for python>=3.12
-        - Updtaed install instructions
+        - Updated install instructions
         - Updated outdated versions
 
 2.2.3
