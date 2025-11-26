@@ -166,10 +166,11 @@ class ExecutionHistoryTreeController(ExtendedController):
             source_path = path.dirname(path.dirname(gui_path))
             viewer_path = path.join(gui_path, "execution_log_viewer.py")
             import sys
-            cmd = "{python_version} {path} '{filename}' '{run_id}'" \
+            cmd = "{python_version} {path} '{filename}' '{run_id}' '{title_addition}'" \
                   "".format(python_version="python3", path=viewer_path,
                             filename=execution_history.consumer_manager.get_file_system_consumer_file_name(),
-                            run_id=run_id)
+                            run_id=run_id,
+                            title_addition=f"(Run {history_id+1})")
             execute_command_in_process(cmd, shell=True, cwd=source_path, logger=logger)
         else:
             logger.info("Set FILE_SYSTEM_EXECUTION_HISTORY_ENABLE to True in your config in order to "
