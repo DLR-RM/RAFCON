@@ -67,6 +67,7 @@ class ExecutionEngine(Observable):
         self.new_execution_command_handled = True
         self.stop_state_machine_after_finishing_step = False
         self.running_only_selected_state = False
+        self._replay_context = None
 
     @Observable.observed
     def pause(self):

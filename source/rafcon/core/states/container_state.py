@@ -276,6 +276,15 @@ class ContainerState(State):
         self._start_state_modified = False
         self.add_default_values_of_scoped_variables_to_scoped_data()
         self.add_input_data_to_scoped_data(self.input_data)
+        self._restore_replay_context()
+
+    def _restore_replay_context(self):
+        """Restore scoped data from execution history replay context if available"""
+        from rafcon.core.singleton import state_machine_execution_engine
+        if state_machine_execution_engine._replay_context:
+            scoped_data = state_machine_execution_engine._replay_context.get('scoped_data')
+            if scoped_data:
+                self._scoped_data.update(scoped_data)
 
     def handle_no_transition(self, state):
         """ This function handles the case that there is no transition for a specific outcome of a sub-state.
