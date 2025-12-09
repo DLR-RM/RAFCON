@@ -137,17 +137,7 @@ class ExecutionEngine(Observable):
 
             self.set_execution_mode(StateMachineExecutionStatus.STARTED)
 
-            self.start_state_paths = []
-
-            if start_state_path:
-                path_list = start_state_path.split("/")
-                cur_path = ""
-                for path in path_list:
-                    if cur_path == "":
-                        cur_path = path
-                    else:
-                        cur_path = cur_path + "/" + path
-                    self.start_state_paths.append(cur_path)
+            self.set_start_path(start_state_path)
 
             self._run_active_state_machine()
 
@@ -285,6 +275,22 @@ class ExecutionEngine(Observable):
         else:
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OUT)
 
+    def set_start_path(self, state_path):
+        """Set the execution start path from a state path string
+
+        Builds the start_state_paths list from the given path by creating
+        the full hierarchical path from root to target state.
+
+        :param state_path: Path to the state to start from (e.g., "ROOT/CONTAINER/STATE")
+        """
+        self.start_state_paths = []
+        if state_path:
+            path_list = state_path.split("/")
+            cur_path = ""
+            for p in path_list:
+                cur_path = p if cur_path == "" else cur_path + "/" + p
+                self.start_state_paths.append(cur_path)
+
     def run_to_selected_state(self, path, state_machine_id=None):
         """Execute the state machine until a specific state. This state won't be executed. This is an asynchronous task
         """
@@ -326,20 +332,18 @@ class ExecutionEngine(Observable):
 
         self.run_to_states = []
         # set appropriate start states
-        self.start_state_paths = []
+        self.set_start_path(start_state_path)
+
+        # Truncate path at parent concurrency state if needed
         if start_state_path:
             path_list = start_state_path.split("/")
-            cur_path = ""
-            for path in path_list:
-                if cur_path == "":
-                    cur_path = path
-                else:
-                    cur_path = cur_path + "/" + path
-                self.start_state_paths.append(cur_path)
+            for i, path in enumerate(path_list):
                 if path == parent_concurrency_id:
+                    self.start_state_paths = self.start_state_paths[:i+1]
                     break
 
         # set target states when execution should stop
+        cur_path = self.start_state_paths[-1] if self.start_state_paths else ""
         self.run_to_states.append(cur_path)
 
     def run_selected_state(self, start_state_path=None, state_machine_id=None):
