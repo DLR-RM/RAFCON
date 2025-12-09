@@ -138,6 +138,10 @@ class ExecutionEngine(Observable):
 
             self.set_execution_mode(StateMachineExecutionStatus.STARTED)
 
+            # Clear replay context on new start
+            if self._replay_context:
+                self._replay_context = None
+
             self.set_start_path(start_state_path)
 
             self._run_active_state_machine()
@@ -291,6 +295,38 @@ class ExecutionEngine(Observable):
             for p in path_list:
                 cur_path = p if cur_path == "" else cur_path + "/" + p
                 self.start_state_paths.append(cur_path)
+
+    def replay_from_history(self, history_item, state_machine):
+        """Execute state machine from a specific point in execution history
+
+        :param history_item: The execution history item to replay from (must be a CallItem)
+        :param state_machine: The state machine to execute
+        """
+        # Build human-readable path from state names
+        state = history_item.state_reference
+        state_names = []
+        while state and not state.is_root_state:
+            state_names.insert(0, state.name)
+            state = state.parent
+        
+        human_readable_path = "/".join(state_names)
+        logger.info("Replaying execution from {0}".format(human_readable_path))
+        logger.debug("Replay state path (IDs): {0}".format(history_item.path))
+
+        # Store scoped data for restoration
+        self._replay_context = {
+            'scoped_data': dict(history_item.scoped_data)
+        }
+
+        try:
+            self.set_start_path(history_item.path)
+            self.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+            self.step_mode(state_machine_id=state_machine.state_machine_id)
+            self.step_into()
+        except Exception as e:
+            self._replay_context = None
+            logger.error("Replay from history failed: {0}".format(e))
+            raise
 
     def run_to_selected_state(self, path, state_machine_id=None):
         """Execute the state machine until a specific state. This state won't be executed. This is an asynchronous task
