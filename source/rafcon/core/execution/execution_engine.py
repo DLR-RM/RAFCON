@@ -320,6 +320,7 @@ class ExecutionEngine(Observable):
         state = history_item.state_reference
         state_names = []
         while not state.is_root_state:
+            # skip root state of library state to omit name duplication in path
             if not state.is_root_state_of_library:
                 state_names.insert(0, state.name)
             state = state.parent
@@ -327,8 +328,8 @@ class ExecutionEngine(Observable):
         state_names.insert(0, state.name)
 
         human_readable_path = "/".join(state_names)
-        logger.info("Replaying execution from {0}".format(human_readable_path))
-        logger.debug("Replay state path (IDs): {0}".format(history_item.path))
+        logger.info('Replaying execution from "{0}"'.format(human_readable_path))
+        logger.debug('Replay state path (IDs): {0}'.format(history_item.path))
 
         # Store runtime map for restoration
         self._replay_context = {
