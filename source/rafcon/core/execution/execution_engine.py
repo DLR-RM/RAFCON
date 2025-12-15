@@ -27,6 +27,7 @@ from rafcon.design_patterns.singleton import Singleton
 from rafcon.design_patterns.observer.observable import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.execution.execution_history_items import CallItem
 from rafcon.core.config import global_config
 from rafcon.utils import log
 from rafcon.utils import plugins
@@ -299,23 +300,40 @@ class ExecutionEngine(Observable):
     def replay_from_history(self, history_item, state_machine):
         """Execute state machine from a specific point in execution history
 
+        Restores scoped_data for ancestor states only. The target state and its descendants run fresh.
+
         :param history_item: The execution history item to replay from (must be a CallItem)
         :param state_machine: The state machine to execute
         """
+        # Build runtime_map: separate scoped_data for each ancestor path
+        path_parts = history_item.path.split('/')
+        ancestors = ['/'.join(path_parts[:i]) for i in range(1, len(path_parts))]
+        runtime_map = {}
+
+        current = history_item.prev
+        while current:
+            if isinstance(current, CallItem) and current.path in ancestors and current.path not in runtime_map:
+                runtime_map[current.path] = dict(current.scoped_data)
+            current = current.prev
+
         # Build human-readable path from state names
         state = history_item.state_reference
         state_names = []
-        while state and not state.is_root_state:
-            state_names.insert(0, state.name)
+        while not state.is_root_state:
+            if not state.is_root_state_of_library:
+                state_names.insert(0, state.name)
             state = state.parent
-        
+
+        state_names.insert(0, state.name)
+
         human_readable_path = "/".join(state_names)
         logger.info("Replaying execution from {0}".format(human_readable_path))
         logger.debug("Replay state path (IDs): {0}".format(history_item.path))
 
-        # Store scoped data for restoration
+        # Store runtime map for restoration
         self._replay_context = {
-            'scoped_data': dict(history_item.scoped_data)
+            'runtime_map': runtime_map,
+            'target_path': history_item.path
         }
 
         try:
