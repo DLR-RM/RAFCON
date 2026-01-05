@@ -285,15 +285,10 @@ class ContainerState(State):
             return
 
         state_path = self.get_path()
-        target_path = replay_ctx['target_path']
-
-        # Don't restore for states at or below the target (descendants should run fresh)
-        if state_path == target_path or state_path.startswith(target_path + "/"):
-            return
-
         runtime_map = replay_ctx['runtime_map']
         if state_path in runtime_map:
             self._scoped_data.update(runtime_map[state_path])
+            del runtime_map[state_path]
 
     def handle_no_transition(self, state):
         """ This function handles the case that there is no transition for a specific outcome of a sub-state.

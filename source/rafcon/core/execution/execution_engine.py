@@ -305,14 +305,14 @@ class ExecutionEngine(Observable):
         :param history_item: The execution history item to replay from (must be a CallItem)
         :param state_machine: The state machine to execute
         """
-        # Build runtime_map: separate scoped_data for each ancestor path
+        # Build runtime_map: skip root, include target and ancestors
         path_parts = history_item.path.split('/')
-        ancestors = ['/'.join(path_parts[:i]) for i in range(1, len(path_parts))]
+        paths_to_restore = ['/'.join(path_parts[:i]) for i in range(2, len(path_parts) + 1)]
         runtime_map = {}
 
-        current = history_item.prev
+        current = history_item
         while current:
-            if isinstance(current, CallItem) and current.path in ancestors and current.path not in runtime_map:
+            if isinstance(current, CallItem) and current.path in paths_to_restore and current.path not in runtime_map:
                 runtime_map[current.path] = dict(current.scoped_data)
             current = current.prev
 
