@@ -29,6 +29,7 @@ from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.states.state import StateType
+from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.signals import MetaSignalMsg
@@ -130,7 +131,17 @@ class StateOverviewController(ExtendedController):
         if isinstance(self.model.state, DeciderState):
             combo.set_sensitive(False)
 
-        # in case the state is inside a library
+        # Breakpoint checkbox
+        breakpoint_checkbox = Gtk.CheckButton.new_with_label("Breakpoint")
+        state_id = state_machine_execution_engine.breakpoint_manager._get_state_id(self.model.state)
+        breakpoints = state_machine_execution_engine.breakpoint_manager.get_all_breakpoints()
+        breakpoint_checkbox.set_active(state_id in breakpoints)
+        breakpoint_checkbox.connect('toggled', self.on_toggle_breakpoint)
+        breakpoint_checkbox.show()
+        self.view['properties_widget'].attach(breakpoint_checkbox, 0, 4, 2, 1)
+        view['breakpoint_checkbox'] = breakpoint_checkbox
+
+        # Disable editing for library states
         if self.model.state.get_next_upper_library_root_state():
             view['entry_name'].set_editable(False)
             combo.set_sensitive(False)
@@ -144,6 +155,26 @@ class StateOverviewController(ExtendedController):
     def on_toggle_is_start_state(self, button):
         if not button.get_active() == self.model.is_start:
             gui_helper_state_machine.selected_state_toggle_is_start_state()
+
+    def on_toggle_breakpoint(self, checkbox):
+        # Build display name from hierarchy
+        path_parts = []
+        current = self.model.state
+        while current and not current.is_root_state:
+            path_parts.insert(0, current.name)
+            current = current.parent
+        display_name = "/".join(path_parts) or self.model.state.name
+
+        if checkbox.get_active():
+            state_machine_execution_engine.breakpoint_manager.add_breakpoint(self.model.state, display_name)
+        else:
+            state_machine_execution_engine.breakpoint_manager.remove_breakpoint(self.model.state)
+
+        # Update breakpoints tab
+        import rafcon.gui.singleton as gui_singletons
+        breakpoints_ctrl = gui_singletons.main_window_controller.get_controller('breakpoints_ctrl')
+        if breakpoints_ctrl:
+            breakpoints_ctrl.update()
 
     def on_toggle_show_content(self, checkbox):
         if self._external_update:
