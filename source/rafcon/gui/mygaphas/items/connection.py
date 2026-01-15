@@ -12,8 +12,10 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+import math
 from weakref import ref
 
+from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.models.data_flow import DataFlowModel
 from rafcon.gui.models.transition import TransitionModel
@@ -99,6 +101,18 @@ class TransitionView(ConnectionView):
                 self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE'], self.parent.transparency)
             self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], self.parent.transparency)
             super(TransitionView, self).draw(context)
+
+            # Draw red dot if target state has breakpoint
+            transition = self.model.core_element
+            if transition.to_state in transition.parent.states:
+                target_state = transition.parent.states[transition.to_state]
+                if state_machine_execution_engine.breakpoint_manager.should_pause(target_state):
+                    cr = context.cairo
+                    x, y = self.to_handle().pos
+                    # Draw small red circle at arrow endpoint
+                    cr.arc(x - 6, y, 1.8, 0, 2 * math.pi)
+                    cr.set_source_rgba(1.0, 0.0, 0.0, 1.0)
+                    cr.fill()
 
 
 class DataFlowView(ConnectionView):
