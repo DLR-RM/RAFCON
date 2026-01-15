@@ -32,6 +32,7 @@ from rafcon.core.states.state import StateType
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.state_editor.overview import StateOverviewView
@@ -171,7 +172,6 @@ class StateOverviewController(ExtendedController):
             state_machine_execution_engine.breakpoint_manager.remove_breakpoint(self.model.state)
 
         # Update breakpoints tab
-        import rafcon.gui.singleton as gui_singletons
         breakpoints_ctrl = gui_singletons.main_window_controller.get_controller('breakpoints_ctrl')
         if breakpoints_ctrl:
             breakpoints_ctrl.update()
