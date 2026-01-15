@@ -32,6 +32,7 @@ from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
 from rafcon.core.id_generator import *
+from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.core.state_elements.logical_port import Income, Outcome
@@ -267,6 +268,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         def run_wrapper():
             try:
+                # Check if breakpoint is set for this state
+                if state_machine_execution_engine.breakpoint_manager.should_pause(self):
+                    logger.info(f"Breakpoint hit: {self.name}")
+                    state_machine_execution_engine.pause()
+
                 self.run()
             finally:
                 plugins.run_hook('state_thread_joined')
