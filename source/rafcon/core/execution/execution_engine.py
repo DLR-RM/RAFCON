@@ -27,6 +27,7 @@ from rafcon.design_patterns.singleton import Singleton
 from rafcon.design_patterns.observer.observable import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.execution.breakpoint_manager import BreakpointManager
 from rafcon.core.config import global_config
 from rafcon.utils import log
 from rafcon.utils import plugins
@@ -67,6 +68,7 @@ class ExecutionEngine(Observable):
         self.new_execution_command_handled = True
         self.stop_state_machine_after_finishing_step = False
         self.running_only_selected_state = False
+        self.breakpoint_manager = BreakpointManager()
 
     @Observable.observed
     def pause(self):
