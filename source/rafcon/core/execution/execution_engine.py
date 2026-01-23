@@ -305,16 +305,34 @@ class ExecutionEngine(Observable):
         :param history_item: The execution history item to replay from (must be a CallItem)
         :param state_machine: The state machine to execute
         """
-        # Build runtime_map: skip root, include target and ancestors
+        # Build hierarchical list of ancestor state machine paths from selected history item
         path_parts = history_item.path.split('/')
-        paths_to_restore = ['/'.join(path_parts[:i]) for i in range(2, len(path_parts) + 1)]
+        paths_ancestor = ['/'.join(path_parts[:i]) for i in range(1, len(path_parts) + 1)]
+        
+        # Build runtime_map: Save most recent CallItems of each hierarchy by walking
+        # through ancestor in execution history.
         runtime_map = {}
+        current_item = history_item
+        collected_states = []
+        while current_item:
+            # Select relevant items 
+            if isinstance(current_item, CallItem) and \
+                current_item.path in paths_ancestor and \
+                    current_item.path not in collected_states:
+                # Collect most recent CallItem of hierarchy or save it for hierarchy
+                if current_item.call_type_str == 'EXECUTE':
+                    collected_call_item = dict(current_item.scoped_data)
+                    collected_states.append(current_item.path)
+                elif current_item.call_type_str == 'CONTAINER':
+                    # This indicates we are now at the root of the current hierarchy.
+                    # Now save the collected CallItem for this hierarchy.
+                    runtime_map[current_item.path] = collected_call_item
+                else:
+                    raise ValueError(f"Can this case happen? {current_item.call_type_str}")
+            current_item = current_item.prev
 
-        current = history_item
-        while current:
-            if isinstance(current, CallItem) and current.path in paths_to_restore and current.path not in runtime_map:
-                runtime_map[current.path] = dict(current.scoped_data)
-            current = current.prev
+        # -jer continue testing if it works now 
+        # -jer need to pause at the correct state machine
 
         # Build human-readable path from state names
         state = history_item.state_reference
