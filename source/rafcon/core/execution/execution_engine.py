@@ -328,11 +328,8 @@ class ExecutionEngine(Observable):
                     # Now save the collected CallItem for this hierarchy.
                     runtime_map[current_item.path] = collected_call_item
                 else:
-                    raise ValueError(f"Can this case happen? {current_item.call_type_str}")
+                    raise ValueError(f"Unhandled case for: call_type_str = {current_item.call_type_str}")
             current_item = current_item.prev
-
-        # -jer continue testing if it works now 
-        # -jer need to pause at the correct state machine
 
         # Build human-readable path from state names
         state = history_item.state_reference
@@ -357,9 +354,7 @@ class ExecutionEngine(Observable):
 
         try:
             self.set_start_path(history_item.path)
-            self.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
             self.step_mode(state_machine_id=state_machine.state_machine_id)
-            self.step_into()
         except Exception as e:
             self._replay_context = None
             logger.error("Replay from history failed: {0}".format(e))

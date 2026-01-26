@@ -290,7 +290,7 @@ class ContainerState(State):
             self._scoped_data.update(runtime_map[state_path])
             del runtime_map[state_path]
             if not runtime_map:
-                replay_ctx = None
+                state_machine_execution_engine._replay_context = None
 
     def handle_no_transition(self, state):
         """ This function handles the case that there is no transition for a specific outcome of a sub-state.
