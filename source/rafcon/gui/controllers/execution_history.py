@@ -306,8 +306,8 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.append_string_to_menu(popup_menu, final_outcome_menu_item_string)
                         self.append_string_to_menu(popup_menu, "------------------------")
 
-                # Add "Start From Here" menu item for CallItem
-                if isinstance(history_item, CallItem):
+                # Add "Start From Here" menu item for CallItem and type 'EXECUTE'
+                if isinstance(history_item, CallItem) and history_item.call_type_str == 'EXECUTE':
                     separator = Gtk.SeparatorMenuItem()
                     separator.show()
                     popup_menu.append(separator)
