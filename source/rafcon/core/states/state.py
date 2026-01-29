@@ -262,17 +262,21 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :return:
         """
+        if state_machine_execution_engine.breakpoint_manager.should_pause(self):
+            logger.info(f"Breakpoint hit: {self.name}")
+            if self.parent and self.parent.last_child:
+                self.parent.last_child.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
+            state_machine_execution_engine.pause()
+            state_machine_execution_engine._wait_while_in_pause_or_in_step_mode()
+            if self.parent and self.parent.last_child:
+                self.parent.last_child.state_execution_status = StateExecutionStatus.INACTIVE
+
         self.execution_history = execution_history
         if generate_run_id:
             self._run_id = run_id_generator()
 
         def run_wrapper():
             try:
-                # Check if breakpoint is set for this state
-                if state_machine_execution_engine.breakpoint_manager.should_pause(self):
-                    logger.info(f"Breakpoint hit: {self.name}")
-                    state_machine_execution_engine.pause()
-
                 self.run()
             finally:
                 plugins.run_hook('state_thread_joined')
