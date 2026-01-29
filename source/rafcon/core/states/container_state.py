@@ -1099,6 +1099,23 @@ class ContainerState(State):
         else:
             self.start_state_id = state
 
+    def _find_previous_state_for(self, target_state):
+        """Find the state that transitions to the target state
+
+        :param target_state: The state to find the predecessor for
+        :return: The state that comes before target_state in execution order, or None
+        """
+        # Look through all transitions to find which state transitions to the target
+        for transition_id, transition in self.transitions.items():
+            # Check if this transition goes to the target state
+            if transition.to_state == target_state.state_id:
+                # Found a transition to the target, get the FROM state
+                if transition.from_state is not None:
+                    from_state_id = transition.from_state
+                    if from_state_id in self.states:
+                        return self.states[from_state_id]
+        return None
+
     def get_start_state(self, set_final_outcome=False):
         """Get the start state of the container state
 
@@ -1106,13 +1123,20 @@ class ContainerState(State):
                                     an outcome
         :return: the start state
         """
-
         # overwrite the start state in the case that a specific start state is specific e.g. by start_from_state
         if self.get_path() in state_machine_execution_engine.start_state_paths:
             for state_id, state in self.states.items():
                 if state.get_path() in state_machine_execution_engine.start_state_paths:
                     state_machine_execution_engine.start_state_paths.remove(self.get_path())
                     self._start_state_modified = True
+
+                    # Find the previous state in the transition chain
+                    # This gives the yellow border to the correct state (the one before target)
+                    previous_state = self._find_previous_state_for(state)
+                    if previous_state:
+                        previous_state.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
+                        self.last_child = previous_state
+
                     return state
 
         if self.start_state_id is None:

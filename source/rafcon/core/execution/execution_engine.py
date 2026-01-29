@@ -354,7 +354,10 @@ class ExecutionEngine(Observable):
 
         try:
             self.set_start_path(history_item.path)
-            self.step_mode(state_machine_id=state_machine.state_machine_id)
+            self.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
+            self.run_to_states = [history_item.path]
+            self._run_active_state_machine()
         except Exception as e:
             self._replay_context = None
             logger.error("Replay from history failed: {0}".format(e))
