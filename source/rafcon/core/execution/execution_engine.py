@@ -27,7 +27,7 @@ from rafcon.design_patterns.singleton import Singleton
 from rafcon.design_patterns.observer.observable import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-from rafcon.core.execution.execution_history_items import CallItem
+from rafcon.core.execution.execution_history_items import CallItem, ReturnItem
 from rafcon.core.config import global_config
 from rafcon.utils import log
 from rafcon.utils import plugins
@@ -346,10 +346,26 @@ class ExecutionEngine(Observable):
         logger.info('Replaying execution from "{0}"'.format(human_readable_path))
         logger.debug('Replay state path (IDs): {0}'.format(history_item.path))
 
+        # Find the state that executed just before the selected state by walking back in history
+        previous_state_path = None
+        prev_item = history_item.prev
+        target_path_parts = history_item.path.split('/')
+        while prev_item:
+            # Look for a ReturnItem (state completion) that represents a sibling state
+            if isinstance(prev_item, ReturnItem):
+                prev_path_parts = prev_item.path.split('/')
+                # Check if this is a sibling (same parent) by comparing path depths
+                if len(prev_path_parts) == len(target_path_parts) and \
+                   prev_path_parts[:-1] == target_path_parts[:-1]:
+                    previous_state_path = prev_item.path
+                    break
+            prev_item = prev_item.prev
+
         # Store runtime map for restoration
         self._replay_context = {
             'runtime_map': runtime_map,
-            'target_path': history_item.path
+            'target_path': history_item.path,
+            'previous_state_path': previous_state_path
         }
 
         try:
