@@ -11,6 +11,8 @@ class BreakpointManager:
 
     @staticmethod
     def _get_state_id(state):
+        if state.file_system_path is None:
+            return None
         return os.path.basename(state.file_system_path)
 
     def add_breakpoint(self, state, display_name):
@@ -37,6 +39,8 @@ class BreakpointManager:
 
     def should_pause(self, state):
         state_id = self._get_state_id(state)
+        if state_id is None:
+            return False
         if state_id in self._breakpoints:
             return self._breakpoints[state_id]['enabled']
         return False
