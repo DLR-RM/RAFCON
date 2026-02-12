@@ -158,6 +158,12 @@ class StateOverviewController(ExtendedController):
             gui_helper_state_machine.selected_state_toggle_is_start_state()
 
     def on_toggle_breakpoint(self, checkbox):
+        if checkbox.get_active() and self.model.state.file_system_path is None:
+            logger.warning("Breakpoint cannot be set: the state machine has not been saved yet. "
+                           "Please save the state machine first.")
+            checkbox.set_active(False)
+            return
+
         # Build display name from hierarchy
         path_parts = []
         current = self.model.state
