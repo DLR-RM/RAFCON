@@ -356,7 +356,7 @@ class ExecutionEngine(Observable):
                 prev_path_parts = prev_item.path.split('/')
                 # Check if this is a sibling (same parent) by comparing path depths
                 if len(prev_path_parts) == len(target_path_parts) and \
-                   prev_path_parts[:-1] == target_path_parts[:-1]:
+                    prev_path_parts[:-1] == target_path_parts[:-1]:
                     previous_state_path = prev_item.path
                     break
             prev_item = prev_item.prev
