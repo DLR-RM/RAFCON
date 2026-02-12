@@ -8,6 +8,11 @@ class BreakpointManager:
 
     def __init__(self):
         self._breakpoints = {}
+        self.on_change = None
+
+    def _notify(self):
+        if self.on_change:
+            self.on_change()
 
     @staticmethod
     def _get_state_id(state):
@@ -24,18 +29,22 @@ class BreakpointManager:
         }
         logger.info(f"✓ Breakpoint: {display_name}")
         logger.info(f"  Path: {state.file_system_path}")
+        self._notify()
 
     def remove_breakpoint(self, state):
         state_id = self._get_state_id(state)
         if state_id in self._breakpoints:
             del self._breakpoints[state_id]
+            self._notify()
 
     def toggle_breakpoint(self, state_id):
         if state_id in self._breakpoints:
             self._breakpoints[state_id]['enabled'] = not self._breakpoints[state_id]['enabled']
+            self._notify()
 
     def clear_all(self):
         self._breakpoints.clear()
+        self._notify()
 
     def should_pause(self, state):
         state_id = self._get_state_id(state)
@@ -51,7 +60,9 @@ class BreakpointManager:
     def disable_all(self):
         for bp in self._breakpoints.values():
             bp['enabled'] = False
+        self._notify()
 
     def enable_all(self):
         for bp in self._breakpoints.values():
             bp['enabled'] = True
+        self._notify()
