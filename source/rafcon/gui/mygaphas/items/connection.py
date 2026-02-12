@@ -108,9 +108,17 @@ class TransitionView(ConnectionView):
                 target_state = transition.parent.states[transition.to_state]
                 if state_machine_execution_engine.breakpoint_manager.should_pause(target_state):
                     cr = context.cairo
-                    x, y = self.to_handle().pos
-                    # Draw small red circle at arrow endpoint
-                    cr.arc(x - 6, y, 1.8, 0, 2 * math.pi)
+                    x2, y2 = self._handles[-1].pos
+                    x1, y1 = self._handles[-2].pos
+                    dx, dy = x2 - x1, y2 - y1
+                    length = math.sqrt(dx * dx + dy * dy) or 1
+                    # Unit perpendicular vector (rotated 90 degrees left)
+                    px, py = -dy / length, dx / length
+                    radius = self.line_width * 3
+                    # Place dot near target port, offset perpendicular to line
+                    cr.arc(x2 - dx / length * radius * 2 + px * radius * 2,
+                           y2 - dy / length * radius * 2 + py * radius * 2,
+                           radius, 0, 2 * math.pi)
                     cr.set_source_rgba(1.0, 0.0, 0.0, 1.0)
                     cr.fill()
 
