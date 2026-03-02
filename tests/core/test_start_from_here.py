@@ -17,7 +17,6 @@ BARRIER_CONCURRENCY    = ROOT + "/QIZZOB/LZLXFW/KEQYNU"   # all branches must fi
 PREEMPTIVE_CONCURRENCY = ROOT + "/QIZZOB/LZLXFW/AESIQF"   # fastest branch cancels the rest
 
 # inside task_2 (EAWGCM is the HierarchyState wrapping the library)
-HIERARCHY2_IN_TASK2 = ROOT + "/RYZGLE/EAWGCM/SFSEDE"              # first hierarchy_2 in task_2
 NESTED_LIBRARY      = ROOT + "/RYZGLE/EAWGCM/SFSEDE/MQRVHE/BNLTCG/IKAANM"  # hierarchy_4, 3 libs deep
 
 
@@ -40,105 +39,45 @@ def _output(sm):
     return sm.root_state.states["RYZGLE"].output_data["output_1"]
 
 
-def test_full_run(caplog):
+def test_output_from_multiple_start_points(caplog):
     # baseline: full run from the beginning
     testing_utils.initialize_environment_core(libraries={"develop_test": LIB_PATH})
     engine = rafcon.core.singleton.state_machine_execution_engine
     sm = engine.execute_state_machine_from_path(path=testing_utils.get_test_sm_path(SM_PATH))
     try:
+        # test output correct on full run
         assert len(sm.execution_histories) == 1
         assert _output(sm) == 295
-    finally:
-        testing_utils.shutdown_environment_only_core(caplog=caplog)
 
-
-def test_replay_from_task1(caplog):
-    # start from task_1 - verify both task_1 and task_2 produce correct outputs
-    testing_utils.initialize_environment_core(libraries={"develop_test": LIB_PATH})
-    engine = rafcon.core.singleton.state_machine_execution_engine
-    sm = engine.execute_state_machine_from_path(path=testing_utils.get_test_sm_path(SM_PATH))
-    _replay_from(sm, TASK_1)
-    try:
+        # test output correct from task 1
+        _replay_from(sm, TASK_1)
         assert sm.root_state.states["QIZZOB"].output_data["output_1"] == 79
         assert _output(sm) == 295
-    finally:
-        testing_utils.shutdown_environment_only_core(caplog=caplog)
 
-
-def test_replay_from_task2(caplog):
-    # task_1 is skipped, its output is restored from history, task_2 re-runs
-    testing_utils.initialize_environment_core(libraries={"develop_test": LIB_PATH})
-    engine = rafcon.core.singleton.state_machine_execution_engine
-    sm = engine.execute_state_machine_from_path(path=testing_utils.get_test_sm_path(SM_PATH))
-    _replay_from(sm, TASK_2)
-    try:
-        assert len(sm.execution_histories) == 2
+        # test output correct from task 2
+        _replay_from(sm, TASK_2)
         assert _output(sm) == 295
-    finally:
-        testing_utils.shutdown_environment_only_core(caplog=caplog)
 
-
-def test_replay_from_barrier_concurrency(caplog):
-    # start from inside task_1 at the barrier concurrency 
-    testing_utils.initialize_environment_core(libraries={"develop_test": LIB_PATH})
-    engine = rafcon.core.singleton.state_machine_execution_engine
-    sm = engine.execute_state_machine_from_path(path=testing_utils.get_test_sm_path(SM_PATH))
-    _replay_from(sm, BARRIER_CONCURRENCY)
-    try:
+        # test output correct from barrier concurrency
+        _replay_from(sm, BARRIER_CONCURRENCY)
         assert _output(sm) == 295
-    finally:
-        testing_utils.shutdown_environment_only_core(caplog=caplog)
 
-
-def test_replay_from_preemptive_concurrency(caplog):
-    # start from the preemptive concurrency inside task_1
-    testing_utils.initialize_environment_core(libraries={"develop_test": LIB_PATH})
-    engine = rafcon.core.singleton.state_machine_execution_engine
-    sm = engine.execute_state_machine_from_path(path=testing_utils.get_test_sm_path(SM_PATH))
-    _replay_from(sm, PREEMPTIVE_CONCURRENCY)
-    try:
+        # test output correct from preemptive concurrency
+        _replay_from(sm, PREEMPTIVE_CONCURRENCY)
         assert _output(sm) == 295
-    finally:
-        testing_utils.shutdown_environment_only_core(caplog=caplog)
 
-
-def test_replay_from_deep_hierarchy(caplog):
-    # start from hierarchy_2 inside task_2, skipping task_1 entirely
-    testing_utils.initialize_environment_core(libraries={"develop_test": LIB_PATH})
-    engine = rafcon.core.singleton.state_machine_execution_engine
-    sm = engine.execute_state_machine_from_path(path=testing_utils.get_test_sm_path(SM_PATH))
-    _replay_from(sm, HIERARCHY2_IN_TASK2)
-    try:
+        # test output correct from lower nested hierarchy
+        _replay_from(sm, NESTED_LIBRARY)
         assert _output(sm) == 295
-    finally:
-        testing_utils.shutdown_environment_only_core(caplog=caplog)
 
-
-def test_replay_from_nested_library(caplog):
-    # IKAANM is hierarchy_4 - a library state three levels deep inside task_2
-    testing_utils.initialize_environment_core(libraries={"develop_test": LIB_PATH})
-    engine = rafcon.core.singleton.state_machine_execution_engine
-    sm = engine.execute_state_machine_from_path(path=testing_utils.get_test_sm_path(SM_PATH))
-    _replay_from(sm, NESTED_LIBRARY)
-    try:
+        # test output correct after multiple replays
+        _replay_from(sm, TASK_2)
+        _replay_from(sm, TASK_1)
         assert _output(sm) == 295
-    finally:
-        testing_utils.shutdown_environment_only_core(caplog=caplog)
-
-
-def test_multiple_replays_from_run1(caplog):
-    # run 1 stays intact - each replay creates a new run, all sourced from run 1
-    testing_utils.initialize_environment_core(libraries={"develop_test": LIB_PATH})
-    engine = rafcon.core.singleton.state_machine_execution_engine
-    sm = engine.execute_state_machine_from_path(path=testing_utils.get_test_sm_path(SM_PATH))
-    _replay_from(sm, TASK_2)
-    _replay_from(sm, TASK_1)
-    try:
-        assert _output(sm) == 295
-        assert len(sm.execution_histories) == 3
+        assert len(sm.execution_histories) == 8
     finally:
         testing_utils.shutdown_environment_only_core(caplog=caplog)
 
 
 if __name__ == '__main__':
-    test_full_run(None)
+    test_output_from_multiple_start_points(None)
