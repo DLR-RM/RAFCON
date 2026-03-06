@@ -307,10 +307,45 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.append_string_to_menu(popup_menu, final_outcome_menu_item_string)
                         self.append_string_to_menu(popup_menu, "------------------------")
 
+                # Add "Start From Here" menu item for CallItem and type 'EXECUTE'
+                if isinstance(history_item, CallItem) and history_item.call_type_str == 'EXECUTE':
+                    separator = Gtk.SeparatorMenuItem()
+                    separator.show()
+                    popup_menu.append(separator)
+
+                    menu_item = Gtk.MenuItem("Start From Here")
+                    menu_item.connect("activate", lambda w: self._on_start_from_here(history_item))
+                    menu_item.show()
+                    popup_menu.append(menu_item)
+
                 popup_menu.show()
                 popup_menu.popup(None, None, None, None, event.get_button()[1], time)
 
             return True
+
+    def _on_start_from_here(self, history_item):
+        """Handle 'Start From Here' menu action
+        
+        :param history_item: The history item to start execution from
+        """
+        if not state_machine_execution_engine.finished_or_stopped():
+            logger.warning("Cannot start from here while execution is running")
+            return
+
+        # Get the state machine
+        if self.lock_view_flag:
+            state_machine = self.lock_state_machine_model.state_machine
+        else:
+            sm_m = self.model.get_selected_state_machine_model()
+            if not sm_m:
+                logger.warning("No state machine selected")
+                return
+            state_machine = sm_m.state_machine
+
+        try:
+            state_machine_execution_engine.replay_from_history(history_item, state_machine)
+        except Exception as e:
+            logger.warning("Start from here failed: {0}".format(e))
 
     def get_history_item_for_tree_iter(self, child_tree_iter):
         """Hands history item for tree iter and compensate if tree item is a dummy item
