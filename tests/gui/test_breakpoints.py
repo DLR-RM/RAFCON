@@ -4,9 +4,6 @@ import rafcon as _rafcon_pkg
 
 from tests import utils as testing_utils
 from rafcon.utils import log
-from rafcon.core.storage import storage
-import rafcon.gui.singleton as gui_singleton
-from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
 
 logger = log.get_logger(__name__)
 
@@ -18,6 +15,10 @@ DECIMATE_BOTTLES = "NDIVLD"
 
 def test_breakpoints_panel(gui):
     """Tests the breakpoints panel GUI — setting, toggling, and removing breakpoints."""
+    import rafcon.gui.singleton as gui_singleton
+    from rafcon.core.storage import storage
+    from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
+
     # load from disk so states have a file_system_path (breakpoints need it)
     sm = gui(storage.load_state_machine_from_path, BOTTLES_PATH)
     sm_id = gui(state_machine_manager.add_state_machine, sm)
