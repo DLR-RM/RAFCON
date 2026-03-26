@@ -1,18 +1,16 @@
 import os
 import time
 
-import rafcon.gui.singleton as gui_singleton
-from rafcon.core.singleton import state_machine_execution_engine
-from rafcon.utils import log
 from tests import utils as testing_utils
-
-logger = log.get_logger(__name__)
 
 SM1_PATH = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "99_bottles_of_beer_no_wait"))
 SM2_PATH = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "validity_check_test"))
 
 
 def test_lock_execution_history_view(gui):
+    import rafcon.gui.singleton as gui_singleton
+    from rafcon.core.singleton import state_machine_execution_engine
+
     menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
     smm_model = gui_singleton.state_machine_manager_model
     execution_history_ctrl = gui_singleton.main_window_controller.get_controller('execution_history_ctrl')
@@ -22,7 +20,14 @@ def test_lock_execution_history_view(gui):
     gui(menubar_ctrl.on_open_activate, None, None, SM1_PATH)
     sm1_id = smm_model.selected_state_machine_id
     gui(menubar_ctrl.on_start_activate, None)
+
+    # run for max 15 seconds or until finished (whichever comes first)
+    start_time = time.time()
+    timeout = 15.0
     while not state_machine_execution_engine.finished_or_stopped():
+        if time.time() - start_time > timeout:
+            gui(menubar_ctrl.on_stop_activate, None)
+            break
         time.sleep(0.05)
     testing_utils.wait_for_gui()
 
