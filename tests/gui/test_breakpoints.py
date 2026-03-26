@@ -62,7 +62,18 @@ def test_breakpoints_panel(gui):
     assert bm.should_pause(count_state)
     assert bm.should_pause(decimate_state)
 
-    # remove all
+    # test individual remove from breakpoints panel
+    # select the first breakpoint in the tree and remove it
+    gui(breakpoints_ctrl.breakpoints_tree.get_selection().select_path, 0)
+    gui(breakpoints_ctrl.on_remove_selected, None)
+    testing_utils.wait_for_gui()
+
+    # verify one breakpoint was removed and one remains
+    assert len(list(breakpoints_ctrl.breakpoints_store)) == 1
+    remaining_breakpoints = bm.get_all_breakpoints()
+    assert len(remaining_breakpoints) == 1
+
+    # remove all remaining breakpoints
     gui(breakpoints_ctrl.on_remove_all, None)
     assert not bm.get_all_breakpoints()
     assert len(list(breakpoints_ctrl.breakpoints_store)) == 0
