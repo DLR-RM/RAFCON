@@ -65,7 +65,7 @@ def test_breakpoint_disabled_skips_pause(caplog):
     count_id = os.path.basename(count_bottles.file_system_path)
     engine.breakpoint_manager.toggle_breakpoint(count_id)  # disable it
 
-    # sentinel: if we reach Decimate_bottles, Count_bottles was not paused
+    # if we reach Decimate_bottles, Count_bottles was not paused
     engine.breakpoint_manager.add_breakpoint(sm.root_state.states[DECIMATE_BOTTLES], "Decimate bottles")
 
     engine.start(sm.state_machine_id)
@@ -74,7 +74,7 @@ def test_breakpoint_disabled_skips_pause(caplog):
     engine.join()
 
     try:
-        assert paused_at_sentinel, "Should have paused at Decimate_bottles (sentinel after disabled BP)"
+        assert paused_at_sentinel, "Should have paused at Decimate_bottles (after disabled BP)"
     finally:
         engine.breakpoint_manager.clear_all()
         testing_utils.shutdown_environment_only_core(caplog=caplog)
@@ -107,7 +107,7 @@ def test_breakpoint_inside_library_state(caplog):
 
 def test_breakpoint_persists_when_library_run_standalone(caplog):
     # set BP from within the library wrapper context (via state_copy)
-    # then run the library SM directly - same BP should still fire
+    # then run the library SM directly - same BP should still run
     # (breakpoints are keyed by the state's folder name, independent of how the SM is loaded)
     testing_utils.initialize_environment_core(libraries={"tutorials": _TUTORIALS})
     engine = rafcon.core.singleton.state_machine_execution_engine
