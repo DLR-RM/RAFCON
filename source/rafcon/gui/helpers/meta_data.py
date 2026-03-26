@@ -310,11 +310,12 @@ def cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas
     margin = cal_margin(parent_size)
     # Add margin and ensure that the upper left corner is within the state
     if group:
-        # frame of grouped state
-        rel_pos = max(left - margin, 0), max(top - margin, 0)
+        # frame of grouped state — extend top by an extra margin so the state name label is not obstructed
+        top_padding = margin
+        rel_pos = max(left - margin, 0), max(top - margin - top_padding, 0)
         # Add margin and ensure that the lower right corner is within the state
         size = (min(right - left + 2 * margin, parent_size[0] - rel_pos[0]),
-                min(bottom - top + 2 * margin, parent_size[1] - rel_pos[1]))
+                min(bottom - top + 2 * margin + top_padding, parent_size[1] - rel_pos[1]))
     else:
         # frame inside of state
         # rel_pos = max(margin, 0), max(margin, 0)
@@ -536,12 +537,14 @@ def scale_meta_data_according_states(models_dict):
     left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
 
     parent_size = models_dict['state'].parent.get_meta_data_editor()['size']
-    _, rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size)
+    margin, rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size)
 
     # Set size and position of new container state
     models_dict['state'].set_meta_data_editor('rel_pos', rel_pos)
     models_dict['state'].set_meta_data_editor('size', size)
-    offset = mult_two_vectors((-1., -1.), rel_pos)
+    # When the container's top is clamped to the parent edge, push children down to preserve label space
+    extra_y = max(0., 2 * margin - top)
+    offset = (-rel_pos[0], -rel_pos[1] + extra_y)
     offset_rel_pos_of_all_models_in_dict(models_dict, offset)
 
     return True
