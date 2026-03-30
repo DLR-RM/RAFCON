@@ -311,7 +311,7 @@ def cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas
     # Add margin and ensure that the upper left corner is within the state
     if group:
         # frame of grouped state — extend top by an extra margin so the state name label is not obstructed
-        top_padding = margin
+        top_padding = 1.5 * margin
         rel_pos = max(left - margin, 0), max(top - margin - top_padding, 0)
         # Add margin and ensure that the lower right corner is within the state
         size = (min(right - left + 2 * margin, parent_size[0] - rel_pos[0]),
