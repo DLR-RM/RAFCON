@@ -93,6 +93,7 @@ class GraphicalEditorController(ExtendedController):
                        "".format(time.time() - start_time, self.model.state_machine_id))
 
     def destroy(self):
+        state_machine_execution_engine.breakpoint_manager.remove_listener(self._on_breakpoint_changed)
         if self.view:
             self.view.editor.prepare_destruction()
         super(GraphicalEditorController, self).destroy()
@@ -106,7 +107,7 @@ class GraphicalEditorController(ExtendedController):
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
         self.drag_motion_handler_id = self.view.editor.connect("drag-motion", self.on_drag_motion)
 
-        state_machine_execution_engine.breakpoint_manager.on_change = self._on_breakpoint_changed
+        state_machine_execution_engine.breakpoint_manager.add_listener(self._on_breakpoint_changed)
 
         try:
             self.setup_canvas()

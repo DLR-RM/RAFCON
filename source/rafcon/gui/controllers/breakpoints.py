@@ -112,9 +112,8 @@ class BreakpointsController(ExtendedController):
         # Get state ID
         state_id = model.get_value(tree_iter, self.COL_STATE_ID)
 
-        # Remove from breakpoint manager
-        if state_id in state_machine_execution_engine.breakpoint_manager._breakpoints:
-            del state_machine_execution_engine.breakpoint_manager._breakpoints[state_id]
+        # Remove from breakpoint manager (triggers _notify to update graphical editor)
+        state_machine_execution_engine.breakpoint_manager.remove_breakpoint_by_id(state_id)
 
         # Update display
         self.update()

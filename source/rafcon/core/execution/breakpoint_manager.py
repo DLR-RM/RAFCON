@@ -8,11 +8,18 @@ class BreakpointManager:
 
     def __init__(self):
         self._breakpoints = {}
-        self.on_change = None
+        self._listeners = []
+
+    def add_listener(self, callback):
+        if callback not in self._listeners:
+            self._listeners.append(callback)
+
+    def remove_listener(self, callback):
+        self._listeners = [l for l in self._listeners if l is not callback]
 
     def _notify(self):
-        if self.on_change:
-            self.on_change()
+        for listener in list(self._listeners):
+            listener()
 
     @staticmethod
     def _get_state_id(state):
@@ -33,6 +40,9 @@ class BreakpointManager:
 
     def remove_breakpoint(self, state):
         state_id = self._get_state_id(state)
+        self.remove_breakpoint_by_id(state_id)
+
+    def remove_breakpoint_by_id(self, state_id):
         if state_id in self._breakpoints:
             del self._breakpoints[state_id]
             self._notify()

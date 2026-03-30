@@ -141,6 +141,7 @@ class StateOverviewController(ExtendedController):
         breakpoint_checkbox.show()
         self.view['properties_widget'].attach(breakpoint_checkbox, 0, 4, 2, 1)
         view['breakpoint_checkbox'] = breakpoint_checkbox
+        state_machine_execution_engine.breakpoint_manager.add_listener(self._refresh_breakpoint_checkbox)
 
         # Disable editing for library states
         if self.model.state.get_next_upper_library_root_state():
@@ -149,6 +150,25 @@ class StateOverviewController(ExtendedController):
             view['is_start_state_checkbutton'].set_sensitive(False)
             if isinstance(self.model, LibraryStateModel):
                 self.view['show_content_checkbutton'].set_sensitive(False)
+
+    def destroy(self):
+        state_machine_execution_engine.breakpoint_manager.remove_listener(self._refresh_breakpoint_checkbox)
+        super(StateOverviewController, self).destroy()
+
+    def _refresh_breakpoint_checkbox(self):
+        """Update breakpoint checkbox when breakpoints change externally."""
+        if self.view is None:
+            return
+        try:
+            checkbox = self.view['breakpoint_checkbox']
+        except KeyError:
+            return
+        state_id = state_machine_execution_engine.breakpoint_manager._get_state_id(self.model.state)
+        has_breakpoint = state_id in state_machine_execution_engine.breakpoint_manager.get_all_breakpoints()
+        if checkbox.get_active() != has_breakpoint:
+            checkbox.handler_block_by_func(self.on_toggle_breakpoint)
+            checkbox.set_active(has_breakpoint)
+            checkbox.handler_unblock_by_func(self.on_toggle_breakpoint)
 
     def rename(self):
         self.view['entry_name'].grab_focus()
