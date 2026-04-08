@@ -23,6 +23,7 @@ from gi.repository import GObject
 from functools import partial
 
 import rafcon.core.singleton as core_singletons
+from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 import rafcon.gui.singleton as gui_singletons
@@ -187,6 +188,7 @@ class StateMachineRightClickMenu(object):
                 save_as_library_sub_menu.append(create_menu_item(library_root_key, constants.SIGN_LIB,
                                                                  callback_function,
                                                                  accel_code=None, accel_group=accel_group))
+        self.insert_breakpoint_in_menu(menu)
         menu.append(Gtk.SeparatorMenuItem())
         callback_function = partial(self.on_change_background_color, state_model=selected_state_m)
         menu.append(create_menu_item("Change Background Color",
@@ -215,6 +217,17 @@ class StateMachineRightClickMenu(object):
                 not isinstance(selected_state_m.parent.state, has_no_start_state_state_types):
             menu.append(create_check_menu_item("Is start state", selected_state_m.is_start, self.on_toggle_is_start_state,
                                                accel_code=shortcuts_dict['is_start_state'][0], accel_group=accel_group))
+
+    def insert_breakpoint_in_menu(self, menu):
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+        if len(selection.states) != 1:
+            return
+        selected_state_m = selection.get_selected_state()
+        bm = state_machine_execution_engine.breakpoint_manager
+        state_id = bm._get_state_id(selected_state_m.state)
+        is_set = state_id is not None and state_id in bm.get_all_breakpoints()
+        label = "Disable Breakpoint" if is_set else "Set Breakpoint"
+        menu.append(create_menu_item(label, constants.BUTTON_STOP, self.on_toggle_breakpoint))
 
     def insert_execution_sub_menu_in_menu(self, menu, shortcuts_dict, accel_group):
         execution_sub_menu_item, execution_sub_menu = append_sub_menu_to_parent_menu("Execution", menu,
@@ -278,6 +291,8 @@ class StateMachineRightClickMenu(object):
         sub_menu.append(create_menu_item("Take name from library", constants.BUTTON_EXCHANGE,
                                          partial(self.on_substitute_library_with_template_activate, keep_name=False)))
         
+        self.insert_breakpoint_in_menu(menu)
+
         menu.append(Gtk.SeparatorMenuItem())
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         selected_state_m = selection.get_selected_state()
@@ -303,6 +318,15 @@ class StateMachineRightClickMenu(object):
 
     def on_toggle_is_start_state(self, widget, data=None):
         self.shortcut_manager.trigger_action("is_start_state", None, None)
+
+    def on_toggle_breakpoint(self, widget, data=None):
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+        selected_state_m = selection.get_selected_state()
+        states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
+        state_id = states_editor_ctrl.get_state_identifier(selected_state_m)
+        props_ctrl = states_editor_ctrl.tabs[state_id]['controller'].get_controller('properties_ctrl')
+        checkbox = props_ctrl.view['breakpoint_checkbox']
+        checkbox.set_active(not checkbox.get_active())
 
     def on_add_execution_state_activate(self, widget=None, data=None):
         self.shortcut_manager.trigger_action('add_execution_state', None, None, cursor_position=self.menu_position)

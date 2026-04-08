@@ -30,6 +30,7 @@ from gaphas.item import Item
 import math
 
 from rafcon.core.decorators import lock_state_machine
+from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.states.state import StateType
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -92,6 +93,7 @@ class GraphicalEditorController(ExtendedController):
                        "".format(time.time() - start_time, self.model.state_machine_id))
 
     def destroy(self):
+        state_machine_execution_engine.breakpoint_manager.remove_listener(self._on_breakpoint_changed)
         if self.view:
             self.view.editor.prepare_destruction()
         super(GraphicalEditorController, self).destroy()
@@ -104,6 +106,8 @@ class GraphicalEditorController(ExtendedController):
         self.focus_changed_handler_id = self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
         self.drag_motion_handler_id = self.view.editor.connect("drag-motion", self.on_drag_motion)
+
+        state_machine_execution_engine.breakpoint_manager.add_listener(self._on_breakpoint_changed)
 
         try:
             self.setup_canvas()
@@ -211,6 +215,10 @@ class GraphicalEditorController(ExtendedController):
             self.view.editor.focused_item = hovered_item
             if not rafcon.gui.singleton.global_gui_config.get_config_value('DRAG_N_DROP_WITH_FOCUS'):
                 self.view.editor.handler_unblock(self.focus_changed_handler_id)
+
+    def _on_breakpoint_changed(self):
+        self.canvas.update_root_items()
+        self.canvas.update_now()
 
     def update_view(self, *args, **kwargs):
         self.canvas.update_root_items()
