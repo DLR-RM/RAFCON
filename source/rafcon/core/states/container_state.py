@@ -777,6 +777,9 @@ class ContainerState(State):
         if state_id == self.start_state_id:
             self.set_start_state(None)
 
+        # Remove possible breakpoints
+        state_machine_execution_engine.breakpoint_manager.remove_breakpoint(self.states[state_id])
+
         # first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []
         for key, transition in self.transitions.items():
