@@ -27,6 +27,7 @@ from rafcon.design_patterns.singleton import Singleton
 from rafcon.design_patterns.observer.observable import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.execution.breakpoint_manager import BreakpointManager
 from rafcon.core.execution.execution_history_items import CallItem, ReturnItem
 from rafcon.core.config import global_config
 from rafcon.utils import log
