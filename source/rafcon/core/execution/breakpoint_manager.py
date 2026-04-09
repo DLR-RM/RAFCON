@@ -1,4 +1,22 @@
+# Copyright (C) 2015-2026 DLR
+#
+# All rights reserved. This program and the accompanying materials are made
+# available under the terms of the Eclipse Public License v1.0 which
+# accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+# Mohamed ElSherbini <mohamed.elsherbini@dlr.de>
+# Johannes Ernst <j.ernst@dlr.de>
+
+"""
+A file containing the breakpoint_manager module.
+It is used to store breakpoints for state machines set by the user. 
+All breakpoints are deleted when the GUI or the core is closed.
+"""
+
 import os
+import weakref
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -12,14 +30,33 @@ class BreakpointManager:
 
     def add_listener(self, callback):
         if callback not in self._listeners:
-            self._listeners.append(callback)
+            self._listeners.append(weakref.WeakMethod(callback))
+
+    def is_same_callback(self, ref, callback):
+        # Resolve the saved weak reference and check if it matches with the callback
+        func = ref()
+        if func is None:
+            return False
+        return (
+            func.__self__ is callback.__self__ and
+            func.__func__ is callback.__func__
+        )
 
     def remove_listener(self, callback):
-        self._listeners = [l for l in self._listeners if l is not callback]
+        self._listeners = [
+            ref for ref in self._listeners if not self.is_same_callback(ref, callback)
+        ]
 
     def _notify(self):
-        for listener in list(self._listeners):
-            listener()
+        # Notify callback functions all listeners and check if they are alive
+        alive = []
+        for ref in self._listeners:
+            # Resolve the weak reference
+            listener = ref()
+            if listener is not None:
+                listener()
+                alive.append(ref)
+        self._listeners = alive
 
     @staticmethod
     def _get_state_id(state):
