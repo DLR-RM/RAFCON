@@ -245,6 +245,10 @@ class StateOverviewController(ExtendedController):
         global on_change
         on_change = True
 
+        # Get possible state breakpoints to delete after state type change
+        # (workaround fot hacky solution above)
+        state_id = state_machine_execution_engine.breakpoint_manager._get_state_id(self.model.state)
+
         # Get the desired type and change it
         state_class_name = widget.get_active_text()
         for state_class in self.allowed_state_classes:
@@ -254,6 +258,12 @@ class StateOverviewController(ExtendedController):
             logger.error("The desired state type does not exist")
 
         gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(self.model, state_class)
+
+        # Remove possible breakpoints and update breakpoint viewer
+        state_machine_execution_engine.breakpoint_manager.remove_breakpoint_by_id(state_id)
+        breakpoints_ctrl = gui_singletons.main_window_controller.get_controller('breakpoints_ctrl')
+        if breakpoints_ctrl:
+            breakpoints_ctrl.update()
 
         del on_change
 
