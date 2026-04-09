@@ -157,7 +157,7 @@ class StateOverviewController(ExtendedController):
 
     def _refresh_breakpoint_checkbox(self):
         """Update breakpoint checkbox when breakpoints change externally."""
-        if self.view is None:
+        if self.view is None or self.model.state is None:
             return
         try:
             checkbox = self.view['breakpoint_checkbox']
