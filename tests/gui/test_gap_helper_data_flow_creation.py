@@ -1,10 +1,11 @@
 import os
 import pytest
 
+from unittest.mock import MagicMock
 from tests import utils as testing_utils
 
 
-def test_add_data_flow_to_state(mocker):
+def test_add_data_flow_to_state():
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.states.execution_state import ExecutionState
 
@@ -53,8 +54,8 @@ def test_add_data_flow_to_state(mocker):
     fi1_m = floating_state_m.get_input_data_port_m(0)
     fo1_m = floating_state_m.get_output_data_port_m(1)
 
-    mocker.patch.object(root_state, "add_data_flow")
-    mocker.patch.object(child_container, "add_data_flow")
+    root_state.add_data_flow = MagicMock()
+    child_container.add_data_flow = MagicMock()
 
     # Data flow in root state from input to output
     add_data_flow_to_state(ri1_m, ro1_m)
