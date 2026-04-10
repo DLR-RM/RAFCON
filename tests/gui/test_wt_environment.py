@@ -7,6 +7,7 @@ import threading
     'RIGHT_BAR_HIDDEN': False,
     'CONSOLE_HIDDEN': False,
 }}], indirect=True, ids=["with visible sidebars"])
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_thread_observer_creation_list(gui):
     """ Test that the worker thread (i.e. the thread calling this function) is not the gui thread
     """

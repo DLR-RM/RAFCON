@@ -156,6 +156,7 @@ def print_state_sizes(state_m, canvas, state_names=None):
     (config_options, state_path_PC, False, (10, 10)),
     (config_options, state_path_PC, True, (10, 10))
 ], indirect=["gui"])
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_simple_state_size_resize(gui, state_path, recursive, rel_size, monkeypatch):
     from rafcon.gui.helpers.meta_data import check_gaphas_state_meta_data_consistency
     sm_m, canvas, view = open_test_state_machine(gui)
