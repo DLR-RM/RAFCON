@@ -75,7 +75,7 @@ Once created, make sure setuptools is installed:
 
 .. code-block:: bash
 
-   pip install setuptools
+   pip install "setuptools<81"
 
 Then, simply install RAFCON with:
 

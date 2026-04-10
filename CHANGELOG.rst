@@ -4,7 +4,22 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
-2.2.3
+2.4.0
+""""""
+    - Features:
+        - Start_from_here: Added option to start from any point in an execution history with the corresponding runtime data
+        - Breakpoints: Added breakpoint functionality to core and GUI
+        - Added unit tests for new features and lock execution history feature
+
+    - Bug fixes:
+        - Fixed issue when using $key as default value of a state to reference GVM variables
+
+    - Miscellaneous:
+        - Added state machine name and run ID to window title for execution log viewer
+        - Improved grouping state machine functionality to leave more space for state name
+        - Removed deprecated conan files
+
+2.3.1
 """"""
     - Miscellaneous:
         - Moved optional PyGObject dependency to required

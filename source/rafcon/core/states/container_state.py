@@ -276,6 +276,23 @@ class ContainerState(State):
         self._start_state_modified = False
         self.add_default_values_of_scoped_variables_to_scoped_data()
         self.add_input_data_to_scoped_data(self.input_data)
+        self._restore_replay_context()
+
+    def _restore_replay_context(self):
+        """Restore scoped data from execution history replay context if available"""
+        replay_ctx = state_machine_execution_engine._replay_context
+        if not replay_ctx:
+            return
+
+        state_path = self.get_path()
+        runtime_map = replay_ctx['runtime_map']
+        if state_path in runtime_map:
+            self._scoped_data.update(runtime_map[state_path])
+            del runtime_map[state_path]
+            # Save previous_state_path before context may be cleared
+            self._replay_previous_state_path = replay_ctx.get('previous_state_path')
+            if not runtime_map:
+                state_machine_execution_engine._replay_context = None
 
     def handle_no_transition(self, state):
         """ This function handles the case that there is no transition for a specific outcome of a sub-state.
@@ -760,6 +777,9 @@ class ContainerState(State):
         if state_id == self.start_state_id:
             self.set_start_state(None)
 
+        # Remove possible breakpoints
+        state_machine_execution_engine.breakpoint_manager.remove_breakpoint(self.states[state_id])
+
         # first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []
         for key, transition in self.transitions.items():
@@ -1091,13 +1111,23 @@ class ContainerState(State):
                                     an outcome
         :return: the start state
         """
-
         # overwrite the start state in the case that a specific start state is specific e.g. by start_from_state
         if self.get_path() in state_machine_execution_engine.start_state_paths:
             for state_id, state in self.states.items():
                 if state.get_path() in state_machine_execution_engine.start_state_paths:
                     state_machine_execution_engine.start_state_paths.remove(self.get_path())
                     self._start_state_modified = True
+
+                    # Highlight the previous state from execution history replay
+                    previous_state_path = getattr(self, '_replay_previous_state_path', None)
+                    if previous_state_path:
+                        previous_state_id = previous_state_path.split('/')[-1]
+                        if previous_state_id in self.states:
+                            previous_state = self.states[previous_state_id]
+                            previous_state.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
+                            self.last_child = previous_state
+                        self._replay_previous_state_path = None
+
                     return state
 
         if self.start_state_id is None:

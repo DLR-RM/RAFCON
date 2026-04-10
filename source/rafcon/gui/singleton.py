@@ -31,7 +31,7 @@ from rafcon.gui.models.state_machine_execution_engine import StateMachineExecuti
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 
 # thread id of the thread which created the gui singletons -> supposed to be used to hold all mvc objects in one thread
-thread_identifier = threading.currentThread().ident
+thread_identifier = threading.current_thread().ident
 
 state_machine_manager_model = StateMachineManagerModel.instance(state_machine_manager)
 

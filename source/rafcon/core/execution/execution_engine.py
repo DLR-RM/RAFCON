@@ -27,6 +27,8 @@ from rafcon.design_patterns.singleton import Singleton
 from rafcon.design_patterns.observer.observable import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.execution.breakpoint_manager import BreakpointManager
+from rafcon.core.execution.execution_history_items import CallItem, ReturnItem
 from rafcon.core.config import global_config
 from rafcon.utils import log
 from rafcon.utils import plugins
@@ -67,6 +69,8 @@ class ExecutionEngine(Observable):
         self.new_execution_command_handled = True
         self.stop_state_machine_after_finishing_step = False
         self.running_only_selected_state = False
+        self.breakpoint_manager = BreakpointManager()
+        self._replay_context = None
 
     @Observable.observed
     def pause(self):
@@ -137,17 +141,11 @@ class ExecutionEngine(Observable):
 
             self.set_execution_mode(StateMachineExecutionStatus.STARTED)
 
-            self.start_state_paths = []
+            # Clear replay context on new start
+            if self._replay_context:
+                self._replay_context = None
 
-            if start_state_path:
-                path_list = start_state_path.split("/")
-                cur_path = ""
-                for path in path_list:
-                    if cur_path == "":
-                        cur_path = path
-                    else:
-                        cur_path = cur_path + "/" + path
-                    self.start_state_paths.append(cur_path)
+            self.set_start_path(start_state_path)
 
             self._run_active_state_machine()
 
@@ -285,6 +283,104 @@ class ExecutionEngine(Observable):
         else:
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OUT)
 
+    def set_start_path(self, state_path):
+        """Set the execution start path from a state path string
+
+        Builds the start_state_paths list from the given path by creating
+        the full hierarchical path from root to target state.
+
+        :param state_path: Path to the state to start from (e.g., "ROOT/CONTAINER/STATE")
+        """
+        self.start_state_paths = []
+        if state_path:
+            path_list = state_path.split("/")
+            cur_path = ""
+            for p in path_list:
+                cur_path = p if cur_path == "" else cur_path + "/" + p
+                self.start_state_paths.append(cur_path)
+
+    def replay_from_history(self, history_item, state_machine):
+        """Execute state machine from a specific point in execution history
+
+        Restores scoped_data for ancestor states only. The target state and its descendants run fresh.
+
+        :param history_item: The execution history item to replay from (must be a CallItem)
+        :param state_machine: The state machine to execute
+        """
+        # Build hierarchical list of ancestor state machine paths from selected history item
+        path_parts = history_item.path.split('/')
+        paths_ancestor = ['/'.join(path_parts[:i]) for i in range(1, len(path_parts) + 1)]
+        
+        # Build runtime_map: Save most recent CallItems of each hierarchy by walking
+        # through ancestor in execution history.
+        runtime_map = {}
+        current_item = history_item
+        collected_states = []
+        while current_item:
+            # Select relevant items 
+            if isinstance(current_item, CallItem) and \
+                current_item.path in paths_ancestor and \
+                    current_item.path not in collected_states:
+                # Collect most recent CallItem of hierarchy or save it for hierarchy
+                if current_item.call_type_str == 'EXECUTE':
+                    collected_call_item = dict(current_item.scoped_data)
+                    collected_states.append(current_item.path)
+                elif current_item.call_type_str == 'CONTAINER':
+                    # This indicates we are now at the root of the current hierarchy.
+                    # Now save the collected CallItem for this hierarchy.
+                    runtime_map[current_item.path] = collected_call_item
+                else:
+                    raise ValueError(f"Unhandled case for: call_type_str = {current_item.call_type_str}")
+            current_item = current_item.prev
+
+        # Build human-readable path from state names
+        state = history_item.state_reference
+        state_names = []
+        while not state.is_root_state:
+            # skip root state of library state to omit name duplication in path
+            if not state.is_root_state_of_library:
+                state_names.insert(0, state.name)
+            state = state.parent
+
+        state_names.insert(0, state.name)
+
+        human_readable_path = "/".join(state_names)
+        logger.info('Replaying execution from "{0}"'.format(human_readable_path))
+        logger.debug('Replay state path (IDs): {0}'.format(history_item.path))
+
+        # Find the state that executed just before the selected state by walking back in history
+        previous_state_path = None
+        prev_item = history_item.prev
+        target_path_parts = history_item.path.split('/')
+        while prev_item:
+            # Look for a ReturnItem (state completion) that represents a sibling state
+            if isinstance(prev_item, ReturnItem):
+                prev_path_parts = prev_item.path.split('/')
+                # Check if this is a sibling (same parent) by comparing path depths
+                if len(prev_path_parts) == len(target_path_parts) and \
+                    prev_path_parts[:-1] == target_path_parts[:-1]:
+                    previous_state_path = prev_item.path
+                    break
+            prev_item = prev_item.prev
+
+        # Store runtime map for restoration
+        self._replay_context = {
+            'runtime_map': runtime_map,
+            'target_path': history_item.path,
+            'previous_state_path': previous_state_path
+        }
+
+        try:
+            self.set_start_path(history_item.path)
+            self.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
+            self.run_to_states = [history_item.path]
+            self._run_active_state_machine()
+        except Exception as e:
+            self._replay_context = None
+            logger.error("Replay from history failed: {0}".format(e))
+            raise
+
     def run_to_selected_state(self, path, state_machine_id=None):
         """Execute the state machine until a specific state. This state won't be executed. This is an asynchronous task
         """
@@ -326,20 +422,18 @@ class ExecutionEngine(Observable):
 
         self.run_to_states = []
         # set appropriate start states
-        self.start_state_paths = []
+        self.set_start_path(start_state_path)
+
+        # Truncate path at parent concurrency state if needed
         if start_state_path:
             path_list = start_state_path.split("/")
-            cur_path = ""
-            for path in path_list:
-                if cur_path == "":
-                    cur_path = path
-                else:
-                    cur_path = cur_path + "/" + path
-                self.start_state_paths.append(cur_path)
+            for i, path in enumerate(path_list):
                 if path == parent_concurrency_id:
+                    self.start_state_paths = self.start_state_paths[:i+1]
                     break
 
         # set target states when execution should stop
+        cur_path = self.start_state_paths[-1] if self.start_state_paths else ""
         self.run_to_states.append(cur_path)
 
     def run_selected_state(self, start_state_path=None, state_machine_id=None):

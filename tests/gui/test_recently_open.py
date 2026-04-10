@@ -256,7 +256,7 @@ def patch_backup_threading():
     class PatchedAutoBackupModel(AutoBackupModel):
 
         def perform_temp_storage(self):
-            testing_utils.auto_backup_threads.append(threading.currentThread())
+            testing_utils.auto_backup_threads.append(threading.current_thread())
             AutoBackupModel.perform_temp_storage(self)
 
     rafcon.gui.models.auto_backup.AutoBackupModel = PatchedAutoBackupModel

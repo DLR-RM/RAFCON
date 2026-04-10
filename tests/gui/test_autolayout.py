@@ -1,5 +1,6 @@
 import os
 import time
+import pytest
 
 from tests import utils as testing_utils
 from tests.utils import wait_for_gui
@@ -27,7 +28,7 @@ def open_test_state_machine(gui):
 
     return sm_m, canvas, gaphas_view
 
-
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_auto_layout(gui):
     from rafcon.gui.layouter import StateMachineLayouter
     sm_m, canvas, view = open_test_state_machine(gui)

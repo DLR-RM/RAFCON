@@ -1066,6 +1066,11 @@ def delete_selected_elements(state_machine_m):
 
     if len(state_machine_m.selection) > 0:
         delete_core_elements_of_models(state_machine_m.selection.get_all(), recursive=True, destroy=True)
+
+        # Update breakpoint viewer
+        breakpoints_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('breakpoints_ctrl')
+        if breakpoints_ctrl:
+            breakpoints_ctrl.update()
         return True
 
 

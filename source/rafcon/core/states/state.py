@@ -32,6 +32,7 @@ from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
 from rafcon.core.id_generator import *
+from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.core.state_elements.logical_port import Income, Outcome
@@ -261,6 +262,15 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :return:
         """
+        if state_machine_execution_engine.breakpoint_manager.should_pause(self):
+            logger.info(f"Breakpoint hit: {self.name}")
+            if self.parent and self.parent.last_child:
+                self.parent.last_child.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
+            state_machine_execution_engine.pause()
+            state_machine_execution_engine._wait_while_in_pause_or_in_step_mode()
+            if self.parent and self.parent.last_child:
+                self.parent.last_child.state_execution_status = StateExecutionStatus.INACTIVE
+
         self.execution_history = execution_history
         if generate_run_id:
             self._run_id = run_id_generator()

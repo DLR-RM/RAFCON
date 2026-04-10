@@ -25,6 +25,7 @@ import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui import glade
 from rafcon.gui.utils import constants
 from rafcon.gui.views.execution_history import ExecutionHistoryView
+from rafcon.gui.views.breakpoints import BreakpointsView
 from rafcon.gui.views.global_variable_editor import GlobalVariableEditorView
 from rafcon.gui.views.library_tree import LibraryTreeView
 from rafcon.gui.views.notification_bar import NotificationBarView
@@ -110,6 +111,13 @@ class MainWindowView(View):
         self.execution_history = ExecutionHistoryView()
         self.execution_history.show()
         self['execution_history_alignment'].add(self.execution_history.get_parent_widget())
+
+        ######################################################
+        # Breakpoints
+        ######################################################
+        self.breakpoints = BreakpointsView()
+        self.breakpoints.show()
+        self['breakpoints_alignment'].add(self.breakpoints.get_parent_widget())
 
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable
@@ -239,7 +247,7 @@ class MainWindowView(View):
         icons = {'Libraries': constants.SIGN_LIB, 'States Tree': constants.ICON_TREE,
                  'Global Variables': constants.ICON_GLOB, 'Library Usages': constants.ICON_FIND_USAGES,
                  'Modification History': constants.ICON_HIST, 'Execution History': constants.ICON_EHIST,
-                 'network': constants.ICON_NET}
+                 'Breakpoints': constants.BUTTON_STOP, 'network': constants.ICON_NET}
         for notebook in self.left_bar_notebooks:
             for i in range(notebook.get_n_pages()):
                 child = notebook.get_nth_page(i)

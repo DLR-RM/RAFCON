@@ -19,7 +19,9 @@ class ExecutionLogTreeView(View):
 
         self.paned.set_position(300)
 
-        self.text_view = Gtk.TextView(buffer=None)
+        # create text_buffer explicitly to avoid creating default buffer implicitly (this caused warnings)
+        self.text_buffer = Gtk.TextBuffer()
+        self.text_view = Gtk.TextView(buffer=self.text_buffer)
         self.scrollable_textview.add(self.text_view)
 
         self.tree_view = Gtk.TreeView()

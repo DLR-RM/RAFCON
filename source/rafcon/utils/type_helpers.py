@@ -64,14 +64,18 @@ def convert_string_to_type(string_value):
 def convert_string_value_to_type_value(string_value, data_type):
     """Helper function to convert a given string to a given data type
 
+    NOTE: In the special case of the string_value being a reference to a GVM variable as $key,
+    returns the variable unchanged because the GVM can be of any type.
+
     :param str string_value: the string to convert
     :param type data_type: the target data type
     :return: the converted value
     """
     from ast import literal_eval
-
     try:
-        if data_type in (str, type(None)):
+        if len(string_value) > 1 and string_value[0] == '$':
+            converted_value = str(string_value)
+        elif data_type in (str, type(None)):
             converted_value = str(string_value)
         elif data_type == int:
             converted_value = int(string_value)

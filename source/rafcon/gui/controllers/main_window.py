@@ -33,6 +33,7 @@ import rafcon.gui.singleton as gui_singletons
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.controllers.execution_history import ExecutionHistoryTreeController
+from rafcon.gui.controllers.breakpoints import BreakpointsController
 from rafcon.gui.controllers.global_variable_manager import GlobalVariableManagerController
 from rafcon.gui.controllers.library_tree import LibraryTreeController
 from rafcon.gui.controllers.menu_bar import MenuBarController
@@ -161,6 +162,12 @@ class MainWindowController(ExtendedController):
         ######################################################
         execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model, view.execution_history)
         self.add_controller('execution_history_ctrl', execution_history_ctrl)
+
+        ######################################################
+        # breakpoints
+        ######################################################
+        breakpoints_ctrl = BreakpointsController(state_machine_manager_model, view.breakpoints)
+        self.add_controller('breakpoints_ctrl', breakpoints_ctrl)
 
         ######################################################
         # execution ticker

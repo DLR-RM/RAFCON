@@ -29,8 +29,10 @@ from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.states.state import StateType
+from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.state_editor.overview import StateOverviewView
@@ -130,7 +132,18 @@ class StateOverviewController(ExtendedController):
         if isinstance(self.model.state, DeciderState):
             combo.set_sensitive(False)
 
-        # in case the state is inside a library
+        # Breakpoint checkbox
+        breakpoint_checkbox = Gtk.CheckButton.new_with_label("Breakpoint")
+        state_id = state_machine_execution_engine.breakpoint_manager._get_state_id(self.model.state)
+        breakpoints = state_machine_execution_engine.breakpoint_manager.get_all_breakpoints()
+        breakpoint_checkbox.set_active(state_id in breakpoints)
+        breakpoint_checkbox.connect('toggled', self.on_toggle_breakpoint)
+        breakpoint_checkbox.show()
+        self.view['properties_widget'].attach(breakpoint_checkbox, 0, 4, 2, 1)
+        view['breakpoint_checkbox'] = breakpoint_checkbox
+        state_machine_execution_engine.breakpoint_manager.add_listener(self._refresh_breakpoint_checkbox)
+
+        # Disable editing for library states
         if self.model.state.get_next_upper_library_root_state():
             view['entry_name'].set_editable(False)
             combo.set_sensitive(False)
@@ -138,12 +151,56 @@ class StateOverviewController(ExtendedController):
             if isinstance(self.model, LibraryStateModel):
                 self.view['show_content_checkbutton'].set_sensitive(False)
 
+    def destroy(self):
+        state_machine_execution_engine.breakpoint_manager.remove_listener(self._refresh_breakpoint_checkbox)
+        super(StateOverviewController, self).destroy()
+
+    def _refresh_breakpoint_checkbox(self):
+        """Update breakpoint checkbox when breakpoints change externally."""
+        if self.view is None or self.model.state is None:
+            return
+        try:
+            checkbox = self.view['breakpoint_checkbox']
+        except KeyError:
+            return
+        state_id = state_machine_execution_engine.breakpoint_manager._get_state_id(self.model.state)
+        has_breakpoint = state_id in state_machine_execution_engine.breakpoint_manager.get_all_breakpoints()
+        if checkbox.get_active() != has_breakpoint:
+            checkbox.handler_block_by_func(self.on_toggle_breakpoint)
+            checkbox.set_active(has_breakpoint)
+            checkbox.handler_unblock_by_func(self.on_toggle_breakpoint)
+
     def rename(self):
         self.view['entry_name'].grab_focus()
 
     def on_toggle_is_start_state(self, button):
         if not button.get_active() == self.model.is_start:
             gui_helper_state_machine.selected_state_toggle_is_start_state()
+
+    def on_toggle_breakpoint(self, checkbox):
+        if checkbox.get_active() and self.model.state.file_system_path is None:
+            logger.warning("Breakpoint cannot be set: the state machine has not been saved yet. "
+                           "Please save the state machine first.")
+            checkbox.set_active(False)
+            return
+
+        # Build display name from hierarchy
+        path_parts = []
+        current = self.model.state
+        while current and not current.is_root_state:
+            path_parts.insert(0, current.name)
+            current = current.parent
+        display_name = "/".join(path_parts) or self.model.state.name
+
+        if checkbox.get_active():
+            state_machine_execution_engine.breakpoint_manager.add_breakpoint(self.model.state, display_name)
+        else:
+            state_machine_execution_engine.breakpoint_manager.remove_breakpoint(self.model.state)
+
+        # Update breakpoints tab
+        breakpoints_ctrl = gui_singletons.main_window_controller.get_controller('breakpoints_ctrl')
+        if breakpoints_ctrl:
+            breakpoints_ctrl.update()
 
     def on_toggle_show_content(self, checkbox):
         if self._external_update:
@@ -188,6 +245,10 @@ class StateOverviewController(ExtendedController):
         global on_change
         on_change = True
 
+        # Get possible state breakpoints to delete after state type change
+        # (workaround fot hacky solution above)
+        state_id = state_machine_execution_engine.breakpoint_manager._get_state_id(self.model.state)
+
         # Get the desired type and change it
         state_class_name = widget.get_active_text()
         for state_class in self.allowed_state_classes:
@@ -197,6 +258,12 @@ class StateOverviewController(ExtendedController):
             logger.error("The desired state type does not exist")
 
         gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(self.model, state_class)
+
+        # Remove possible breakpoints and update breakpoint viewer
+        state_machine_execution_engine.breakpoint_manager.remove_breakpoint_by_id(state_id)
+        breakpoints_ctrl = gui_singletons.main_window_controller.get_controller('breakpoints_ctrl')
+        if breakpoints_ctrl:
+            breakpoints_ctrl.update()
 
         del on_change
 
