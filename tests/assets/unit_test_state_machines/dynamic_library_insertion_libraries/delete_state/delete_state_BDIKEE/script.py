@@ -5,7 +5,7 @@ import sys
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.utils import wait_for_gui
 from rafcon.utils.gui_functions import call_gui_callback
-from threading import Lock, Condition, Event, Thread, currentThread
+from threading import Lock, Condition, Event, Thread, current_thread
 from rafcon.core.decorators import lock_state_machine
 from rafcon.gui.helpers.state_machine import delete_core_elements_of_models
 from rafcon.gui.singleton import state_machine_manager_model

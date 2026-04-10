@@ -8,7 +8,7 @@ import tempfile
 import time
 from os import mkdir, environ
 from os.path import join, dirname, realpath, exists, abspath
-from threading import Lock, Event, Thread, currentThread
+from threading import Lock, Event, Thread, current_thread
 import weakref
 from logging import Formatter
 
@@ -328,7 +328,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     main_window_view.get_parent_widget().set_gravity(Gdk.Gravity.STATIC)
     MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
 
-    print("run_gui thread: ", currentThread(), currentThread().ident, "gui.singleton thread ident:", \
+    print("run_gui thread: ", current_thread(), current_thread().ident, "gui.singleton thread ident:", \
         rafcon.gui.singleton.thread_identifier)
 
     # Wait for GUI to initialize
@@ -351,7 +351,7 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
         patch_gtkmvc3_model_mt()
     global gui_ready, gui_thread, gui_executed_once
 
-    print("WT thread: ", currentThread(), currentThread().ident)
+    print("WT thread: ", current_thread(), current_thread().ident)
     gui_ready = Event()
     gui_thread = Thread(target=run_gui_thread, args=[gui_config, runtime_config])
     gui_thread.start()
@@ -458,25 +458,25 @@ def patch_gtkmvc3_model_mt():
             logger.error("ASSERT WILL COME observer not in observable threads observer: {0} observable: {1}"
                          "-> known threads are {2}".format(observer, self, self._threads))
         assert observer in self._threads
-        if threading.currentThread() == self._threads[observer]:
+        if threading.current_thread() == self._threads[observer]:
             return Model.notify_observer(self, observer, method, *args, **kwargs)
         else:
             # multi-threading call
-            if threading.currentThread() in state_threads or threading.currentThread() in auto_backup_threads:
+            if threading.current_thread() in state_threads or threading.current_thread() in auto_backup_threads:
                 GLib.idle_add(self._idle_notify_observer, method, args, kwargs)
                 return
-            elif is_gui_thread(threading.currentThread()) \
+            elif is_gui_thread(threading.current_thread()) \
                     and is_gui_thread(self._threads[observer]):
                 # As long as the gtk module keeps constant the gtk main thread will always have the same thread id!
                 # But, if the module is patched as in "test_interface.py" the gtk thread will get another thread id!
                 # Thus, if both threads are in used_gui_threads then we simply allow this case!
                 print("Both threads are former gui threads! Current thread {}, Observer thread {}".format(
-                    threading.currentThread(), self._threads[observer]))
+                    threading.current_thread(), self._threads[observer]))
                 return Model.notify_observer(self, observer, method, *args, **kwargs)
             else:
                 print("{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
                       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
-                                threading.currentThread(), self._threads[observer], (args, kwargs)))
+                                threading.current_thread(), self._threads[observer], (args, kwargs)))
                 raise RuntimeError("This test should not have multi-threading constellations.")
 
     rafcon.design_patterns.mvc.model.ModelMT.notify_observer = __patched__notify_observer__

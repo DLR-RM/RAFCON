@@ -24,7 +24,7 @@ import time
 import copy
 from rafcon.design_patterns.singleton import Singleton
 from rafcon.design_patterns.observer.observable import Observable
-from threading import Lock, currentThread, RLock
+from threading import Lock, current_thread, RLock
 from rafcon.core.id_generator import *
 
 from rafcon.utils.type_helpers import type_inherits_of_type
@@ -210,7 +210,7 @@ class GlobalVariableManager(Observable):
                             if int(duration*10) % 20 == 0:
                                 # while loops informs the user about long locked variables
                                 logger.verbose("Variable '{2}' is locked and thread {0} waits already {1} seconds to "
-                                               "access it.".format(currentThread(), duration, key))
+                                               "access it.".format(current_thread(), duration, key))
                     access_key = global_variable_id_generator()
                     self.__access_keys[key] = access_key
                     return access_key

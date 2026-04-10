@@ -35,7 +35,7 @@ class ModelMT(Model):
         """
 
         Model.register_observer(self, observer)
-        self._threads[observer] = threading.currentThread()
+        self._threads[observer] = threading.current_thread()
 
     def unregister_observer(self, observer):
         """
@@ -50,7 +50,7 @@ class ModelMT(Model):
         Notifies an observer
         """
 
-        if self._threads[observer] == threading.currentThread():
+        if self._threads[observer] == threading.current_thread():
             return Model.notify_observer(self, observer, method, *args, **kwargs)
         GLib.idle_add(self._idle_notify_observer, method, args, kwargs)
 
