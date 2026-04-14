@@ -97,7 +97,9 @@ class HierarchyState(ContainerState):
                 execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, self.child_state)
 
                 # Handle possible breakpoint for upcoming state
-                if singleton.state_machine_execution_engine.breakpoint_manager.should_pause(self.child_state):
+                if self.child_state and singleton.state_machine_execution_engine.breakpoint_manager.should_pause(
+                        self.child_state
+                ):
                     logger.info(f"Breakpoint hit: {self.child_state.name}")
                     if self.last_child:
                         self.last_child.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
