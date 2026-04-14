@@ -96,6 +96,16 @@ class HierarchyState(ContainerState):
                 self.handling_execution_mode = True
                 execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, self.child_state)
 
+                # Handle possible breakpoint for upcoming state
+                if singleton.state_machine_execution_engine.breakpoint_manager.should_pause(self.child_state):
+                    logger.info(f"Breakpoint hit: {self.child_state.name}")
+                    if self.last_child:
+                        self.last_child.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
+                    singleton.state_machine_execution_engine.pause()
+                    singleton.state_machine_execution_engine._wait_while_in_pause_or_in_step_mode()
+                    if self.last_child:
+                        self.last_child.state_execution_status = StateExecutionStatus.INACTIVE
+
                 # in the case of starting the sm from a specific state not the transitions define the logic flow
                 # but the the execution_engine.run_to_states; thus, do not alter the next state in this case
                 if not self._start_state_modified:
