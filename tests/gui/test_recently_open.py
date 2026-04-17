@@ -274,9 +274,8 @@ def unpatch_backup_threading():
     'AUTO_BACKUP_ENABLED': True,
 },
 "libraries": {
-    "ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-    "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
-}}], indirect=True, ids=["with auto backup, ros and turtle libraries"])
+    "ros2": join(testing_utils.EXAMPLES_PATH, "ros2_libraries")
+}}], indirect=True, ids=["with auto backup, ros2"])
 def test_recent_opened_state_machine_list(gui):
     try:
         gui(patch_backup_threading)

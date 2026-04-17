@@ -76,17 +76,15 @@ def trigger_ungroup_signals(gui):
 
 
 @pytest.mark.parametrize('gui', [{"libraries": {
-    "ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-    "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
-}}], indirect=True, ids=["with ros and turtle libraries"])
+    "ros2": join(testing_utils.EXAMPLES_PATH, "ros2_libraries")
+}}], indirect=True, ids=["with ros2"])
 def test_ungroup(gui):
     trigger_ungroup_signals(gui)
 
 
 @pytest.mark.parametrize('gui', [{"libraries": {
-    "ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-    "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
-}}], indirect=True, ids=["with ros and turtle libraries"])
+    "ros2": join(testing_utils.EXAMPLES_PATH, "ros2_libraries")
+}}], indirect=True, ids=["with ros2"])
 def test_bug_issue_539(gui):
 
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine

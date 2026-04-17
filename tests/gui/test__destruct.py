@@ -924,10 +924,9 @@ def test_simple_execution_model_and_core_destruct_with_gui(gui):
         'HISTORY_ENABLED': True
     },
     "libraries": {
-        "ros": os.path.join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-        "turtle_libraries": os.path.join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
+        "ros2": os.path.join(testing_utils.EXAMPLES_PATH, "ros2_libraries")
     }
-}], indirect=True, ids=["with history, auto backup, ros and turtle libraries"])
+}], indirect=True, ids=["with history, auto backup, ros2"])
 def test_model_and_core_modification_history_destruct_with_gui(gui):
     testing_utils.dummy_gui(None)
 

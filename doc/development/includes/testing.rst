@@ -85,6 +85,8 @@ If your test commands causes any ``logger.warning`` or ``logger.error``, you nee
 by calling ``gui.expected_warnings += 1``, respectively  ``gui.expected_errors += 1``, directly after the command that
 causes the warning/error.
 
+For an extensive tutorial on how to write GUI tests please refer to the next section.
+
 The fixture will load the default core and gui config options and the libraries ``generic`` and
 ``unit_test_state_machines``. If you want to override certain settings or add more libraries, use the following
 decorator:
@@ -97,10 +99,9 @@ decorator:
             'HISTORY_ENABLED': True
         },
         "libraries": {
-            "ros": os.path.join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-            "turtle_libraries": os.path.join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
+            "ros2": os.path.join(testing_utils.EXAMPLES_PATH, "ros2_libraries")
         }
-    }], indirect=True, ids=["with history, auto backup, ros and turtle libraries"])
+    }], indirect=True, ids=["with history, auto backup, ros2"])
     def test_name(gui):
         pass  # test code
 

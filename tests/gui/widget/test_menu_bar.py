@@ -102,9 +102,8 @@ def paste(gui, state_machine_model, state_m, main_window_controller, menu_bar_ct
 @pytest.mark.unstable35
 @pytest.mark.unstable37
 @pytest.mark.parametrize('gui', [{"libraries": {
-    "ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-    "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
-}}], indirect=True, ids=["with ros and turtle libraries"])
+    "ros2": join(testing_utils.EXAMPLES_PATH, "ros2_libraries")
+}}], indirect=True, ids=["with ros2"])
 def test_gui(gui):
     trigger_menu_bar_items(gui)
 

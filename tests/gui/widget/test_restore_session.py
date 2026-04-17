@@ -257,8 +257,7 @@ def trigger_gui_signals_second_run(gui, open_state_machines):
 configuration = {
     "gui_config": {'SESSION_RESTORE_ENABLED': True},
     "libraries": {
-        "ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-        "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
+        "ros2": join(testing_utils.EXAMPLES_PATH, "ros2_libraries")
     }
 }
 

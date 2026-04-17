@@ -175,52 +175,32 @@ of achieving things in RAFCON.
             return 1
         return 0
 
-.. _tutorial_ros_turtle:
+.. _tutorial_ros2:
 
-Starting the basic turtle demo state machine using ROS
+Using ROS2 with RAFCON
 ------------------------------------------------------
 
-The basic turtle demo is a demo to demonstrate the use of libraries and
-to show the easy integration of `ROS <http://www.ros.org/>`__ into the RAFCON. To start
-the turtle demo just open the basic\_turtle\_state\_machine in the tutorials library folder and click on start.
-The following code blocks include code lines to generate the correct environment for our institute PCs;
-in an e.g. Ubuntu setup, where the environment is statically specified
-in the ~/.bashrc these environment generating commands can be omitted:
+RAFCON already provides the tools to directly use ROS2 by running interface state machines.
+Here, we will give a quick overview how to perform simple service calls and subscribing or publishing from inside RAFCON.
 
-.. code:: bash
+As a prerequiste, ROS2 needs to be installed on your system
+- Start RAFCON in ros2 environment (to be able to import rclpy)
+- First, use the state machine init_ros2_node (explanation about inputs)
+    - This node will handle all the traffic happening via RAFCON
+    - The node will be saved in the GVM of RAFCON and can be used in any state machine
+- Calling a service from RAFCON
+    - Start a terminal separate from RAFCON and host a service (ros2 run demo_nodes_py add_two_ints_server)
+    - Use the state machine ros2_service_call_example (and configure inputs and topic)
+- Subscribing to a topic from RAFCON
+    - Start a terminal separate from RAFCON to start a publisher (ros2 run demo_nodes_py talker)
+    - Use the state machine ros2_subscribe_example (and configure inputs and topic)
+- Publish on a topic from RAFCON
+    - Start a terminal separate from RAFCON to start a listener (ros2 run demo_nodes_py listener)
+    - Use the state machine ros2_publish_example (and configure inputs and topic)
+- Provide a service from RAFCON
+    - Use the state machine ros2_service_server_example (and configure inputs)
+    - Start a terminal separate from RAFCON to call the service
 
-    rmpm_do env ros.indigo.desktop > /tmp/desktop.env
-    source /tmp/desktop.env
-    rmpm_do env rafcon > /tmp/rafcon.env
-    source /tmp/rafcon.env
-    cd $RAFCON_GIT_HUB_REPO_OR_RMPM_PATH/share/examples/api/generate_state_machine
-    python basic_turtle_state_machine.py
-
-A screenshot of how the state machine looks like is shown here.
-
-.. figure:: _static/BasicTurtleDemoScreenshot.png
-   :alt: Screenshot of RAFCON with an example state machine
-   :width: 90 %
-   :align: center
-
-Next start a roscore in another console:
-
-.. code:: python
-
-    rmpm_do env ros.indigo.desktop > /tmp/desktop.env
-    source /tmp/desktop.env
-    roscore
-
-And the turtlesim node in yet another console:
-
-.. code:: python
-
-    rmpm_do env ros.indigo.desktop > /tmp/desktop.env
-    source /tmp/desktop.env
-    rosrun turtlesim turtlesim_node
-
-After that start the state machine. The state machine will then start
-some basic services of the turtlesim in a sequence.
 
 .. _tutorial_libraries:
 
