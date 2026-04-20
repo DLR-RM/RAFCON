@@ -4,8 +4,8 @@ import rafcon.core.singleton
 from rafcon.core.execution.execution_history_items import CallItem
 from tests import utils as testing_utils
 
-SM_PATH = os.path.join("unit_test_state_machines", "start_from_here_test", "example_demo_state_machine")
-LIB_PATH = os.path.join(testing_utils.TEST_STATE_MACHINES_PATH, "start_from_here_test", "develop_test_libraries")
+SM_PATH = os.path.join("unit_test_state_machines", "start_from_here_test", "start_from_here_test")
+LIB_PATH = os.path.join(testing_utils.TEST_STATE_MACHINES_PATH, "start_from_here_test")
 ROOT = "QBYTMD"
 
 # top-level tasks
@@ -17,7 +17,7 @@ BARRIER_CONCURRENCY    = ROOT + "/QIZZOB/LZLXFW/KEQYNU"   # all branches must fi
 PREEMPTIVE_CONCURRENCY = ROOT + "/QIZZOB/LZLXFW/AESIQF"   # fastest branch cancels the rest
 
 # inside task_2 (EAWGCM is the HierarchyState wrapping the library)
-NESTED_LIBRARY      = ROOT + "/RYZGLE/EAWGCM/SFSEDE/MQRVHE/BNLTCG/IKAANM"  # hierarchy_4, 3 libs deep
+NESTED_LIBRARY      = ROOT + "/RYZGLE/EAWGCM/SFSEDE/MQRVHE/FLOSSL/PHPOHQ"  # hierarchy_4, 3 libs deep
 
 
 def _replay_from(sm, target_path):
@@ -47,33 +47,33 @@ def test_output_from_multiple_start_points(caplog):
     try:
         # test output correct on full run
         assert len(sm.execution_histories) == 1
-        assert _output(sm) == 295
+        assert _output(sm) == 82
 
         # test output correct from task 1
         _replay_from(sm, TASK_1)
         assert sm.root_state.states["QIZZOB"].output_data["output_1"] == 79
-        assert _output(sm) == 295
+        assert _output(sm) == 82
 
         # test output correct from task 2
         _replay_from(sm, TASK_2)
-        assert _output(sm) == 295
+        assert _output(sm) == 82
 
         # test output correct from barrier concurrency
         _replay_from(sm, BARRIER_CONCURRENCY)
-        assert _output(sm) == 295
+        assert _output(sm) == 82
 
         # test output correct from preemptive concurrency
         _replay_from(sm, PREEMPTIVE_CONCURRENCY)
-        assert _output(sm) == 295
+        assert _output(sm) == 82
 
         # test output correct from lower nested hierarchy
         _replay_from(sm, NESTED_LIBRARY)
-        assert _output(sm) == 295
+        assert _output(sm) == 82
 
         # test output correct after multiple replays
         _replay_from(sm, TASK_2)
         _replay_from(sm, TASK_1)
-        assert _output(sm) == 295
+        assert _output(sm) == 82
         assert len(sm.execution_histories) == 8
     finally:
         testing_utils.shutdown_environment_only_core(caplog=caplog)
