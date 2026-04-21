@@ -1,7 +1,5 @@
 import os
-import threading
-# core elements
-from rafcon.core.states.state import StateExecutionStatus
+import time
 
 from rafcon.core.storage import storage
 import rafcon.core.singleton
@@ -28,7 +26,7 @@ def test_run_this_state(caplog):
     state_machine_execution_engine.run_selected_state("BTWFZQ/EPQSTG", sm.state_machine_id)
     wait_for_execution_engine_sync_counter(1, logger)
     state_machine_execution_engine.stop()
-    rafcon.core.singleton.state_machine_execution_engine.join()
+    state_machine_execution_engine.join()
     # assert variable state
     try:
         assert rafcon.core.singleton.global_variable_manager.get_variable("test_value") == 2

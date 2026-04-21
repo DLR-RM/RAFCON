@@ -5,6 +5,7 @@ import rafcon.core.singleton
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.storage import storage
 from tests import utils as testing_utils
+from rafcon.utils import log
 
 import rafcon as _rafcon_pkg
 
@@ -30,6 +31,8 @@ def _wait_for_pause(engine, timeout=5.0):
         time.sleep(0.05)
     return False
 
+logger = log.get_logger(__name__)
+
 
 def test_breakpoint_pauses_execution(caplog):
     # set a breakpoint on Count_bottles and verify execution stops there
@@ -41,6 +44,7 @@ def test_breakpoint_pauses_execution(caplog):
     engine.breakpoint_manager.add_breakpoint(sm.root_state.states[COUNT_BOTTLES], "Count bottles")
     engine.start(sm.state_machine_id)
 
+    testing_utils.wait_for_execution_engine_sync_counter(1, logger)
     paused = _wait_for_pause(engine)
     engine.stop()
     engine.join()
@@ -69,6 +73,7 @@ def test_breakpoint_disabled_skips_pause(caplog):
     engine.breakpoint_manager.add_breakpoint(sm.root_state.states[DECIMATE_BOTTLES], "Decimate bottles")
 
     engine.start(sm.state_machine_id)
+    testing_utils.wait_for_execution_engine_sync_counter(1, logger)
     paused_at_sentinel = _wait_for_pause(engine)
     engine.stop()
     engine.join()
@@ -94,6 +99,7 @@ def test_breakpoint_inside_library_state(caplog):
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     engine.start(sm.state_machine_id)
 
+    testing_utils.wait_for_execution_engine_sync_counter(1, logger)
     paused = _wait_for_pause(engine)
     engine.stop()
     engine.join()
@@ -122,6 +128,7 @@ def test_breakpoint_persists_when_library_run_standalone(caplog):
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm_bare)
     engine.start(sm_bare.state_machine_id)
 
+    testing_utils.wait_for_execution_engine_sync_counter(1, logger)
     paused = _wait_for_pause(engine)
     engine.stop()
     engine.join()
