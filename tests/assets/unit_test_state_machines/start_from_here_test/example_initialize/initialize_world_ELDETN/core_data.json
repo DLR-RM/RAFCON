@@ -2,7 +2,7 @@
     "__jsonqualname__": "rafcon.core.states.library_state.LibraryState", 
     "input_data_port_runtime_values": {}, 
     "library_name": "initialize_world", 
-    "library_path": "develop_test/start_from_here_test", 
+    "library_path": "unit_test_state_machines/start_from_here_test", 
     "name": "initialize world", 
     "outcomes": {
         "-2": {

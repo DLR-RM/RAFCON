@@ -5,7 +5,7 @@
         "1": 5
     }, 
     "library_name": "execution_state", 
-    "library_path": "develop_test/start_from_here_test", 
+    "library_path": "unit_test_state_machines/start_from_here_test", 
     "name": "execution state 3", 
     "outcomes": {
         "-2": {

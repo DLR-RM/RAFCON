@@ -4,7 +4,7 @@
         "1": 78
     }, 
     "library_name": "task_1", 
-    "library_path": "develop_test/start_from_here_test", 
+    "library_path": "unit_test_state_machines/start_from_here_test", 
     "name": "task 1", 
     "outcomes": {
         "-2": {

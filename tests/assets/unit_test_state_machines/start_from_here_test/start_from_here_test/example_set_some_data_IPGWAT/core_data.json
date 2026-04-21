@@ -4,7 +4,7 @@
         "2": 14
     }, 
     "library_name": "example_set_some_data", 
-    "library_path": "develop_test/start_from_here_test", 
+    "library_path": "unit_test_state_machines/start_from_here_test", 
     "name": "example set some data", 
     "outcomes": {
         "-2": {

@@ -4,7 +4,7 @@
         "1": null
     }, 
     "library_name": "hierarchy_2", 
-    "library_path": "develop_test/start_from_here_test", 
+    "library_path": "unit_test_state_machines/start_from_here_test", 
     "name": "hierarchy 2", 
     "outcomes": {
         "-2": {
