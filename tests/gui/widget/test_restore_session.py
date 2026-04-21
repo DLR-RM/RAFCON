@@ -155,8 +155,8 @@ def trigger_gui_signals_first_run(gui, open_state_machines):
     # state machine loaded and no changes
     current_number_of_sm += 1
     current_sm_id += 1
-    basic_turtle_sm_path = join(testing_utils.TUTORIAL_PATH, "basic_turtle_demo_sm")
-    gui(menubar_ctrl.on_open_activate, None, None, basic_turtle_sm_path)
+    start_from_here_sm_path = join(testing_utils.TEST_STATE_MACHINES_PATH, "start_from_here_test/start_from_here_test")
+    gui(menubar_ctrl.on_open_activate, None, None, start_from_here_sm_path)
     gui(sm_manager_model.__setattr__, 'selected_state_machine_id', current_sm_id)
     move_this_sm_id = sm_manager_model.selected_state_machine_id
     assert len(sm_manager_model.state_machines) == current_number_of_sm
@@ -165,16 +165,16 @@ def trigger_gui_signals_first_run(gui, open_state_machines):
     current_number_of_sm += 1
     current_sm_id += 1
     print("BUGS")
-    basic_turtle_sm_path = join(testing_utils.TUTORIAL_PATH, "99_bugs")
-    gui(menubar_ctrl.on_open_activate, None, None, basic_turtle_sm_path)
+    bugs_sm_path = join(testing_utils.TUTORIAL_PATH, "99_bugs")
+    gui(menubar_ctrl.on_open_activate, None, None, bugs_sm_path)
     gui(testing_utils.wait_for_gui)
     assert len(sm_manager_model.state_machines) == current_number_of_sm
-    assert sm_manager_model.get_selected_state_machine_model().state_machine.file_system_path == basic_turtle_sm_path
+    assert sm_manager_model.get_selected_state_machine_model().state_machine.file_system_path == bugs_sm_path
     add_two_states_to_root_state_of_selected_state_machine()
 
     # library not changed (needs state machine that has meta data already -> that should not be changed by opening)
     print("LIB no changes")
-    library_os_path = library_manager.get_os_path_to_library("turtle_libraries", "clear_field")[0]
+    library_os_path = library_manager.get_os_path_to_library("unit_test_state_machines/start_from_here_test", "start_from_here_test")[0]
     gui(menubar_ctrl.on_open_activate, None, None, library_os_path)
     gui(testing_utils.wait_for_gui)
     # use artificial marked dirty to check for recovery of the flag
@@ -184,7 +184,7 @@ def trigger_gui_signals_first_run(gui, open_state_machines):
 
     # library with changes
     print("LIB with changes")
-    library_os_path = library_manager.get_os_path_to_library("turtle_libraries", "teleport_turtle")[0]
+    library_os_path = library_manager.get_os_path_to_library("unit_test_state_machines/start_from_here_test", "task_1")[0]
     gui(menubar_ctrl.on_open_activate, None, None, library_os_path)
     gui(testing_utils.wait_for_gui)
     lib_sm_m = sm_manager_model.get_selected_state_machine_model()

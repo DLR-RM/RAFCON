@@ -144,10 +144,6 @@ def test_plugins_example(caplog):
 
 
 if __name__ == '__main__':
-    test_api_example(None)
-    test_ros_library_examples(None)
-    test_turtle_library_examples(None)
     test_functionality_example(None)
     test_plugins_example(None)
-    test_tutorial_state_machine_examples(None)
     # pytest.main(['-s', __file__])

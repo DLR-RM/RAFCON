@@ -128,20 +128,20 @@ def trigger_gui_signals(gui):
     assert sm_manager_model.state_machines[first_sm_id+1].state_machine.file_system_path == recently_opened_state_machines_paths[0]
 
     # menu-bar: Open State Machine no library (check in list and in menu)
-    basic_turtle_sm_path = join(testing_utils.TUTORIAL_PATH, "basic_turtle_demo_sm")
-    gui(menubar_ctrl.on_open_activate, None, None, basic_turtle_sm_path)
+    start_from_here_sm_path = join(testing_utils.TEST_STATE_MACHINES_PATH, "start_from_here_test/start_from_here_test")
+    gui(menubar_ctrl.on_open_activate, None, None, start_from_here_sm_path)
     gui(testing_utils.wait_for_gui)
     recently_opened_state_machines_paths = get_recently_opened_state_machines(gui)
-    assert basic_turtle_sm_path == recently_opened_state_machines_paths[0]
+    assert start_from_here_sm_path == recently_opened_state_machines_paths[0]
     check_order_and_consistency_of_menu(gui, menubar_ctrl)
 
     # menu-bar: Open State Machine no library and re-save it somewhere (check in list and in menu)
-    turtle_state_machine_m = sm_manager_model.get_selected_state_machine_model()
-    assert turtle_state_machine_m.state_machine.file_system_path == basic_turtle_sm_path
+    start_from_here_m = sm_manager_model.get_selected_state_machine_model()
+    assert start_from_here_m.state_machine.file_system_path == start_from_here_sm_path
 
     gui(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
     recently_opened_state_machines_paths = get_recently_opened_state_machines(gui)
-    assert turtle_state_machine_m.state_machine.file_system_path == recently_opened_state_machines_paths[0]
+    assert start_from_here_m.state_machine.file_system_path == recently_opened_state_machines_paths[0]
     check_order_and_consistency_of_menu(gui, menubar_ctrl)
 
     # lib-tree: Open library State Machine (check in list and
