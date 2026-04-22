@@ -21,7 +21,7 @@ def execute(self, inputs, outputs, gvm):
     # Define message definition and topic
     from std_msgs.msg import String
     msg_definition = String
-    topic = inputs['namespace'] + '/chatter'
+    topic = inputs['namespace'] + 'chatter'
     sub_msg_timeout = inputs['timeout']
 
     # Get node and create subscriber

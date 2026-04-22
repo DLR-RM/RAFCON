@@ -33,7 +33,7 @@ def execute(self, inputs, outputs, gvm):
     # Define service definition and name
     from example_interfaces.srv import AddTwoInts
     srv_definition = AddTwoInts
-    srv_name = inputs['namespace'] + '/add_two_ints'
+    srv_name = inputs['namespace'] + 'add_two_ints'
     callback_group = rclpy.callback_groups.MutuallyExclusiveCallbackGroup()
 
     # Create service client handle

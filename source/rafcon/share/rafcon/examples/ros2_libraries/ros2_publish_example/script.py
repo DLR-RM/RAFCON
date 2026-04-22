@@ -23,7 +23,7 @@ def execute(self, inputs, outputs, gvm):
     # Define message definition and topic
     from std_msgs.msg import String
     msg_definition = String
-    topic = inputs['namespace'] + '/chatter'
+    topic = inputs['namespace'] + 'chatter'
     callback_group = rclpy.callback_groups.MutuallyExclusiveCallbackGroup()
 
     # Create publisher handle
