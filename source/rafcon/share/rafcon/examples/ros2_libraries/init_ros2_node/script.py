@@ -1,13 +1,15 @@
 # RAFCON ROS2 Initialization State Machine
 # Author: Johannes Ernst, Ryo Sakagami
+#
+# NOTE: To use the state machine, ROS2 needs to be installed (tested with 'Humble')
 
 import rclpy
 import traceback
 import string
 import random
 
-
-from rafcon_ros_utilities import RafconRosNode, ROSThread
+from rafcon.utils.ros2.rafcon_ros_node import RafconRosNode
+from rafcon.utils.ros2.rafcon_ros_thread import ROSThread
 
 
 def execute(self, inputs, outputs, gvm):
@@ -43,7 +45,7 @@ def execute(self, inputs, outputs, gvm):
             gvm.set_variable("ros_thread", ros_thread, per_reference=True)
             ros_thread.start_thread()
             self.logger.info("Started ros2 node thread")
-            
+
             # Create dicts to hold the handles for clients and publishers
             gvm.set_variable("ros_clients",  {}, per_reference=True)
             gvm.set_variable("ros_publishers",  {}, per_reference=True)

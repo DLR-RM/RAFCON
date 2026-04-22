@@ -1,21 +1,21 @@
 {
     "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
-    "description": "Author: Johannes Ernst, Ryo Sakagami\nDescription:\n    - Initializes a ROS2 node that handles publsihing, subscribing and service calls\n    - Detailed explanations in the comments\nInputs:\n    - robot_namespace [str]: Namespace that will be pre-pended to the ros node.\n                             Leave empty if not needed.", 
+    "description": "Author: Johannes Ernst\nDescription:\n    - Example state machine to instantiate a service server with the RAFCON ROS node\n    - The service definition and name has to be defined in first section of execute()\n    - Individual service_callback function hast to be implemented\nInputs:\n    - namespace [str]: Namespace to be prepended to the topic", 
     "income": {
         "__jsonqualname__": "rafcon.core.state_elements.logical_port.Income"
     }, 
     "input_data_ports": {
-        "1": {
+        "0": {
             "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
-            "data_port_id": 1, 
+            "data_port_id": 0, 
             "data_type": {
                 "__type__": "__builtin__.str"
             }, 
             "default_value": "", 
-            "name": "robot_namespace"
+            "name": "namespace"
         }
     }, 
-    "name": "Initialize ROS2 Node", 
+    "name": "ros2 service server example", 
     "outcomes": {
         "-2": {
             "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
@@ -34,5 +34,5 @@
         }
     }, 
     "output_data_ports": {}, 
-    "state_id": "INIT_ROS_NODE"
+    "state_id": "UMTNII"
 }
