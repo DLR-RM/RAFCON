@@ -178,28 +178,71 @@ of achieving things in RAFCON.
 .. _tutorial_ros2:
 
 Using ROS2 with RAFCON
-------------------------------------------------------
+----------------------
 
 RAFCON already provides the tools to directly use ROS2 by running interface state machines.
 Here, we will give a quick overview how to perform simple service calls and subscribing or publishing from inside RAFCON.
 
-As a prerequiste, ROS2 needs to be installed on your system
-- Start RAFCON in ros2 environment (to be able to import rclpy)
-- First, use the state machine init_ros2_node (explanation about inputs)
-    - This node will handle all the traffic happening via RAFCON
-    - The node will be saved in the GVM of RAFCON and can be used in any state machine
-- Calling a service from RAFCON
-    - Start a terminal separate from RAFCON and host a service (ros2 run demo_nodes_py add_two_ints_server)
-    - Use the state machine ros2_service_call_example (and configure inputs and topic)
-- Subscribing to a topic from RAFCON
-    - Start a terminal separate from RAFCON to start a publisher (ros2 run demo_nodes_py talker)
-    - Use the state machine ros2_subscribe_example (and configure inputs and topic)
-- Publish on a topic from RAFCON
-    - Start a terminal separate from RAFCON to start a listener (ros2 run demo_nodes_py listener)
-    - Use the state machine ros2_publish_example (and configure inputs and topic)
-- Provide a service from RAFCON
-    - Use the state machine ros2_service_server_example (and configure inputs)
-    - Start a terminal separate from RAFCON to call the service
+Setup
+"""""
+As a prerequiste, ROS2 needs to be installed on your system (note that RAFCON is a ROS2 independent python library and therefore ROS2 needs to be installed manually).
+The example state machines are tested with 'Humble' but all common distributions should work.
+We created some helpful utilities that are located in the source code at ``source/rafcon/utils/ros2``.
+The example state machines shown in this tutorial will use these utilities.
+
+#. Start RAFCON in ROS2 environment (to be able to ``import rclpy``).
+#. Once RAFCON is loaded, find the library state machine in ``ros2/init_ros2_node``. 
+   Open the state machine and run it.
+   This state machine will create a ROS2 node that handles publishing, subscribing and service calls (basically all ROS2 traffic) happening via RAFCON.
+   The node will be saved as a global variable (called ``rafcon_ros_node``) and can be used in any state machine via the GVM.
+#. Optionally: You can set a custom robot namespace for the ROS2 node in the input parameters. 
+   This is used for namespace scoping of topics and services.
+   If you are unsure, you can just leave the input parameter empty.
+
+Calling a service from RAFCON
+"""""""""""""""""""""""""""""
+#. Start a terminal separate from RAFCON with a ROS2 environment and host the add_two_ints_server-service by running: ``ros2 run demo_nodes_py add_two_ints_server``
+#. Use the state machine ``ros2/ros2_service_call_example`` to perform the service call of adding two integers.
+   Note that the example state machine has several inputs (``a`` and ``b``) and an output (``sum``).
+   The input parameters directly map to the service definition of the add_two_ints_server-service by type and name.
+   The same applies for the output.
+   An additional input port ``namespace`` can be used to prepend the service name with a string or left empty.
+   You can inspect the code used to map the input parameters of the state machine to the request of the service call inside the state machine.
+   There are some helpful explanations on how to use the parameters and how the service name is set.
+#. Once the state machine finishes, the output port ``sum`` should be filled with the result of ``a+b``.
+
+Subscribing to a topic from RAFCON
+""""""""""""""""""""""""""""""""""
+#. Start a terminal separate from RAFCON with a ROS2 environment and start a publisher by running: ``ros2 run demo_nodes_py talker``
+#. Use the state machine ``ros2/ros2_subscribe_example`` to subscribe to the talker.
+   The state machine comes with an additional input port ``timeout`` that determines how long the state machine will wait for a message to arrive before returning.
+   Similar to the service call example above, take a look at the code in the state machine to change parameters and topics.
+#. Once the state machine finishes, if a message was received on the ``/chatter`` topic, the output port ``data`` will be filled with the message.
+
+Publish on a topic from RAFCON
+""""""""""""""""""""""""""""""
+#. Start a terminal separate from RAFCON with a ROS2 environment and start a listener by running: ``ros2 run demo_nodes_py listener``
+#. Use the state machine ``ros2/ros2_publish_example`` to publish to the listener.
+   Similar to the service call example above, the input parameter ``data`` directly maps to the message field of the ``/chatter`` topic by name and type.
+   Take a look at the code inside the state machine for further adaptation.
+#. The state machine will try to publish on the defined topic.
+   If no subscriber is available, the state machine will still publish the message but also output an error.
+
+Provide a service from RAFCON
+"""""""""""""""""""""""""""""
+#. Use the state machine ``ros2/ros2_service_server_example`` to start a service server hosted from the RAFCON state machine.
+#. Start a terminal separate from RAFCON with a ROS2 environment and try to call the add_two_ints_server-service: ``ros2 service call /add_two_ints example_interfaces/srv/AddTwoInts "{a: 2, b: 3}"``
+#. Once the service is called a callback function will be triggered called ``srv_callback``.
+   This function is defined in the code of the state machine.
+   In this example, the callback function will just add the two integers send from the terminal.
+
+Shutdown
+""""""""
+When the ROS2 node is not needed anymore or you want to re-initialize it, execute the state machine ``ros2/shutdown_ros2``.
+This will destroy the node and delte the global variables.
+
+For further development, also take a look at the utility scripts provided in ``source/rafcon/utils/ros2``.
+There are some helpful tools and functions that can be used in the state machines as well.
 
 
 .. _tutorial_libraries:
