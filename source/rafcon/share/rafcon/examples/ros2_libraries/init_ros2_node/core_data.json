@@ -1,6 +1,6 @@
 {
     "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
-    "description": "Author: Johannes Ernst, Ryo Sakagami\nDescription:\n    - Initializes a ROS2 node that handles publsihing, subscribing and service calls\n    - Detailed explanations in the comments\nInputs:\n    - robot_namespace [str]: Namespace that will be pre-pended to the ros node.\n                             Leave empty if not needed.", 
+    "description": "Author: Johannes Ernst, Ryo Sakagami\nDescription:\n    - Initializes a ROS2 node that handles publishing, subscribing and service calls\n    - Detailed explanations in the comments\nInputs:\n    - robot_namespace [str]: Namespace that will be pre-pended to the ros node.\n                             Leave empty if not needed.", 
     "income": {
         "__jsonqualname__": "rafcon.core.state_elements.logical_port.Income"
     }, 
