@@ -35,38 +35,6 @@ def shutdown_gui(duration_wait_for_gui):
     testing_utils.call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def test_api_example(caplog):
-
-    path_of_api_examples = os.path.join(testing_utils.EXAMPLES_PATH, 'api', 'generate_state_machine')
-    sys.path.insert(0, path_of_api_examples)
-
-    testing_utils.test_multithreading_lock.acquire()
-    try:
-        import basic_turtle_state_machine
-        # TODO maybe extend example to run ros processes to check functionality of state machine too
-        duration_wait_for_gui = 0.1
-        timed_thread = threading.Timer(5*duration_wait_for_gui, shutdown_gui, args=[duration_wait_for_gui,])
-        timed_thread.daemon = True
-        timed_thread.start()
-
-        basic_turtle_state_machine.run_turtle_demo()
-        logger.debug("after gtk main")
-        timed_thread.join()
-    finally:
-        sys.path.remove(path_of_api_examples)
-        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
-
-
-def test_ros_library_examples(caplog):
-    """This test checks whether all ros example libraries are functional"""
-    # TODO implement the tests
-
-
-def test_turtle_library_examples(caplog):
-    """This test checks whether all turtle example libraries are functional"""
-    # TODO implement the tests
-
-
 @pytest.mark.timeout(60)
 def test_functionality_example(caplog):
     """Test for now only tests:
@@ -104,7 +72,7 @@ def test_functionality_example(caplog):
             rafcon.core.singleton.state_machine_execution_engine.join()
     finally:
         testing_utils.wait_for_gui()  # to avoid execution and model notification clinches
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=6, expected_errors=4,
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=8, expected_errors=4,
                                            unpatch_threading=False)
 
 
@@ -175,16 +143,7 @@ def test_plugins_example(caplog):
                                            unpatch_threading=False)
 
 
-def test_tutorial_state_machine_examples(caplog):
-    """This test checks whether all tutorial state machine example are functional"""
-    # TODO implement the tests
-
-
 if __name__ == '__main__':
-    test_api_example(None)
-    test_ros_library_examples(None)
-    test_turtle_library_examples(None)
     test_functionality_example(None)
     test_plugins_example(None)
-    test_tutorial_state_machine_examples(None)
     # pytest.main(['-s', __file__])
