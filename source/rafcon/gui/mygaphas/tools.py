@@ -23,7 +23,7 @@ from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGap
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.mygaphas.aspect import HandleInMotion
 from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionPlaceholderView, DataFlowPlaceholderView, \
-    TransitionView
+    TransitionView, DataFlowView
 from rafcon.gui.mygaphas.items.ports import InputPortView, PortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils import gap_helper
@@ -200,15 +200,15 @@ class MoveItemTool(gaphas.tool.ItemTool):
                 if state_m.get_meta_data_editor()['name']['rel_pos'] != rel_pos:
                     state_m.set_meta_data_editor('name.rel_pos', rel_pos)
                     affected_models[state_m] = ("name_position", False, state_v)
-            elif isinstance(inmotion.item, TransitionView):
-                transition_v = inmotion.item
-                transition_m = transition_v.model
-                self.view.canvas.request_update(transition_v)
-                current_waypoints = gap_helper.get_relative_positions_of_waypoints(transition_v)
-                old_waypoints = transition_m.get_meta_data_editor()['waypoints']
+            elif isinstance(inmotion.item, (TransitionView, DataFlowView)):
+                connection_v = inmotion.item
+                connection_m = connection_v.model
+                self.view.canvas.request_update(connection_v)
+                current_waypoints = gap_helper.get_relative_positions_of_waypoints(connection_v)
+                old_waypoints = connection_m.get_meta_data_editor()['waypoints']
                 if current_waypoints != old_waypoints:
-                    transition_m.set_meta_data_editor('waypoints', current_waypoints)
-                    affected_models[transition_m] = ("waypoints", False, transition_v)
+                    connection_m.set_meta_data_editor('waypoints', current_waypoints)
+                    affected_models[connection_m] = ("waypoints", False, connection_v)
 
         if len(affected_models) == 1:
             model = next(iter(affected_models))
