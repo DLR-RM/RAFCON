@@ -17,6 +17,7 @@ from gaphas.segment import Segment
 from gaphas.aspect import HandleFinder, ItemHandleFinder, HandleSelection, ItemHandleSelection, ItemHandleInMotion, \
     HandleInMotion, Connector, ConnectionSink
 
+from rafcon.gui.mygaphas.utils import gap_helper
 from rafcon.gui.mygaphas.utils.gap_draw_helper import get_side_length_of_resize_handle
 from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionView, DataFlowView, \
     TransitionPlaceholderView, DataFlowPlaceholderView
@@ -221,6 +222,9 @@ class SegmentHandleSelection(ItemHandleSelection):
         if d < merge_distance:
             assert len(self.view.canvas.solver._marked_cons) == 0
             Segment(item, self.view).merge_segment(segment)
+            # update meta data of waypoints
+            if isinstance(item, ConnectionView):
+                gap_helper.update_meta_data_for_connection_waypoints(self.view.graphical_editor, item, None)
 
         if handle:
             item.request_update()
