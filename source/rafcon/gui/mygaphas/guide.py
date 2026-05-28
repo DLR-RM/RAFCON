@@ -91,7 +91,7 @@ class GuidedStateInMotion(GuidedStateMixin, GuidedItemInMotion):
         if not self.item.moving:
             return
         #----------------------------------------------------
-        logger.debugs(f"[GuidedstateInMotion] -> current position of move command: {pos}")
+        logger.debug(f"[GuidedstateInMotion] -> current position of move command: {pos}")
         #----------------------------------------------------
         super(GuidedStateInMotion, self).move(pos)
         parent_item = self.item.parent
