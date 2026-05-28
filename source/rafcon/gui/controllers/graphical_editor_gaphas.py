@@ -175,6 +175,8 @@ class GraphicalEditorController(ExtendedController):
         :param info:
         :param time:
         """
+        ### Hier wird das object bei drag and drop mit der maus bewegt/angeglichen
+        logger.info(f"[GraphicalEditorController]------> on_drag_data_received executed!<------")
         state_id_insert = data.get_text()
         parent_m = self.model.selection.get_selected_state()
         if not isinstance(parent_m, ContainerStateModel):
@@ -199,6 +201,8 @@ class GraphicalEditorController(ExtendedController):
         :param y: Integer: y-position of mouse
         :param time:
         """
+        #this function is first for drag-and-drop functionality for library states, then on_drag_data_received
+        logger.debug(f"[GraphicalEditorcontroller]---------> on_drag_motion executed!<----------")
         hovered_item = ItemFinder(self.view.editor).get_item_at_point((x, y))
         if isinstance(hovered_item, NameView):
             hovered_item = hovered_item.parent
@@ -288,6 +292,7 @@ class GraphicalEditorController(ExtendedController):
 
         :param StateView | ConnectionView | PortView item: The item to be moved into the viewport
         """
+        logger.debug("[GraphicalEditorController]:-------> item is moved into viewport <--------")
         if not item:
             return
         HORIZONTAL = 0
@@ -394,7 +399,7 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
-        """Called on any change within th state machine
+        """Called on any change within the state machine
 
         This method is called, when any state, transition, data flow, etc. within the state machine changes. This
         then typically requires a redraw of the graphical editor, to display these changes immediately.

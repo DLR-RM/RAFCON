@@ -154,7 +154,7 @@ class MyCanvas(gaphas.canvas.Canvas):
 class ItemProjection(object):
     """Project a point of item A into the coordinate system of item B.
 
-    The class os based on the implementation of gaphas.canvas.CanvasProjection.
+    The class is based on the implementation of gaphas.canvas.CanvasProjection.
     """
 
     def __init__(self, point, item_point, item_target):

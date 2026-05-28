@@ -132,6 +132,7 @@ class MoveItemTool(gaphas.tool.ItemTool):
             for item in selected_items:
                 if not isinstance(item, Item):
                     continue
+                logger.debug("[MoveItemTool -> movable_items()] -> InMotion object is created for moving state machine in movable-items function")
                 yield InMotion(item, view)
 
     def on_button_press(self, event):
@@ -186,6 +187,8 @@ class MoveItemTool(gaphas.tool.ItemTool):
             inmotion.move((event.x, event.y))
             rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
                                                         inmotion.item.handles()[NW])
+            logger.debug(f"[MoveItemTool -> on_button_release()] -> Relative pose when button released: {rel_pos}")
+            logger.debug(f"[MoveItemTool -> on_button_release()] -> Event pose when button released: x:{event.x}, y:{event.y} ")
             if isinstance(inmotion.item, StateView):
                 state_v = inmotion.item
                 state_m = state_v.model
@@ -449,6 +452,9 @@ class MultiSelectionTool(gaphas.tool.RubberbandTool):
     def on_motion_notify(self, event):
         if event.get_state()[1] & Gdk.EventMask.BUTTON_PRESS_MASK and event.get_state()[1] & \
                 constants.RUBBERBAND_MODIFIER:
+            
+            logger.debug(f"[MultiSelectionTool] --------> MultiSelectionTool active <------")
+
             view = self.view
             self.queue_draw(view)
             self.x1, self.y1 = event.x, event.y
@@ -521,6 +527,8 @@ class MoveHandleTool(gaphas.tool.HandleTool):
         item = self.grabbed_item
         resize_recursive = isinstance(item, StateView) and self.grabbed_handle in item.corner_handles and \
                            event.get_state()[1] & constants.RECURSIVE_RESIZE_MODIFIER
+        
+        logger.debug(f"[MoveHanldeTool]----->MoveHanldeTool active<-----")
 
         if resize_recursive:
             old_size = (item.width, item.height)
@@ -710,6 +718,8 @@ class ConnectionCreationTool(ConnectionTool):
         if not self._parent_state_v or not event.get_state()[1] & Gdk.EventMask.BUTTON_PRESS_MASK:
             return False
 
+        logger.debug(f"[ConnectionCreationTool]---->ConnectionCreationTool active<----")
+
         if not self._connection_v:
             # Create new temporary connection, with origin at the start port and target at the cursor
             self._create_temporary_connection()
@@ -795,6 +805,8 @@ class ConnectionModificationTool(ConnectionTool):
             self._disconnect_temporarily(self._start_port_v, target=modify_target)
             self.grab_handle(self._connection_v, self._end_handle)
             self._set_motion_handle(event)
+
+        logger.info(f"[ConnectionModificationTool] -------> ConnectionModificationTool active <-----")
 
         last_sink = self._current_sink
         self._current_sink = self.motion_handle.move((event.x, event.y))
