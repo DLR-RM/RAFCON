@@ -14,7 +14,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gi.repository import Gdk
+from gi.repository import Gdk, GObject
 from gaphas.aspect import HandleFinder, InMotion
 from gaphas.item import NW, Item
 import gaphas.tool
@@ -62,6 +62,115 @@ class ToolChain(gaphas.tool.ToolChain):
         if tool is None:
             return
         super(ToolChain, self).ungrab(tool)
+
+
+class AutoscrollMixin:
+    """
+    Helper class for all tools using autoscrolling.
+    """
+    def __init_mixin__(self) -> None:
+        self._scroll_timeout_id = 0
+        self._last_event_pos = (0, 0)
+        self._margin = 30
+        self._speed = 15
+        self._counter = 0
+
+    def _is_dragging(self) -> bool:
+        movable = getattr(self, '_movable_items', None)
+        handle = getattr(self, 'motion_handle', None)
+
+        if movable:
+            logger.debug(f"[_is_dragging()]: State is moved")
+        elif handle:
+            logger.debug(f"[_is_dragging()]: Handler is moved")
+            
+        return bool(movable) or bool(handle)
+
+    def _should_autoscroll(self, x, y) -> list:
+        # wird ständig aufgerufen -> overshoot (nur bei selected object)
+        width = self.view.get_allocated_width()
+        height = self.view.get_allocated_height()  
+
+        left_bound_hit = x < self._margin
+        rigth_bound_hit = x > width - self._margin
+        top_bound_hit = y < self._margin
+        bottom_bound_hit = y > height - self._margin
+
+        if left_bound_hit or rigth_bound_hit or top_bound_hit or bottom_bound_hit:
+            logger.debug("[_should autoscroll] -> active")
+        
+        return rigth_bound_hit, left_bound_hit, bottom_bound_hit, top_bound_hit
+
+    def _on_autoscroll(self) -> bool:
+
+        if not self._is_dragging():
+            self._stop_autoscroll()
+            return False
+        
+        x, y = self._last_event_pos # -> coordinates in editor world space
+        scroll = self._should_autoscroll(self._last_event_pos[0], self._last_event_pos[1])
+
+        dx = (scroll[0]-scroll[1]) * self._speed
+        dy = (scroll[2]-scroll[3]) * self._speed
+
+        x_= x + (self._counter * dx)
+        y_ = y + (self._counter * dy)
+
+        logger.debug(f"[_on_autoscroll()] -> last event pos: {x}, {y}")
+        logger.debug(f"[_on_autoscroll()] -> new scroll pos: {x_, y_}")
+
+        if dx or dy:
+            movable_items = getattr(self, '_movable_items', None)
+            if movable_items: 
+                h_adj = self.view.get_hadjustment()
+                v_adj = self.view.get_vadjustment()
+                h_adj.set_value(h_adj.get_value() + dx)
+                v_adj.set_value(v_adj.get_value() + dy)
+                
+                for inmotion in self._movable_items:
+                    
+                    inmotion.move((x_, y_))
+                    self._counter += 1
+
+                    logger.debug(f"[_on_autoscroll()] -> new item pos: {x_, y_}")
+                    logger.debug(f"[_on_autoscroll()] -> counter: {self._counter}")
+
+                    #self._last_event_pos = (x_, y_)  # -> somehow triggers weird jumping behavior
+                    '''
+                    Wenn ich rausspringe aus dem padding Bereich, wird iregendeine andere Pose übertragen, 
+                    an die das Item dann final geheftet wird. es soll aber am Mauszeiger bleiben
+                    --> Wie wird das beim ConnectionTool gemacht?
+                    '''
+            
+
+            motion_handle = getattr(self, 'motion_handle', None)
+            if motion_handle:
+                h_adj = self.view.get_hadjustment()
+                v_adj = self.view.get_vadjustment()
+                h_adj.set_value(h_adj.get_value() + dx)
+                v_adj.set_value(v_adj.get_value() + dy)
+
+                motion_handle.move((x_, y_))
+                self._counter += 1
+            
+            '''
+            LÄUFT!!: ---> JETZT NOCH SCHÖNER MACHEN!
+            '''
+        return True
+
+    def _stop_autoscroll(self):
+        if self._scroll_timeout_id:
+            GObject.source_remove(self._scroll_timeout_id)
+            self._scroll_timeout_id = 0
+            self._counter = 0  
+
+    def handle_autoscroll(self, x, y) -> None:
+        self._last_event_pos = (x, y) # gets just updated if on_motion_notify is called
+        if self._is_dragging() and any(self._should_autoscroll(x, y)):
+            if not self._scroll_timeout_id:
+                self._scroll_timeout_id = GObject.timeout_add(50, self._on_autoscroll)
+        else:
+            self._stop_autoscroll()
 
 
 class PanTool(gaphas.tool.PanTool):
