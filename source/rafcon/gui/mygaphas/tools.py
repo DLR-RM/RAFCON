@@ -217,12 +217,14 @@ class ZoomTool(gaphas.tool.ZoomTool):
             return True
 
 
-class MoveItemTool(gaphas.tool.ItemTool):
+class MoveItemTool(gaphas.tool.ItemTool, AutoscrollMixin):
     """This class is responsible for moving states, names, connections, etc.
     """
 
     def __init__(self, view=None, buttons=(1,)):
         super(MoveItemTool, self).__init__(view, buttons)
+        self.__init_mixin__()
+        
         self._item = None
         self._move_name_v = False
         self._old_selection = None
@@ -276,11 +278,24 @@ class MoveItemTool(gaphas.tool.ItemTool):
                 # When items are to be moved, a button-press should not cause any deselection.
                 # However, the selection is stored, in case no move operation is performed.
                 self.view.handle_new_selection(self._item)
-
+            logger.debug("[MoveItemTool _> on_button_press()] -> state machine is selected for move in on_button_press function")
+        logger.debug(f"[MoveItemTool -> on_button_press()-> x-value of event GDK_BUTTON_PRESS: {event.x}")    
         if not self.view.is_focus():
             self.view.grab_focus()
 
         return True
+    
+    
+    def on_motion_notify(self, event):
+        """Autoscroll on drag
+        If one or more items are moved against the boarder of the graphical editor view, the view is moved into
+        the direction of the boarder threshold.
+
+        :param event: The motion event
+        """
+        self.handle_autoscroll(event.x, event.y)
+
+        return super().on_motion_notify(event)
 
     def on_button_release(self, event):
         """Write back changes
@@ -584,13 +599,17 @@ class MultiSelectionTool(gaphas.tool.RubberbandTool):
         return True
 
 
-class MoveHandleTool(gaphas.tool.HandleTool):
+class MoveHandleTool(gaphas.tool.HandleTool, AutoscrollMixin):
     """Tool to move handles around
 
     Handles can be moved using click'n'drag. This is already implemented in the base class `HandleTool`. This class
     extends the behaviour by requiring a modifier key to be pressed when moving ports. It also allows to change the
     modifier key, which are defined in `rafcon.gui.utils.constants`.
     """
+    def __init__(self):
+        super(MoveHandleTool, self).__init__()
+        self.__init_mixin__()
+
 
     def on_button_press(self, event):
         """Handle button press events.
@@ -643,6 +662,7 @@ class MoveHandleTool(gaphas.tool.HandleTool):
             old_size = (item.width, item.height)
 
         super(MoveHandleTool, self).on_motion_notify(event)
+        self.handle_autoscroll(event.x, event.y)
 
         if resize_recursive:
             item.resize_all_children(old_size)
@@ -679,10 +699,11 @@ class MoveHandleTool(gaphas.tool.HandleTool):
         super(MoveHandleTool, self).on_button_release(event)
 
 
-class ConnectionTool(gaphas.tool.ConnectHandleTool):
+class ConnectionTool(gaphas.tool.ConnectHandleTool, AutoscrollMixin):
 
     def __init__(self):
         super(ConnectionTool, self).__init__()
+        self.__init_mixin__()
         self._connection_v = None
         self._start_port_v = None
         self._parent_state_v = None
@@ -839,6 +860,7 @@ class ConnectionCreationTool(ConnectionTool):
 
         last_sink = self._current_sink
         self._current_sink = self.motion_handle.move((event.x, event.y))
+        self.handle_autoscroll(event.x, event.y)
 
         self._handle_temporary_connection(last_sink, self._current_sink, of_target=True)
 
