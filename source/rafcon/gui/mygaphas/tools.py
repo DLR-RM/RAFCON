@@ -129,8 +129,17 @@ class AutoscrollMixin:
                 
                 for inmotion in self._movable_items:
                     
-                for inmotion in self._movable_items:
-                    if inmotion.item.parent.border_width in rel_pos:
+                for idx, inmotion in enumerate(self._movable_items):
+
+                    rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
+                                                        inmotion.item.handles()[NW])
+                    # parent state boarders
+                    parent_border_left = parent_border_top = inmotion.item.parent.border_width
+                    parent_border_right = inmotion.item.parent.width - (inmotion.item.width + inmotion.item.parent.border_width)
+                    parent_border_bottom = inmotion.item.parent.height - (inmotion.item.height + inmotion.item.parent.border_width)
+                    
+                    if parent_border_left <= rel_pos[0] or parent_border_top <= rel_pos[1] or \
+                    parent_border_right >= rel_pos[0] or parent_border_bottom >= rel_pos[1]:
                         self._stop_autoscroll()
                         return
 
@@ -140,12 +149,6 @@ class AutoscrollMixin:
                     logger.debug(f"[_on_autoscroll()] -> new item pos: {offset_x, offset_y}")
                     logger.debug(f"[_on_autoscroll()] -> counter: {self._counter}")
 
-                    #self._last_event_pos = (x_, y_)  # -> somehow triggers weird jumping behavior
-                    '''
-                    Wenn ich rausspringe aus dem padding Bereich, wird iregendeine andere Pose übertragen, 
-                    an die das Item dann final geheftet wird. es soll aber am Mauszeiger bleiben
-                    --> Wie wird das beim ConnectionTool gemacht?
-                    '''
             elif getattr(self, 'motion_handle', None):
                 h_adj = self.view.get_hadjustment()
                 v_adj = self.view.get_vadjustment()
@@ -313,7 +316,7 @@ class MoveItemTool(gaphas.tool.ItemTool, AutoscrollMixin):
             inmotion.move((event.x, event.y))
             rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
                                                         inmotion.item.handles()[NW])
-            logger.debug(f"[MoveItemTool -> on_button_release()] -> Relative pose when button released: {rel_pos}")
+            logger.debug(f"[MoveItemTool -> on_button_release()] -> Relative pose to parent when button released: {rel_pos}")
             logger.debug(f"[MoveItemTool -> on_button_release()] -> Event pose when button released: x:{event.x}, y:{event.y} ")
             if isinstance(inmotion.item, StateView):
                 state_v = inmotion.item
