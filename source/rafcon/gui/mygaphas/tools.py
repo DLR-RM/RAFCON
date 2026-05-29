@@ -113,11 +113,11 @@ class AutoscrollMixin:
         dx = (scroll[0]-scroll[1]) * self._speed
         dy = (scroll[2]-scroll[3]) * self._speed
 
-        x_= x + (self._counter * dx)
-        y_ = y + (self._counter * dy)
+        offset_x= x + (self._counter * dx) 
+        offset_y = y + (self._counter * dy)
 
         logger.debug(f"[_on_autoscroll()] -> last event pos: {x}, {y}")
-        logger.debug(f"[_on_autoscroll()] -> new scroll pos: {x_, y_}")
+        logger.debug(f"[_on_autoscroll()] -> new scroll pos: {offset_x, offset_y}")
 
         if dx or dy:
             movable_items = getattr(self, '_movable_items', None)
@@ -129,10 +129,10 @@ class AutoscrollMixin:
                 
                 for inmotion in self._movable_items:
                     
-                    inmotion.move((x_, y_))
+                    inmotion.move((offset_x, offset_y))
                     self._counter += 1
 
-                    logger.debug(f"[_on_autoscroll()] -> new item pos: {x_, y_}")
+                    logger.debug(f"[_on_autoscroll()] -> new item pos: {offset_x, offset_y}")
                     logger.debug(f"[_on_autoscroll()] -> counter: {self._counter}")
 
                     #self._last_event_pos = (x_, y_)  # -> somehow triggers weird jumping behavior
@@ -150,7 +150,7 @@ class AutoscrollMixin:
                 h_adj.set_value(h_adj.get_value() + dx)
                 v_adj.set_value(v_adj.get_value() + dy)
 
-                motion_handle.move((x_, y_))
+                self.motion_handle.move((offset_x, offset_y))
                 self._counter += 1
             
             '''
