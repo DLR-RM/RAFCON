@@ -105,7 +105,7 @@ class AutoscrollMixin:
 
         if not self._is_dragging():
             self._stop_autoscroll()
-            return False
+            return
         
         x, y = self._last_event_pos # -> coordinates in editor world space
         scroll = self._should_autoscroll(self._last_event_pos[0], self._last_event_pos[1])
@@ -120,8 +120,8 @@ class AutoscrollMixin:
         logger.debug(f"[_on_autoscroll()] -> new scroll pos: {offset_x, offset_y}")
 
         if dx or dy:
-            movable_items = getattr(self, '_movable_items', None)
-            if movable_items: 
+            
+            if getattr(self, '_movable_items', None): 
                 h_adj = self.view.get_hadjustment()
                 v_adj = self.view.get_vadjustment()
                 h_adj.set_value(h_adj.get_value() + dx)
@@ -129,6 +129,11 @@ class AutoscrollMixin:
                 
                 for inmotion in self._movable_items:
                     
+                for inmotion in self._movable_items:
+                    if inmotion.item.parent.border_width in rel_pos:
+                        self._stop_autoscroll()
+                        return
+
                     inmotion.move((offset_x, offset_y))
                     self._counter += 1
 
@@ -141,10 +146,7 @@ class AutoscrollMixin:
                     an die das Item dann final geheftet wird. es soll aber am Mauszeiger bleiben
                     --> Wie wird das beim ConnectionTool gemacht?
                     '''
-            
-
-            motion_handle = getattr(self, 'motion_handle', None)
-            if motion_handle:
+            elif getattr(self, 'motion_handle', None):
                 h_adj = self.view.get_hadjustment()
                 v_adj = self.view.get_vadjustment()
                 h_adj.set_value(h_adj.get_value() + dx)
