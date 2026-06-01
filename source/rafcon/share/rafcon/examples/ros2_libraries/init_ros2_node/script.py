@@ -36,7 +36,7 @@ def execute(self, inputs, outputs, gvm):
             gvm.set_variable("rafcon_ros_node", rafcon_ros_node, per_reference=True)
 
             # Initialize the ros executor
-            executor = rclpy.executors.MultiThreadedExecutor(num_threads=5)
+            executor = rclpy.executors.MultiThreadedExecutor()
             executor.add_node(rafcon_ros_node)
             gvm.set_variable("ros_executor", executor, per_reference=True)
 
