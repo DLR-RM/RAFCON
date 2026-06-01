@@ -138,8 +138,11 @@ class AutoscrollMixin:
                     parent_border_right = inmotion.item.parent.width - (inmotion.item.width + inmotion.item.parent.border_width)
                     parent_border_bottom = inmotion.item.parent.height - (inmotion.item.height + inmotion.item.parent.border_width)
                     
-                    if parent_border_left <= rel_pos[0] or parent_border_top <= rel_pos[1] or \
-                    parent_border_right >= rel_pos[0] or parent_border_bottom >= rel_pos[1]:
+                    rel_x, rel_y = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
+                                                        inmotion.item.handles()[NW])
+                    
+                    if rel_x in (parent_border_left, parent_border_right) or \
+                       rel_y in (parent_border_top, parent_border_bottom):
                         self._stop_autoscroll()
                         return
 
