@@ -50,5 +50,5 @@ def execute(self, inputs, outputs, gvm):
                     break
 
     # Destroy service and return
-    node.destroy_service(server)
+    server.destroy_service()
     return result
