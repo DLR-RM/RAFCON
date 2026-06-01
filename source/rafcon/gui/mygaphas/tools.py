@@ -316,7 +316,6 @@ class MoveItemTool(gaphas.tool.ItemTool, AutoscrollMixin):
         affected_models = {}
 
         for inmotion in self._movable_items:
-            inmotion.move((event.x, event.y))
             rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
                                                         inmotion.item.handles()[NW])
             logger.debug(f"[MoveItemTool -> on_button_release()] -> Relative pose to parent when button released: {rel_pos}")
