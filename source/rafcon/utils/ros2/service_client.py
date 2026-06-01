@@ -149,7 +149,22 @@ class ServiceClientHandle():
             return "aborted"
 
     def destroy_client(self):
+        # Remove on ros side
         self.node.destroy_client(self.cli)
+
+        # Remove client from RAFCON global variables
+        if self.gvm.variable_exist("ros_clients"):
+            dict_name = "ros_clients"
+            access_key = self.gvm.lock_variable(dict_name, block=True)
+            try:
+                ros_clients = self.gvm.get_variable(dict_name,
+                                                    per_reference=True,
+                                                    access_key=access_key)
+                if self.srv_name in ros_clients:
+                    del ros_clients[self.srv_name]
+                    self.rafcon.logger.info(f"Removing existing service client '{self.srv_name}'")
+            finally:
+                self.gvm.unlock_variable(dict_name, access_key)
 
     def get_srv_resp(self):
         # This is a generic getter for service response

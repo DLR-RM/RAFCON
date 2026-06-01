@@ -130,7 +130,21 @@ class PublisherHandle():
             return "aborted"
 
     def destroy_publisher(self):
+        # Remove on ros side
         self.node.destroy_publisher(self.pub)
+
+        # Remove publisher from RAFCON global variables
+        dict_name = "ros_publishers"
+        access_key = self.gvm.lock_variable(dict_name, block=True)
+        try:
+            ros_publishers = self.gvm.get_variable(dict_name,
+                                                   per_reference=True,
+                                                   access_key=access_key)
+            if self.pub_topic in ros_publishers:
+                del ros_publishers[self.pub_topic]
+                self.rafcon.logger.info(f"Removing existing publisher '{self.pub_topic}'")
+        finally:
+            self.gvm.unlock_variable(dict_name, access_key)
 
     def replace_chars(self, message):
         # Replace non-ascii chars with 'char(#)' for printing
