@@ -30,9 +30,9 @@ class SubscriberHandle():
     Variables:
     rafcon: The RAFCON handle to access, e.g. the logger
     node: The ROS node that is used for instantiation
-    sub_topic: Stores the subscription topic
     sub_msg_def: Stores the subscription message definition
     sub_msg: Stores the actual subscription message
+    sub_topic: Stores the subscription topic
     sub_msg_lock: A threading lock to prevent race conditions when receiving multiple
                   subscriptions
     qos_profile: Custom quality of service profile
@@ -62,7 +62,7 @@ class SubscriberHandle():
             raise RuntimeError("ROS2 node is not available in gvm. "\
                                "Have you called init_ros2_node?")
 
-        # Create publisher
+        # Create subscription
         self.sub = self.node.create_subscription(self.sub_msg_def,
                                                  self.sub_topic,
                                                  self.sub_callback,
@@ -70,12 +70,12 @@ class SubscriberHandle():
                                                  callback_group=self.callback_group)
 
     def sub_callback(self, msg):
-        # Use a threading lock to prevent race condition with execute_subscribing
+        # Use a threading lock to prevent race condition with wait_for_sub_msg()
         with self.sub_msg_lock:
             self.sub_msg = msg
         self.rafcon.logger.info(f"ROS: subscribed from '{self.sub_topic}': "\
                                 f"{self.replace_chars(self.sub_msg)}")
-        # Wait a minimal time, so the while loop in execute_subscribing
+        # Wait a minimal time, so the while loop in wait_for_sub_msg()
         # catches the first received message
         time.sleep(0.002)
 
