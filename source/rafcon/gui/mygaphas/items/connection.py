@@ -130,6 +130,8 @@ class DataFlowView(ConnectionView):
         self.model = data_flow_m
         self._line_color = None
         self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_PORT'])
+        self._prev_siblings_index = None
+        self._prev_node_index = None
 
     @property
     def model(self):
@@ -148,6 +150,52 @@ class DataFlowView(ConnectionView):
         if self.model.core_element and self.show_connection:
             if context.selected:
                 self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE_SELECTED'])
+                self._bring_to_front()
             else:
                 self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
+                self._bring_to_back()
             super(DataFlowView, self).draw(context)
+
+    def _bring_to_front(self):
+        """
+        Reorder this item to the top of its siblings (highest z-order).
+            
+        NOTE: canvas.reparent() cannot be used here because it only works if the parent
+        changes (gaphas 2.1 limitation).
+        Instead, we add the data flow at the end of the list to be painted on top.
+        """
+        siblings = self.canvas._tree.get_siblings(self)
+        if siblings and siblings[-1] is not self:
+            # Add item at the end of siblings list and save index
+            self._prev_siblings_index = siblings.index(self)
+            siblings.remove(self)
+            siblings.append(self)
+
+            # Also fix the _nodes order and save index
+            nodes = self.canvas._tree._nodes
+            self._prev_node_index = nodes.index(self)
+            nodes.remove(self)
+            nodes.append(self)
+
+            self.canvas._dirty_index = True
+            self.canvas.request_update(self)
+
+    def _bring_to_back(self):
+        """
+        Reorder this item to its previous index if it changed before (lowest z-order).
+        """
+        siblings = self.canvas._tree.get_siblings(self)
+        if siblings and self._prev_siblings_index and self._prev_node_index:
+            # Re-ordering happened before, now bring back to original index
+            siblings.remove(self)
+            siblings.insert(self._prev_siblings_index, self)
+            self._prev_siblings_index = None
+
+            # Also fix the _nodes order
+            nodes = self.canvas._tree._nodes
+            nodes.remove(self)
+            nodes.insert(self._prev_node_index, self)
+            self._prev_node_index = None
+
+            self.canvas._dirty_index = True
+            self.canvas.request_update(self)
