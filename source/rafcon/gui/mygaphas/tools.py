@@ -939,6 +939,7 @@ class ConnectionModificationTool(ConnectionTool):
 
         last_sink = self._current_sink
         self._current_sink = self.motion_handle.move((event.x, event.y))
+        self.handle_autoscroll(event.x, event.y)
 
         self._handle_temporary_connection(last_sink, self._current_sink, modify_target)
 
