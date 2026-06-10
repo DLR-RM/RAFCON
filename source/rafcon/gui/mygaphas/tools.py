@@ -105,16 +105,16 @@ class AutoscrollMixin:
 
         if not self._is_dragging():
             self._stop_autoscroll()
-            return
+            return False
         
-        x, y = self._last_event_pos # -> coordinates in editor world space
+        x, y = self._last_event_pos
         scroll = self._should_autoscroll(self._last_event_pos[0], self._last_event_pos[1])
 
         dx = (scroll[0]-scroll[1]) * self._speed
         dy = (scroll[2]-scroll[3]) * self._speed
 
-        offset_x= x + (self._counter * dx) 
-        offset_y = y + (self._counter * dy)
+        offset_x= x + dx
+        offset_y = y + dy
 
         logger.debug(f"[_on_autoscroll()] -> last event pos: {x}, {y}")
         logger.debug(f"[_on_autoscroll()] -> new scroll pos: {offset_x, offset_y}")
@@ -129,11 +129,7 @@ class AutoscrollMixin:
                 
                 for inmotion in self._movable_items:
                     
-                for idx, inmotion in enumerate(self._movable_items):
-
-                    rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
-                                                        inmotion.item.handles()[NW])
-                    # parent state boarders
+                    # parent state boarders to stop autoscrolling when boarders are hit
                     parent_border_left = parent_border_top = inmotion.item.parent.border_width
                     parent_border_right = inmotion.item.parent.width - (inmotion.item.width + inmotion.item.parent.border_width)
                     parent_border_bottom = inmotion.item.parent.height - (inmotion.item.height + inmotion.item.parent.border_width)
@@ -144,13 +140,14 @@ class AutoscrollMixin:
                     if rel_x in (parent_border_left, parent_border_right) or \
                        rel_y in (parent_border_top, parent_border_bottom):
                         self._stop_autoscroll()
-                        return
-
-                    inmotion.move((offset_x, offset_y))
-                    self._counter += 1
+                        return True
+                    
+                    # *2 to compensate for the shifted view coordinates
+                    inmotion.move((x+2*dx, y+2*dy))
+                    inmotion.last_x = offset_x
+                    inmotion.last_y = offset_y
 
                     logger.debug(f"[_on_autoscroll()] -> new item pos: {offset_x, offset_y}")
-                    logger.debug(f"[_on_autoscroll()] -> counter: {self._counter}")
 
             elif getattr(self, 'motion_handle', None):
                 h_adj = self.view.get_hadjustment()
@@ -161,9 +158,6 @@ class AutoscrollMixin:
                 self.motion_handle.move((offset_x, offset_y))
                 self._counter += 1
             
-            '''
-            LÄUFT!!: ---> JETZT NOCH SCHÖNER MACHEN!
-            '''
         return True
 
     def _stop_autoscroll(self):
