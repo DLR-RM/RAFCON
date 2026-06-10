@@ -73,7 +73,6 @@ class AutoscrollMixin:
         self._last_event_pos = (0, 0)
         self._margin = 30
         self._speed = 15
-        self._counter = 0
 
     def _is_dragging(self) -> bool:
         movable = getattr(self, '_movable_items', None)
@@ -87,7 +86,7 @@ class AutoscrollMixin:
         return bool(movable) or bool(handle)
 
     def _should_autoscroll(self, x, y) -> list:
-        # wird ständig aufgerufen -> overshoot (nur bei selected object)
+        '''checks if thresholds gets hit for autoscrolling'''
         width = self.view.get_allocated_width()
         height = self.view.get_allocated_height()  
 
@@ -156,7 +155,6 @@ class AutoscrollMixin:
                 v_adj.set_value(v_adj.get_value() + dy)
 
                 self.motion_handle.move((offset_x, offset_y))
-                self._counter += 1
             
         return True
 
@@ -164,10 +162,9 @@ class AutoscrollMixin:
         if self._scroll_timeout_id:
             GObject.source_remove(self._scroll_timeout_id)
             self._scroll_timeout_id = 0
-            self._counter = 0  
 
     def handle_autoscroll(self, x, y) -> None:
-        self._last_event_pos = (x, y) # gets just updated if on_motion_notify is called
+        self._last_event_pos = (x, y)
         if self._is_dragging() and any(self._should_autoscroll(x, y)):
             if not self._scroll_timeout_id:
                 self._scroll_timeout_id = GObject.timeout_add(50, self._on_autoscroll)
