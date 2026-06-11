@@ -98,7 +98,14 @@ class AutoscrollMixin:
         if left_bound_hit or rigth_bound_hit or top_bound_hit or bottom_bound_hit:
             logger.debug("[_should autoscroll] -> active")
         
-        return rigth_bound_hit, left_bound_hit, bottom_bound_hit, top_bound_hit
+
+
+    def _scroll_view(self, dx: float, dy: float) -> None:
+        '''Scroll the view by (dx, dy) pixels by adjusting the view object'''
+        h_adj = self.view.get_hadjustment()
+        v_adj = self.view.get_vadjustment()
+        h_adj.set_value(h_adj.get_value() + dx)
+        v_adj.set_value(v_adj.get_value() + dy)
 
     def _on_autoscroll(self) -> bool:
 
@@ -119,13 +126,9 @@ class AutoscrollMixin:
         logger.debug(f"[_on_autoscroll()] -> new scroll pos: {offset_x, offset_y}")
 
         if dx ^ dy:
-            
-            if getattr(self, '_movable_items', None): 
-                h_adj = self.view.get_hadjustment()
-                v_adj = self.view.get_vadjustment()
-                h_adj.set_value(h_adj.get_value() + dx)
-                v_adj.set_value(v_adj.get_value() + dy)
-                
+            self._scroll_view(dx, dy)
+
+            if getattr(self, '_movable_items', None):     
                 for inmotion in self._movable_items:
                     
                     # parent state boarders to stop autoscrolling when boarders are hit
@@ -149,11 +152,6 @@ class AutoscrollMixin:
                     logger.debug(f"[_on_autoscroll()] -> new item pos: {offset_x, offset_y}")
 
             elif getattr(self, 'motion_handle', None):
-                h_adj = self.view.get_hadjustment()
-                v_adj = self.view.get_vadjustment()
-                h_adj.set_value(h_adj.get_value() + dx)
-                v_adj.set_value(v_adj.get_value() + dy)
-
                 self.motion_handle.move((offset_x, offset_y))
             
         return True
