@@ -118,7 +118,7 @@ class AutoscrollMixin:
         logger.debug(f"[_on_autoscroll()] -> last event pos: {x}, {y}")
         logger.debug(f"[_on_autoscroll()] -> new scroll pos: {offset_x, offset_y}")
 
-        if dx or dy:
+        if dx ^ dy:
             
             if getattr(self, '_movable_items', None): 
                 h_adj = self.view.get_hadjustment()
