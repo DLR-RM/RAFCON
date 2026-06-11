@@ -65,39 +65,58 @@ class ToolChain(gaphas.tool.ToolChain):
 
 
 class AutoscrollMixin:
+    """ mixin class to add autoscroll to agaphas tool.
+    When an item or handle is dragged against the border of the graphical editor,
+    the view is scrolled in that direction. The dragged item follows the curser.
+
+    This mixin class expects to be combined with a ``gaphas`` tool and
+    relies on the following attributes provided by the base classes.
+        * ``self.view``             - the GtkView object on which the tool operates on
+        * ``self._movable_items``   - InMotion objects, which are set by the ItemTool
+        * ``self.motion_handle``    - HanldeInMotion object. which is set by the HandleTool
+    Call ``self.__init_mixin__()`` in the tool`s ``__init__`` and
+    ``self.handle_autoscroll(event.x, event.y)`` in the ``on_motion_notify`` event class
+    of the gaphas tool
     """
-    Helper class for all tools using autoscrolling.
-    """
+    _SCROLL_INTERVALL = 50
+
     def __init_mixin__(self) -> None:
         self._scroll_timeout_id = 0
         self._last_event_pos = (0, 0)
-        self._margin = 30
-        self._speed = 15
+        self._margin = 30  # px distance to border to trigger autoscroll
+        self._speed = 15   # px scrolled distance per timer tick
+
+
+    def handle_autoscroll(self, x: float, y: float) -> None:
+        '''Start or stop autoscrolling based on the current curser position'''
+        self._last_event_pos = (x, y)
+        if self._is_dragging() and any(self._should_autoscroll(x, y)):
+            if not self._scroll_timeout_id:
+                self._scroll_timeout_id = GObject.timeout_add(self._SCROLL_INTERVALL,
+                                                              self._on_autoscroll)
+        else:
+            self._stop_autoscroll()
+
 
     def _is_dragging(self) -> bool:
-        movable = getattr(self, '_movable_items', None)
-        handle = getattr(self, 'motion_handle', None)
+        '''True while this tool is dragging an item or handle'''
+        return bool(getattr(self, '_movable_items', None)) or \
+               bool(getattr(self, 'motion_handle', None))
 
-        if movable:
-            logger.debug(f"[_is_dragging()]: State is moved")
-        elif handle:
-            logger.debug(f"[_is_dragging()]: Handler is moved")
-            
-        return bool(movable) or bool(handle)
 
-    def _should_autoscroll(self, x, y) -> list:
-        '''checks if thresholds gets hit for autoscrolling'''
+    def _should_autoscroll(self, x: float, y: float):
+        '''checks if border thresholds get hit for autoscrolling.
+        -> returns (right, left, bottom, top) boolean for hit borders.
+        '''
         width = self.view.get_allocated_width()
         height = self.view.get_allocated_height()  
 
-        left_bound_hit = x < self._margin
-        rigth_bound_hit = x > width - self._margin
-        top_bound_hit = y < self._margin
-        bottom_bound_hit = y > height - self._margin
-
-        if left_bound_hit or rigth_bound_hit or top_bound_hit or bottom_bound_hit:
-            logger.debug("[_should autoscroll] -> active")
+        left_border_hit = x < self._margin
+        right_border_hit = x > width - self._margin
+        top_border_hit = y < self._margin
+        bottom_border_hit = y > height - self._margin
         
+        return right_border_hit, left_border_hit, bottom_border_hit, top_border_hit
 
 
     def _scroll_view(self, dx: float, dy: float) -> None:
@@ -107,23 +126,21 @@ class AutoscrollMixin:
         h_adj.set_value(h_adj.get_value() + dx)
         v_adj.set_value(v_adj.get_value() + dy)
 
-    def _on_autoscroll(self) -> bool:
 
+    def _on_autoscroll(self) -> bool:
+        '''Timer callback: scroll the view and drags item(s) along.'''
         if not self._is_dragging():
             self._stop_autoscroll()
             return False
         
         x, y = self._last_event_pos
-        scroll = self._should_autoscroll(self._last_event_pos[0], self._last_event_pos[1])
-
-        dx = (scroll[0]-scroll[1]) * self._speed
-        dy = (scroll[2]-scroll[3]) * self._speed
+        scroll_directions = self._should_autoscroll(self._last_event_pos[0],
+                                                    self._last_event_pos[1])
+        dx = (scroll_directions[0]-scroll_directions[1]) * self._speed
+        dy = (scroll_directions[2]-scroll_directions[3]) * self._speed
 
         offset_x= x + dx
         offset_y = y + dy
-
-        logger.debug(f"[_on_autoscroll()] -> last event pos: {x}, {y}")
-        logger.debug(f"[_on_autoscroll()] -> new scroll pos: {offset_x, offset_y}")
 
         if dx ^ dy:
             self._scroll_view(dx, dy)
@@ -144,30 +161,22 @@ class AutoscrollMixin:
                         self._stop_autoscroll()
                         return True
                     
-                    # *2 to compensate for the shifted view coordinates
+                    # *2 factor multiplication to compensate for the shifted view coordinates
+                    # the view already shifted here, to keep the item also aligned with the cursor
+                    # while shifting, we need to add the delta a 2nd time
                     inmotion.move((x+2*dx, y+2*dy))
                     inmotion.last_x = offset_x
                     inmotion.last_y = offset_y
-
-                    logger.debug(f"[_on_autoscroll()] -> new item pos: {offset_x, offset_y}")
 
             elif getattr(self, 'motion_handle', None):
                 self.motion_handle.move((offset_x, offset_y))
             
         return True
 
-    def _stop_autoscroll(self):
+    def _stop_autoscroll(self) -> None:
         if self._scroll_timeout_id:
             GObject.source_remove(self._scroll_timeout_id)
             self._scroll_timeout_id = 0
-
-    def handle_autoscroll(self, x, y) -> None:
-        self._last_event_pos = (x, y)
-        if self._is_dragging() and any(self._should_autoscroll(x, y)):
-            if not self._scroll_timeout_id:
-                self._scroll_timeout_id = GObject.timeout_add(50, self._on_autoscroll)
-        else:
-            self._stop_autoscroll()
 
 
 class PanTool(gaphas.tool.PanTool):
@@ -240,7 +249,6 @@ class MoveItemTool(gaphas.tool.ItemTool, AutoscrollMixin):
             for item in selected_items:
                 if not isinstance(item, Item):
                     continue
-                logger.debug("[MoveItemTool -> movable_items()] -> InMotion object is created for moving state machine in movable-items function")
                 yield InMotion(item, view)
 
     def on_button_press(self, event):
@@ -275,8 +283,6 @@ class MoveItemTool(gaphas.tool.ItemTool, AutoscrollMixin):
                 # When items are to be moved, a button-press should not cause any deselection.
                 # However, the selection is stored, in case no move operation is performed.
                 self.view.handle_new_selection(self._item)
-            logger.debug("[MoveItemTool _> on_button_press()] -> state machine is selected for move in on_button_press function")
-        logger.debug(f"[MoveItemTool -> on_button_press()-> x-value of event GDK_BUTTON_PRESS: {event.x}")    
         if not self.view.is_focus():
             self.view.grab_focus()
 
@@ -307,8 +313,6 @@ class MoveItemTool(gaphas.tool.ItemTool, AutoscrollMixin):
         for inmotion in self._movable_items:
             rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
                                                         inmotion.item.handles()[NW])
-            logger.debug(f"[MoveItemTool -> on_button_release()] -> Relative pose to parent when button released: {rel_pos}")
-            logger.debug(f"[MoveItemTool -> on_button_release()] -> Event pose when button released: x:{event.x}, y:{event.y} ")
             if isinstance(inmotion.item, StateView):
                 state_v = inmotion.item
                 state_m = state_v.model
@@ -572,9 +576,6 @@ class MultiSelectionTool(gaphas.tool.RubberbandTool):
     def on_motion_notify(self, event):
         if event.get_state()[1] & Gdk.EventMask.BUTTON_PRESS_MASK and event.get_state()[1] & \
                 constants.RUBBERBAND_MODIFIER:
-            
-            logger.debug(f"[MultiSelectionTool] --------> MultiSelectionTool active <------")
-
             view = self.view
             self.queue_draw(view)
             self.x1, self.y1 = event.x, event.y
@@ -651,20 +652,19 @@ class MoveHandleTool(gaphas.tool.HandleTool, AutoscrollMixin):
         item = self.grabbed_item
         resize_recursive = isinstance(item, StateView) and self.grabbed_handle in item.corner_handles and \
                            event.get_state()[1] & constants.RECURSIVE_RESIZE_MODIFIER
-        
-        logger.debug(f"[MoveHanldeTool]----->MoveHanldeTool active<-----")
 
         if resize_recursive:
             old_size = (item.width, item.height)
 
-        super(MoveHandleTool, self).on_motion_notify(event)
         self.handle_autoscroll(event.x, event.y)
+
+        super(MoveHandleTool, self).on_motion_notify(event)
 
         if resize_recursive:
             item.resize_all_children(old_size)
         if isinstance(item, StateView):
             item.update_minimum_size_of_children()
-
+    
         return True
 
     def on_button_release(self, event):
@@ -843,8 +843,6 @@ class ConnectionCreationTool(ConnectionTool):
     def on_motion_notify(self, event):
         if not self._parent_state_v or not event.get_state()[1] & Gdk.EventMask.BUTTON_PRESS_MASK:
             return False
-
-        logger.debug(f"[ConnectionCreationTool]---->ConnectionCreationTool active<----")
 
         if not self._connection_v:
             # Create new temporary connection, with origin at the start port and target at the cursor

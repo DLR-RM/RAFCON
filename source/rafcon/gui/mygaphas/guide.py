@@ -90,9 +90,6 @@ class GuidedStateInMotion(GuidedStateMixin, GuidedItemInMotion):
     def move(self, pos):
         if not self.item.moving:
             return
-        #----------------------------------------------------
-        logger.debug(f"[GuidedstateInMotion] -> current position of move command: {pos}")
-        #----------------------------------------------------
         super(GuidedStateInMotion, self).move(pos)
         parent_item = self.item.parent
         if parent_item:    ## e.g. parent_item=root state if I want to move HierarchyState1 inside root stae

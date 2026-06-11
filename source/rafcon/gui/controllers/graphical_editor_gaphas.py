@@ -201,8 +201,6 @@ class GraphicalEditorController(ExtendedController):
         :param y: Integer: y-position of mouse
         :param time:
         """
-        #this function is first for drag-and-drop functionality for library states, then on_drag_data_received
-        logger.debug(f"[GraphicalEditorcontroller]---------> on_drag_motion executed!<----------")
         hovered_item = ItemFinder(self.view.editor).get_item_at_point((x, y))
         if isinstance(hovered_item, NameView):
             hovered_item = hovered_item.parent
