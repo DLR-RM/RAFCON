@@ -142,24 +142,24 @@ class AutoscrollMixin:
         offset_x= x + dx
         offset_y = y + dy
 
-        if dx ^ dy:
+        if dx or dy:
             self._scroll_view(dx, dy)
 
             if getattr(self, '_movable_items', None):     
                 for inmotion in self._movable_items:
-                    
-                    # parent state boarders to stop autoscrolling when boarders are hit
-                    parent_border_left = parent_border_top = inmotion.item.parent.border_width
-                    parent_border_right = inmotion.item.parent.width - (inmotion.item.width + inmotion.item.parent.border_width)
-                    parent_border_bottom = inmotion.item.parent.height - (inmotion.item.height + inmotion.item.parent.border_width)
-                    
-                    rel_x, rel_y = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
-                                                        inmotion.item.handles()[NW])
-                    
-                    if rel_x in (parent_border_left, parent_border_right) or \
-                       rel_y in (parent_border_top, parent_border_bottom):
-                        self._stop_autoscroll()
-                        return True
+                    if inmotion.item.parent:
+                        parent_border_left = parent_border_top = inmotion.item.parent.border_width
+                        parent_border_right = inmotion.item.parent.width - (inmotion.item.width + inmotion.item.parent.border_width)
+                        parent_border_bottom = inmotion.item.parent.height - (inmotion.item.height + inmotion.item.parent.border_width)
+
+                        rel_x, rel_y = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
+                                                            inmotion.item.handles()[NW])
+
+                        #check to stop if parent borders are hit
+                        if rel_x in (parent_border_left, parent_border_right) or \
+                           rel_y in (parent_border_top, parent_border_bottom):
+                            self._stop_autoscroll()
+                            return True
                     
                     # *2 factor multiplication to compensate for the shifted view coordinates
                     # the view already shifted here, to keep the item also aligned with the cursor
