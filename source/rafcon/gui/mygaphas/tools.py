@@ -308,6 +308,7 @@ class MoveItemTool(gaphas.tool.ItemTool, AutoscrollMixin):
 
         :param event: The button event
         """
+        self._stop_autoscroll()
         affected_models = {}
 
         for inmotion in self._movable_items:
@@ -668,6 +669,7 @@ class MoveHandleTool(gaphas.tool.HandleTool, AutoscrollMixin):
         return True
 
     def on_button_release(self, event):
+        self._stop_autoscroll()
         if self.grabbed_item:
             item = self.grabbed_item
 
@@ -707,6 +709,7 @@ class ConnectionTool(gaphas.tool.ConnectHandleTool, AutoscrollMixin):
         self._current_sink = None
 
     def on_button_release(self, event):
+        self._stop_autoscroll()
         self._is_transition = False
         self._connection_v = None
         self._start_port_v = None
