@@ -175,8 +175,7 @@ class GraphicalEditorController(ExtendedController):
         :param info:
         :param time:
         """
-        ### Hier wird das object bei drag and drop mit der maus bewegt/angeglichen
-        logger.info(f"[GraphicalEditorController]------> on_drag_data_received executed!<------")
+
         state_id_insert = data.get_text()
         parent_m = self.model.selection.get_selected_state()
         if not isinstance(parent_m, ContainerStateModel):
@@ -290,7 +289,7 @@ class GraphicalEditorController(ExtendedController):
 
         :param StateView | ConnectionView | PortView item: The item to be moved into the viewport
         """
-        logger.debug("[GraphicalEditorController]:-------> item is moved into viewport <--------")
+        
         if not item:
             return
         HORIZONTAL = 0

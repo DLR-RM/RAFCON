@@ -65,7 +65,7 @@ class ToolChain(gaphas.tool.ToolChain):
 
 
 class AutoscrollMixin:
-    """ mixin class to add autoscroll to agaphas tool.
+    """ mixin class to add autoscroll to a gaphas tool.
     When an item or handle is dragged against the border of the graphical editor,
     the view is scrolled in that direction. The dragged item follows the curser.
 
@@ -73,7 +73,7 @@ class AutoscrollMixin:
     relies on the following attributes provided by the base classes.
         * ``self.view``             - the GtkView object on which the tool operates on
         * ``self._movable_items``   - InMotion objects, which are set by the ItemTool
-        * ``self.motion_handle``    - HanldeInMotion object. which is set by the HandleTool
+        * ``self.motion_handle``    - HandleInMotion object. which is set by the HandleTool
     Call ``self.__init_mixin__()`` in the tool`s ``__init__`` and
     ``self.handle_autoscroll(event.x, event.y)`` in the ``on_motion_notify`` event class
     of the gaphas tool
@@ -930,8 +930,6 @@ class ConnectionModificationTool(ConnectionTool):
             self._disconnect_temporarily(self._start_port_v, target=modify_target)
             self.grab_handle(self._connection_v, self._end_handle)
             self._set_motion_handle(event)
-
-        logger.info(f"[ConnectionModificationTool] -------> ConnectionModificationTool active <-----")
 
         last_sink = self._current_sink
         self._current_sink = self.motion_handle.move((event.x, event.y))
