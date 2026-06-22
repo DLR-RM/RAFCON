@@ -112,11 +112,11 @@ class AutoscrollMixin:
         height = self.view.get_allocated_height()  
 
         left_border_hit = x < self._margin
-        right_border_hit = x > width - self._margin
         top_border_hit = y < self._margin
+        right_border_hit = x > width - self._margin
         bottom_border_hit = y > height - self._margin
         
-        return right_border_hit, left_border_hit, bottom_border_hit, top_border_hit
+        return left_border_hit, top_border_hit, right_border_hit, bottom_border_hit
 
 
     def _scroll_view(self, dx: float, dy: float) -> None:
@@ -136,8 +136,8 @@ class AutoscrollMixin:
         x, y = self._last_event_pos
         scroll_directions = self._should_autoscroll(self._last_event_pos[0],
                                                     self._last_event_pos[1])
-        dx = (scroll_directions[0]-scroll_directions[1]) * self._speed
-        dy = (scroll_directions[2]-scroll_directions[3]) * self._speed
+        dx = (scroll_directions[2]-scroll_directions[0]) * self._speed
+        dy = (scroll_directions[3]-scroll_directions[1]) * self._speed
 
         offset_x= x + dx
         offset_y = y + dy
