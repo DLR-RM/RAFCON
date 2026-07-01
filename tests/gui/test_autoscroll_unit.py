@@ -8,7 +8,7 @@ gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
 
 from tests import utils as testing_utils
-
+from tests.utils import call_gui_callback, wait_for_gui
 
 # --------------- unit tests --------------------    
 def _make_view(width=800, height=600):
@@ -149,6 +149,3 @@ def test_on_autoscroll_stops_when_not_dragging(monkeypatch):
     tool = _make_dummy_tool(_make_view())
     tool._last_event_pos = (795, 300)
     assert tool._on_autoscroll() is False           # not dragging -> returns False and exit
-
-
-# ----------- intergration tests ----------------
