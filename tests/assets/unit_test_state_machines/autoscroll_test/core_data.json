@@ -8,14 +8,6 @@
             "from_state": "FQNEQG", 
             "to_key": 0, 
             "to_state": "PHVUSJ"
-        }, 
-        "3": {
-            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
-            "data_flow_id": 3, 
-            "from_key": 1, 
-            "from_state": "PHVUSJ", 
-            "to_key": 0, 
-            "to_state": "GLNOWX"
         }
     }, 
     "description": null, 
