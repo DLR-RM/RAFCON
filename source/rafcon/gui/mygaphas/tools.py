@@ -85,7 +85,7 @@ class AutoscrollMixin:
         self._last_frame_time = 0
         self._last_event_pos = (0, 0)
         self._margin = 30  # px distance to border to trigger autoscroll
-        self._speed = 15   # px scrolled distance per timer tick
+        self._speed = global_gui_config.get_config_value("GRAPHAS_EDITOR_AUTOSCROLL_SPEED", 200)  # px scrolled per second
 
 
     def handle_autoscroll(self,x: float, y: float) -> None:
