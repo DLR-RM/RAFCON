@@ -78,23 +78,24 @@ class AutoscrollMixin:
     ``self.handle_autoscroll(event.x, event.y)`` in the ``on_motion_notify`` event class
     of the gaphas tool
     """
-    _SCROLL_INTERVALL = 50
+    _NOMINAL_FRAME_DT = 1.0 / 60.0   # seed dt for the first frame of a autoscroll cycle (assume 60fps)
 
     def __init_mixin__(self) -> None:
-        self._scroll_timeout_id = 0
+        self._scroll_tick_id = 0
+        self._last_frame_time = 0
         self._last_event_pos = (0, 0)
         self._margin = 30  # px distance to border to trigger autoscroll
         self._speed = 15   # px scrolled distance per timer tick
 
 
-    def handle_autoscroll(self, x: float, y: float) -> None:
+    def handle_autoscroll(self,x: float, y: float) -> None:
         '''Start or stop autoscrolling based on the current curser position'''
         self._last_event_pos = (x, y)
         if self._is_dragging() and any(self._should_autoscroll(x, y)):
-            if not self._scroll_timeout_id:
-                self._scroll_timeout_id = GObject.timeout_add(self._SCROLL_INTERVALL,
-                                                              self._on_autoscroll)
-        else:
+            if not self._scroll_tick_id:
+                self._last_frame_time = 0
+                self._scroll_tick_id = self.view.add_tick_callback(self._on_autoscroll)
+        elif self._scroll_tick_id:
             self._stop_autoscroll()
 
 
@@ -109,13 +110,13 @@ class AutoscrollMixin:
         -> returns (right, left, bottom, top) boolean for hit borders.
         '''
         width = self.view.get_allocated_width()
-        height = self.view.get_allocated_height()  
+        height = self.view.get_allocated_height()
 
         left_border_hit = x < self._margin
         top_border_hit = y < self._margin
         right_border_hit = x > width - self._margin
         bottom_border_hit = y > height - self._margin
-        
+
         return left_border_hit, top_border_hit, right_border_hit, bottom_border_hit
 
 
@@ -127,56 +128,70 @@ class AutoscrollMixin:
         v_adj.set_value(v_adj.get_value() + dy)
 
 
-    def _on_autoscroll(self) -> bool:
-        '''Timer callback: scroll the view and drags item(s) along.'''
+    def _on_autoscroll(self, widget, frame_clock) -> bool:
+        '''Frame clock callback: scroll the view and drags item(s) along - fires one per rendered frame'''
         if not self._is_dragging():
             self._stop_autoscroll()
             return False
-        
+
+        '''GdkFrameClock returns the timestamp of current frame in microseconds. We use it to calculate
+        the time difference between the previous frame and the current frame to encounter different rendering times 
+        and ensure constant scrolling behavior with different resolutions of the screens.'''
+        now = frame_clock.get_frame_time()
+        if self._last_frame_time:
+            dt = (now - self._last_frame_time) / 1_000_000.0
+        else:
+            dt = self._NOMINAL_FRAME_DT
+        self._last_frame_time = now
+        step = self._speed * min(dt, 1.0 / 30.0)  # cap to encounter unforseen frame-clock behavior leading to big jumps
+
         x, y = self._last_event_pos
+        zoom = self.view.matrix[0]
         scroll_directions = self._should_autoscroll(self._last_event_pos[0],
                                                     self._last_event_pos[1])
-        dx = (scroll_directions[2]-scroll_directions[0]) * self._speed
-        dy = (scroll_directions[3]-scroll_directions[1]) * self._speed
+        dx = (scroll_directions[2]-scroll_directions[0]) * step*zoom
+        dy = (scroll_directions[3]-scroll_directions[1]) * step*zoom
 
         offset_x= x + dx
         offset_y = y + dy
 
         if dx or dy:
             self._scroll_view(dx, dy)
-
-            if getattr(self, '_movable_items', None):     
+            if getattr(self, '_movable_items', None):
                 for inmotion in self._movable_items:
                     if inmotion.item.parent:
                         parent_border_left = parent_border_top = inmotion.item.parent.border_width
-                        parent_border_right = inmotion.item.parent.width - (inmotion.item.width + inmotion.item.parent.border_width)
-                        parent_border_bottom = inmotion.item.parent.height - (inmotion.item.height + inmotion.item.parent.border_width)
+                        parent_border_right = inmotion.item.parent.width - \
+                            (inmotion.item.width + inmotion.item.parent.border_width)
+                        parent_border_bottom = inmotion.item.parent.height - \
+                            (inmotion.item.height + inmotion.item.parent.border_width)
 
                         rel_x, rel_y = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
                                                             inmotion.item.handles()[NW])
-
                         #check to stop if parent borders are hit
                         if rel_x in (parent_border_left, parent_border_right) or \
                            rel_y in (parent_border_top, parent_border_bottom):
                             self._stop_autoscroll()
-                            return True
-                    
-                    # *2 factor multiplication to compensate for the shifted view coordinates
-                    # the view already shifted here, to keep the item also aligned with the cursor
-                    # while shifting, we need to add the delta a 2nd time
+                            return False
+
+                    '''*2 factor multiplication to compensate for the shifted view coordinates.
+                    The view already shifted here, to keep the item also aligned with the cursor
+                    while shifting, we need to add the delta a 2nd time'''
                     inmotion.move((x+2*dx, y+2*dy))
                     inmotion.last_x = offset_x
                     inmotion.last_y = offset_y
 
             elif getattr(self, 'motion_handle', None):
                 self.motion_handle.move((offset_x, offset_y))
-            
-        return True
+            return True
+        else:
+            self._stop_autoscroll()
+            return False
 
     def _stop_autoscroll(self) -> None:
-        if self._scroll_timeout_id:
-            GObject.source_remove(self._scroll_timeout_id)
-            self._scroll_timeout_id = 0
+        if self._scroll_tick_id:
+            self.view.remove_tick_callback(self._scroll_tick_id)
+            self._scroll_tick_id = 0
 
 
 class PanTool(gaphas.tool.PanTool):
@@ -186,7 +201,8 @@ class PanTool(gaphas.tool.PanTool):
 
     def on_scroll(self, event):
         ctrl_key_pressed = bool(event.get_state()[1] & Gdk.ModifierType.CONTROL_MASK)
-        if (self.zoom_with_control and ctrl_key_pressed) or (not self.zoom_with_control and not ctrl_key_pressed):
+        if (self.zoom_with_control and ctrl_key_pressed) or \
+            (not self.zoom_with_control and not ctrl_key_pressed):
             return False
         return super(PanTool, self).on_scroll(event)
 
