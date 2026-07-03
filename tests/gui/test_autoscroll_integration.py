@@ -178,7 +178,7 @@ def _item_drag_into_autoscroll_and_stop(gui, view, state_v, monkeypatch, stop_co
         gui(tool.on_motion_notify, move_event)
         testing_utils.wait_for_gui()
         assert tool._is_dragging(), "item drag did not start"
-        if tool._scroll_timeout_id > 0:
+        if tool._scroll_tick_id > 0:
             break
     if stop_condition == "BUTTON_RELEASE":
         stop_event = _make_event(Gdk.EventType.BUTTON_RELEASE, move_event.x, move_event.y)
@@ -225,7 +225,7 @@ def _handle_drag_into_autoscroll_and_stop(gui, view, state_v, monkeypatch, stop_
         gui(tool.on_motion_notify, move_event)
         testing_utils.wait_for_gui()
         assert tool._is_dragging(), "item drag did not start"
-        if tool._scroll_timeout_id > 0:
+        if tool._scroll_tick_id > 0:
             break
     if stop_condition == "BUTTON_RELEASE":
         stop_event = _make_event(Gdk.EventType.BUTTON_RELEASE, move_event.x, move_event.y)
@@ -270,7 +270,7 @@ def _connection_drag_into_autoscroll_and_stop(gui, view, state_v, monkeypatch, s
         gui(tool.on_motion_notify, move_event)
         testing_utils.wait_for_gui()
         assert tool._is_dragging(), "item drag did not start"
-        if tool._scroll_timeout_id > 0:
+        if tool._scroll_tick_id > 0:
             break
     if stop_condition == "BUTTON_RELEASE":
         stop_event = _make_event(Gdk.EventType.BUTTON_RELEASE, move_event.x, move_event.y)
