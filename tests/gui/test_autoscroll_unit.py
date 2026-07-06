@@ -2,8 +2,8 @@ import pytest
 from unittest.mock import MagicMock
 
 import gi
-gi.require_version('Gdk', '3.0')
-gi.require_version('Gtk', '3.0')
+gi.require_version('Gdk', '4.0')
+gi.require_version('Gtk', '4.0')
 
 # --------------- unit tests --------------------    
 def _make_view(width=800, height=600):

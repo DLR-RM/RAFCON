@@ -62,7 +62,7 @@ def test_gui_open_folder(monkeypatch):
     print("execute test_gui_open_folder")
     import rafcon.gui.interface as gui_interface
     import gi
-    gi.require_version('Gtk', '3.0')
+    gi.require_version('Gtk', '4.0')
     from gi.repository import Gtk
 
     class PatchedFileChooserDialog(Gtk.FileChooserDialog):
@@ -101,7 +101,7 @@ def test_gui_create_folder(monkeypatch):
     print("execute test_gui_create_folder")
     import rafcon.gui.interface as gui_interface
     import gi
-    gi.require_version('Gtk', '3.0')
+    gi.require_version('Gtk', '4.0')
     from gi.repository import Gtk
 
     class PatchedFileChooserDialog(Gtk.FileChooserDialog):

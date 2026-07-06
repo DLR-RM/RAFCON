@@ -17,7 +17,7 @@ class View:
             self._builder.add_from_file(builder_filename)
             for widget in self._builder.get_objects():
                 if isinstance(widget, Gtk.Buildable):
-                    self._widgets[Gtk.Buildable.get_name(widget)] = widget
+                    self._widgets[Gtk.Buildable.get_buildable_id(widget)] = widget
 
     def __getitem__(self, key):
         if key in self._widgets:
@@ -44,19 +44,23 @@ class View:
         Shows the parent widget
         """
 
-        self.get_parent_widget().show_all()
+        self.get_parent_widget().set_visible(True)
 
     def hide(self):
         """
         Hides the parent widget
         """
 
-        self.get_parent_widget().hide()
+        self.get_parent_widget().set_visible(False)
 
     def connect_signals(self, callbacks):
         """
         Connects the signals of the widgets to the custom callbacks
+
+        GTK4 removed Gtk.Builder.connect_signals(); signal handlers must be supplied as a builder scope
+        object at parse time instead. No view uses this mechanism anymore.
         """
 
-        if self._builder is not None:
-            self._builder.connect_signals(callbacks)
+        raise NotImplementedError(
+            "Gtk.Builder.connect_signals() was removed in GTK4 — pass a scope object to Gtk.Builder "
+            "and declare handlers in the .ui file, or connect signals explicitly in the controller.")

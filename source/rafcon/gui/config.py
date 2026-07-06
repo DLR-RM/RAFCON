@@ -108,7 +108,8 @@ class GuiConfig(ObservableConfig):
         self.colors = defaultdict(lambda: "#FFFFFF")
         try:
             from gi.repository import Gdk
-            self.gtk_colors = defaultdict(lambda: Gdk.RGBA(0, 0, 0).to_color())
+            # GTK4 removed Gdk.Color; colors are kept as Gdk.RGBA
+            self.gtk_colors = defaultdict(lambda: Gdk.RGBA(red=0, green=0, blue=0, alpha=1))
         except ImportError:
             self.gtk_colors = defaultdict(lambda: None)
             return
@@ -138,7 +139,7 @@ class GuiConfig(ObservableConfig):
                 self.colors[color_name] = color_code
                 gtk_color = Gdk.RGBA()
                 if gtk_color.parse(color_code):
-                    self.gtk_colors[color_name] = gtk_color.to_color()
+                    self.gtk_colors[color_name] = gtk_color
                 else:
                     self.logger.warning("Could not parse color with name '{}' and code '{}'".format(color_name,
                                                                                                     color_code))
@@ -158,7 +159,7 @@ class GuiConfig(ObservableConfig):
             gtk_color = Gdk.RGBA()
             if color_code.startswith("#"):
                 if gtk_color.parse(color_code):
-                    color = gtk_color.to_color()
+                    color = gtk_color
                 else:
                     self.logger.warning("Could not parse color with name '{}' and code '{}'".format(color_name,
                                                                                                     color_code))

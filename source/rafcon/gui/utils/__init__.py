@@ -13,6 +13,7 @@
 
 
 def wait_for_gui():
-    from gi.repository import Gtk
-    while Gtk.events_pending():
-        Gtk.main_iteration()
+    from gi.repository import GLib
+    context = GLib.MainContext.default()
+    while context.pending():
+        context.iteration(False)

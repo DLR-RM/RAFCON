@@ -869,7 +869,7 @@ def test_simple_model_and_core_destruct_with_gui(gui):
     import rafcon.design_patterns.mvc.controller
     import rafcon.design_patterns.mvc.model
     import gi
-    gi.require_version('Gtk', '3.0')
+    gi.require_version('Gtk', '4.0')
     from gi.repository import Gtk
 
     searched_class = rafcon.gui.models.container_state.ContainerStateModel

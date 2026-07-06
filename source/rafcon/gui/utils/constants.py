@@ -45,9 +45,11 @@ LETTER_SPACING_1PT = "1024"
 LETTER_SPACING_2PT = "2048"
 LETTER_SPACING_3PT = "3072"
 
-MOVE_CURSOR = Gdk.CursorType.FLEUR
-SELECT_CURSOR = Gdk.CursorType.HAND1
-CREATION_CURSOR = Gdk.CursorType.CROSS
+# GTK4 removed Gdk.CursorType; cursors are referenced by CSS name (Gdk.Cursor.new_from_name /
+# Gtk.Widget.set_cursor_from_name)
+MOVE_CURSOR = "move"
+SELECT_CURSOR = "pointer"
+CREATION_CURSOR = "crosshair"
 
 KEYVALUE_CTRL_L = 65507
 KEYVALUE_CTRL_R = 65508

@@ -13,9 +13,10 @@ import rafcon.gui.interface
 
 try:
     import gi
-    gi.require_version('Gtk', '3.0')
+    gi.require_version('Gtk', '4.0')
+    gi.require_version('Gdk', '4.0')
     gi.require_version('PangoCairo', '1.0')
-    gi.require_version('GtkSource', '3.0')
+    gi.require_version('GtkSource', '5')
 except (ImportError, ValueError) as e:
     from rafcon.utils import log
     logger = log.get_logger(__name__)

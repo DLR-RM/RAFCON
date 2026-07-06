@@ -53,7 +53,7 @@ from rafcon.utils.i18n import setup_l10n
 from rafcon.utils import resources, log, profiling
 
 from gi.repository import Gtk
-from gi.repository import Gdk
+from gi.repository import Gio
 from gi.repository import GLib
 
 
@@ -116,11 +116,11 @@ def setup_gtkmvc3_logger():
 
 
 def install_reactor():
-    from twisted.internet import gtk3reactor
+    from twisted.internet import gireactor
     from twisted.internet.error import ReactorAlreadyInstalledError
     try:
         # needed for GLib.idle_add, and signals
-        gtk3reactor.install()
+        gireactor.install()
     except ReactorAlreadyInstalledError:
         pass
 
@@ -259,13 +259,23 @@ def setup_gui():
     # Create the GUI-View
     main_window_view = MainWindowView()
 
-    # set the gravity of the main window controller to static to ignore window manager decorations and get
-    # a correct position of the main window on the screen (else there are offsets for some window managers)
-    main_window_view.get_parent_widget().set_gravity(Gdk.Gravity.STATIC)
-
     sm_manager_model = gui_singletons.state_machine_manager_model
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
     return main_window_controller
+
+
+gtk_app = None
+
+
+def _on_gtk_app_activate(app):
+    # The main window is created before the application runs (in setup_gui); adding it to the application
+    # keeps the application alive until the window is destroyed
+    main_window_controller = gui_singletons.main_window_controller
+    main_window = main_window_controller.view.get_parent_widget() if main_window_controller else None
+    if isinstance(main_window, Gtk.Window):
+        app.add_window(main_window)
+    else:
+        app.hold()
 
 
 def start_gtk():
@@ -276,7 +286,13 @@ def start_gtk():
         is_main_thread = isinstance(threading.current_thread(), threading._MainThread)
         reactor.run(installSignalHandlers=is_main_thread)
     else:
-        Gtk.main()
+        global gtk_app
+        gtk_app = Gtk.Application(application_id='de.dlr.rafcon', flags=Gio.ApplicationFlags.NON_UNIQUE)
+        gtk_app.connect('activate', _on_gtk_app_activate)
+        try:
+            gtk_app.run(None)
+        finally:
+            gtk_app = None
 
 
 def stop_gtk():
@@ -286,11 +302,11 @@ def stop_gtk():
         if reactor.running:
             reactor.callFromThread(reactor.stop)
         # Twisted can be imported without the reactor being used
-        # => check if GTK main loop is running
-        elif Gtk.main_level() > 0:
-            GLib.idle_add(Gtk.main_quit)
-    else:
-        GLib.idle_add(Gtk.main_quit)
+        # => check if the GTK application is running
+        elif gtk_app is not None:
+            GLib.idle_add(gtk_app.quit)
+    elif gtk_app is not None:
+        GLib.idle_add(gtk_app.quit)
 
     # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
     wait_for_gui()
@@ -373,16 +389,39 @@ def register_signal_handlers(callback):
         GLib.idle_add(install_glib_handler, signal_code, priority=GLib.PRIORITY_HIGH)
 
 
+class NoOpSplashScreen:
+    """Placeholder until the splash screen is ported to GTK4 (Stage 2 of the migration)"""
+
+    def set_text(self, text):
+        logger.info(text)
+
+    def rotate_image(self, random_=True):
+        pass
+
+    def destroy(self):
+        pass
+
+
 def create_splash_screen():
     splash_screen_width = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_WIDTH", 530)
     splash_screen_height = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_HEIGHT", 350)
-    splash_screen = SplashScreen(contains_image=True, width=splash_screen_width, height=splash_screen_height)
-    splash_screen.rotate_image(random_=True)
+    try:
+        splash_screen = SplashScreen(contains_image=True, width=splash_screen_width, height=splash_screen_height)
+        splash_screen.rotate_image(random_=True)
+    except Exception as e:
+        logger.warning("Splash screen not available (pending GTK4 port): {}".format(e))
+        splash_screen = NoOpSplashScreen()
     splash_screen.set_text(_("Starting RAFCON..."))
     return splash_screen
 
 
 def main():
+    # gaphas 5 schedules view updates as asyncio tasks on the GLib main loop, so the GLib event loop
+    # policy must be installed before any GTK/gaphas code runs
+    import asyncio
+    import gi.events
+    asyncio.set_event_loop_policy(gi.events.GLibEventLoopPolicy())
+
     # Setup Pango warning filter for Ubuntu systems
     from rafcon.gui.utils.warning_filters import setup_pango_warning_filter
     setup_pango_warning_filter()
@@ -415,8 +454,7 @@ def main():
                             user_input.gui_config_path, user_input.design_config_path)
 
     splash_screen = create_splash_screen()
-    while Gtk.events_pending():
-        Gtk.main_iteration()
+    wait_for_gui()
 
     splash_screen.set_text("Install missing resources ...")
     setup_installation()

@@ -303,8 +303,8 @@ def wait_for_gui():
 
 def run_gui_thread(gui_config=None, runtime_config=None):
     import gi
-    gi.require_version("Gtk", "3.0")
-    gi.require_version("Gdk", "3.0")
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Gdk", "4.0")
 
     from gi.repository import GLib
     from gi.repository import Gdk
