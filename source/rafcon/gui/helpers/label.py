@@ -79,16 +79,34 @@ def set_icon_and_text_box_of_menu_item(menu_item, uni_code):
 
 def create_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=(),
                      accel_code=None, accel_group=None):
-    raise NotImplementedError(_MENU_WIDGETS_REMOVED)
+    """Creates a context menu entry description
+
+    GTK4 removed Gtk.MenuItem; entries are ContextMenuItem descriptions appended to a
+    :class:`rafcon.gui.utils.context_menu.ContextMenu`. The icon and accelerator arguments
+    are accepted for call-site compatibility, but GMenu-rendered popovers show neither
+    FontAwesome icon boxes nor foreign accelerator hints.
+    """
+    from rafcon.gui.utils.context_menu import ContextMenuItem
+    return ContextMenuItem(label_text, callback, callback_args)
 
 
 def create_check_menu_item(label_text="", is_active=False, callback=None, callback_args=(), is_sensitive=True,
                            accel_code=None, accel_group=None):
-    raise NotImplementedError(_MENU_WIDGETS_REMOVED)
+    """Creates a checkable context menu entry description (see create_menu_item)"""
+    from rafcon.gui.utils.context_menu import ContextMenuItem
+    item = ContextMenuItem(label_text, callback, callback_args, checked=bool(is_active))
+    item.set_sensitive(is_sensitive)
+    return item
 
 
 def append_sub_menu_to_parent_menu(name, parent_menu, icon_code=None):
-    raise NotImplementedError(_MENU_WIDGETS_REMOVED)
+    """Appends a sub menu to a ContextMenu and returns (sub menu entry, sub menu)
+
+    The first return value was the Gtk.MenuItem in GTK3; the controllers only keep it around,
+    so the nested ContextMenu is returned in both positions.
+    """
+    sub_menu = parent_menu.add_submenu(name)
+    return sub_menu, sub_menu
 
 
 def create_widget_title(title, widget_name=None):

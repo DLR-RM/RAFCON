@@ -85,11 +85,17 @@ class SourceEditorView(EditorView):
             key_controller.connect("key-pressed", self.on_text_view_event)
             self.textview.add_controller(key_controller)
 
-    def on_draw(self, widget, event):
+    def on_size_changed(self, widget, param=None):
+        """Adapts the spacer width to the available width of the container
+
+        GTK4 removed the draw signal (with its cairo clip extents); the container width is
+        read directly instead.
+        """
         if self.run_with_spacer:
+            available_width = widget.get_width()
             right_bar_width_of_all = self.button_container_min_width + self.tab_width + self.line_numbers_width
-            if right_bar_width_of_all > event.clip_extents()[2]:
-                spacer_width = right_bar_width_of_all - event.clip_extents()[2]
+            if available_width and right_bar_width_of_all > available_width:
+                spacer_width = right_bar_width_of_all - available_width
                 self.spacer_frame.set_size_request(width=spacer_width, height=-1)
             else:
                 self.spacer_frame.set_size_request(width=-1, height=-1)

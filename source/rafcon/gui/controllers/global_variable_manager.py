@@ -74,7 +74,10 @@ class GlobalVariableManagerController(ListViewController):
         view['value_text'].set_property('editable', True)
         view['type_text'].set_property('editable', True)
 
-        self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
+        # GTK4: key events come from an event controller instead of widget signals
+        key_controller = Gtk.EventControllerKey()
+        key_controller.connect('key-pressed', self._on_tree_view_key_pressed)
+        self.tree_view.add_controller(key_controller)
         self._apply_value_on_edited_and_focus_out(view['name_text'], self.apply_new_global_variable_name)
         self._apply_value_on_edited_and_focus_out(view['value_text'], self.apply_new_global_variable_value)
         self._apply_value_on_edited_and_focus_out(view['type_text'], self.apply_new_global_variable_type)

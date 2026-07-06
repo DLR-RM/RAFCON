@@ -38,64 +38,35 @@ class StateIconController(ExtendedController):
 
         self.shortcut_manager = shortcut_manager
 
-        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, None, Gdk.DragAction.COPY)
-        view.drag_source_add_text_targets()
+        # GTK4 TODO (Stage 4): re-enable dragging state icons onto the graphical editor via
+        # Gtk.DragSource/Gtk.DropTarget once the gaphas canvas is ported
 
     def register_view(self, view):
         super(StateIconController, self).register_view(view)
-        self.view.connect("drag-data-get", self.on_drag_data_get)
-        self.view.connect("drag-begin", self.on_drag_begin)
-        self.view.connect("drag-end", self.on_drag_end)
-        self.view.connect("button-release-event", self.on_mouse_click)
-        self.view.connect("motion-notify-event", self.on_mouse_motion)
+        # GTK4: pointer events come from event controllers/gestures
+        release_gesture = Gtk.GestureClick()
+        release_gesture.connect("released", self.on_mouse_click)
+        self.view.add_controller(release_gesture)
+        motion_controller = Gtk.EventControllerMotion()
+        motion_controller.connect("motion", self.on_mouse_motion)
+        self.view.add_controller(motion_controller)
 
-    def on_drag_data_get(self, widget, context, data, info, time):
-        """dragged state is inserted and its state_id sent to the receiver
-
-        :param widget:
-        :param context:
-        :param data: SelectionData: contains state_id
-        :param info:
-        :param time:
-        """
-        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-        state = self._get_state()
-        gui_helper_state_machine.add_state_by_drag_and_drop(state, data)
-
-    def on_drag_begin(self, widget, context):
-        """replace drag icon
-
-        :param widget:
-        :param context:
-        """
-        pass
-
-    def on_drag_end(self, widget, context):
-        """if the drag is finished, all icons are unselected
-
-        :param widget:
-        :param context:
-        """
-        self.view.unselect_all()
-
-    def on_mouse_click(self, widget, event):
+    def on_mouse_click(self, gesture, n_press, x, y):
         """state insertion on mouse click
 
-        :param widget:
-        :param Gdk.Event event: mouse click event
+        :param Gtk.GestureClick gesture: click gesture of the icon view
         """
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-        if self.view.get_path_at_pos(int(event.x), int(event.y)) is not None \
+        if self.view.get_path_at_pos(int(x), int(y)) is not None \
                 and len(self.view.get_selected_items()) > 0:
             return gui_helper_state_machine.insert_state_into_selected_state(self._get_state(), False)
 
-    def on_mouse_motion(self, widget, event):
+    def on_mouse_motion(self, motion_controller, x, y):
         """selection on mouse over
 
-        :param widget:
-        :param Gdk.Event event: mouse motion event
+        :param Gtk.EventControllerMotion motion_controller: motion controller of the icon view
         """
-        path = self.view.get_path_at_pos(int(event.x), int(event.y))
+        path = self.view.get_path_at_pos(int(x), int(y))
         if path is not None:
             self.view.select_path(path)
         else:

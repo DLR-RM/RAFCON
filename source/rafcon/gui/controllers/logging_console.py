@@ -9,11 +9,10 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio
 import threading
 
 from rafcon.gui.utils import wait_for_gui, constants
-from rafcon.gui.helpers.label import create_menu_item
 from rafcon.gui.models.config_model import ConfigModel
 from rafcon.gui.views.logging_console import LoggingConsoleView
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -40,7 +39,7 @@ class LoggingConsoleController(ExtendedController):
 
     def register_view(self, view):
         super(LoggingConsoleController, self).register_view(view)
-        view.text_view.connect('populate_popup', self.add_clear_menu_item)
+        self.add_clear_menu_item(view.text_view)
         self.view.set_enables(self._enables)
         self.update_filtered_buffer()
 
@@ -85,11 +84,19 @@ class LoggingConsoleController(ExtendedController):
         self._log_entries = []
         self.print_filtered_buffer()
 
-    def add_clear_menu_item(self, widget, menu):
-        clear_item = create_menu_item("Clear Logging View", constants.BUTTON_DEL, callback=self._clear_buffer)
-        menu.append(Gtk.SeparatorMenuItem())
-        menu.append(clear_item)
-        menu.show_all()
+    def add_clear_menu_item(self, text_view):
+        """Extends the text view context menu with a clear entry
+
+        GTK4 replaced the populate-popup signal with the extra-menu model property.
+        """
+        action_group = Gio.SimpleActionGroup()
+        clear_action = Gio.SimpleAction.new('clear', None)
+        clear_action.connect('activate', lambda action, param: self._clear_buffer(text_view))
+        action_group.add_action(clear_action)
+        text_view.insert_action_group('logging-console', action_group)
+        extra_menu = Gio.Menu()
+        extra_menu.append("Clear Logging View", "logging-console.clear")
+        text_view.set_extra_menu(extra_menu)
 
     def _get_config_enables(self):
         keys = ['VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR']

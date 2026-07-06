@@ -39,11 +39,13 @@ class DebugConsoleController(ExtendedController):
                                                               view.logging_console_view)
         self.add_controller('logging_console_controller', logging_console_controller)
 
-        view['debug_console_button_hbox'].reorder_child(view['button_show_error'], 0)
-        view['debug_console_button_hbox'].reorder_child(view['button_show_warning'], 1)
-        view['debug_console_button_hbox'].reorder_child(view['button_show_info'], 2)
-        view['debug_console_button_hbox'].reorder_child(view['button_show_debug'], 3)
-        view['debug_console_button_hbox'].reorder_child(view['button_show_verbose'], 4)
+        # GTK4: Box.reorder_child was replaced by reorder_child_after
+        button_hbox = view['debug_console_button_hbox']
+        button_hbox.reorder_child_after(view['button_show_error'], None)
+        button_hbox.reorder_child_after(view['button_show_warning'], view['button_show_error'])
+        button_hbox.reorder_child_after(view['button_show_info'], view['button_show_warning'])
+        button_hbox.reorder_child_after(view['button_show_debug'], view['button_show_info'])
+        button_hbox.reorder_child_after(view['button_show_verbose'], view['button_show_debug'])
 
     def register_view(self, view):
         super(DebugConsoleController, self).register_view(view)

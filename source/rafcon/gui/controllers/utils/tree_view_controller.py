@@ -23,6 +23,42 @@ from rafcon.utils import log
 
 module_logger = log.get_logger(__name__)
 
+# sentinel for double clicks; GTK4 removed Gdk.EventType._2BUTTON_PRESS (no synthesized events)
+DOUBLE_BUTTON_PRESS = object()
+
+
+class KeyEventShim(object):
+    """Minimal stand-in for the Gdk key press event removed in GTK4"""
+
+    class _EventType(object):
+        value_name = "GDK_KEY_PRESS"
+
+    type = _EventType()
+
+    def __init__(self, keyval, state):
+        self.keyval = keyval
+        self.state = state
+
+    def get_state(self):
+        return self.state
+
+
+class ButtonEventShim(object):
+    """Minimal stand-in for the Gdk button press event removed in GTK4"""
+
+    def __init__(self, event_type, x, y, button, state):
+        self.type = event_type
+        self.x = x
+        self.y = y
+        self.button = button
+        self.state = state
+
+    def get_state(self):
+        return self.state
+
+    def get_button(self):
+        return True, self.button
+
 
 class AbstractTreeViewController(ExtendedController):
     """Abstract base class for controller having a Gtk.Tree view with a Gtk.ListStore or a Gtk.TreeStore
@@ -75,11 +111,19 @@ class AbstractTreeViewController(ExtendedController):
         super(AbstractTreeViewController, self).register_view(view)
         self.signal_handlers.append((self._tree_selection,
                                      self._tree_selection.connect('changed', self.selection_changed)))
-        self.tree_view.connect('key-release-event', self.on_key_release_event)
-        self.tree_view.connect('button-release-event', self.tree_view_keypress_callback)
-        self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
+        # GTK4: key events come from an event controller instead of widget signals
+        key_controller = Gtk.EventControllerKey()
+        key_controller.connect('key-pressed', self._on_tree_view_key_pressed)
+        key_controller.connect('key-released', self._on_tree_view_key_released)
+        self.tree_view.add_controller(key_controller)
         self._tree_selection.set_mode(Gtk.SelectionMode.MULTIPLE)
         self.update_selection_sm_prior()
+
+    def _on_tree_view_key_pressed(self, controller, keyval, keycode, state):
+        return bool(self.tree_view_keypress_callback(self.tree_view, KeyEventShim(keyval, state)))
+
+    def _on_tree_view_key_released(self, controller, keyval, keycode, state):
+        self.on_key_release_event(self.tree_view, None)
 
     def get_view_selection(self):
         """Get actual tree selection object and all respective models of selected rows"""
@@ -230,26 +274,26 @@ class AbstractTreeViewController(ExtendedController):
             def remove_handler(widget, data_name):
                 """Remove handler from given widget
 
-                :param Gtk.Widget widget: Widget from which a handler is to be removed
-                :param data_name: Name of the data of the widget in which the handler id is stored
+                :param Gtk.Widget widget: Widget on which the (holder, handler id) pair is stored
+                :param data_name: Name of the data of the widget in which the handler is stored
                 """
-                handler_id = getattr(widget, data_name)
-                if widget.handler_is_connected(handler_id):
-                    widget.disconnect(handler_id)
+                holder, handler_id = getattr(widget, data_name)
+                if holder.handler_is_connected(handler_id):
+                    holder.disconnect(handler_id)
 
             editable = getattr(renderer, "editable")
             remove_handler(editable, "focus_out_handler_id")
             remove_handler(editable, "cursor_move_handler_id")
             remove_handler(editable, "insert_at_cursor_handler_id")
-            remove_handler(editable, "entry_widget_expose_event_handler_id")
+            remove_handler(editable, "entry_widget_cursor_notify_handler_id")
             remove_handler(renderer, "editing_cancelled_handler_id")
 
-        def on_focus_out(entry, event):
+        def on_focus_out(focus_controller):
             """Applies the changes to the entry
 
-            :param Gtk.Entry entry: The entry that was focused out
-            :param Gtk.Event event: Event object with information about the event
+            :param Gtk.EventControllerFocus focus_controller: Focus controller of the entry that was focused out
             """
+            entry = focus_controller.get_widget()
             renderer.remove_all_handler(renderer)
             if renderer.ctrl.get_path() is None:
                 return
@@ -278,21 +322,26 @@ class AbstractTreeViewController(ExtendedController):
                                               use_align=False)
 
             editing_cancelled_handler_id = renderer.connect('editing-canceled', on_editing_canceled)
-            focus_out_handler_id = editable.connect('focus-out-event', on_focus_out)
+            # GTK4: focus-out-event is replaced by an event controller, the draw signal (used to
+            # follow the cursor with the scrollbar) by cursor-position notifications
+            focus_controller = Gtk.EventControllerFocus()
+            focus_out_handler_id = focus_controller.connect('leave', on_focus_out)
+            editable.add_controller(focus_controller)
             cursor_move_handler_id = editable.connect('move-cursor', on_cursor_move_in_entry_widget)
             insert_at_cursor_handler_id = editable.connect("insert-at-cursor", on_cursor_move_in_entry_widget)
-            entry_widget_expose_event_handler_id = editable.connect("draw", self.on_entry_widget_draw_event)
+            cursor_notify_handler_id = editable.connect("notify::cursor-position",
+                                                        self.on_entry_widget_cursor_position_changed)
             # Store reference to editable and signal handler ids for later access when removing the handlers
             # see https://gitlab.gnome.org/GNOME/accerciser/commit/036689e70304a9e98ce31238dfad2432ad4c78ea
             # originally with renderer.set_data()
             # renderer.set_data("editable", editable)
             setattr(renderer, "editable", editable)
-            setattr(renderer, "editing_cancelled_handler_id", editing_cancelled_handler_id)
-            # editable
-            setattr(editable, "focus_out_handler_id", focus_out_handler_id)
-            setattr(editable, "cursor_move_handler_id", cursor_move_handler_id)
-            setattr(editable, "insert_at_cursor_handler_id", insert_at_cursor_handler_id)
-            setattr(editable, "entry_widget_expose_event_handler_id", entry_widget_expose_event_handler_id)
+            setattr(renderer, "editing_cancelled_handler_id", (renderer, editing_cancelled_handler_id))
+            # editable; handlers are stored as (holder, handler_id) pairs
+            setattr(editable, "focus_out_handler_id", (focus_controller, focus_out_handler_id))
+            setattr(editable, "cursor_move_handler_id", (editable, cursor_move_handler_id))
+            setattr(editable, "insert_at_cursor_handler_id", (editable, insert_at_cursor_handler_id))
+            setattr(editable, "entry_widget_cursor_notify_handler_id", (editable, cursor_notify_handler_id))
             ctrl.active_entry_widget = editable
 
         def on_edited(renderer, path, new_value_str):
@@ -353,13 +402,15 @@ class AbstractTreeViewController(ExtendedController):
             # entry_widget_text_length must be greater than zero otherwise DevisionByZero Exception
             if horizontal_scroll_bar is not None and float(entry_widget_text_length) > 0:
                 adjustment = horizontal_scroll_bar.get_adjustment()
-                layout_pixel_width = widget.get_layout().get_pixel_size()[0]
+                # GTK4 removed Gtk.Entry.get_layout; a fresh pango layout of the text approximates the width
+                layout_pixel_width = widget.create_pango_layout(widget.get_text()).get_pixel_size()[0]
                 rel_pos = cell_rect_of_entry_widget.x - entry_widget_scroll_offset + \
                     int(layout_pixel_width*float(entry_widget_cursor_position)/float(entry_widget_text_length))
 
                 # optimize rel_pos for better user support
-                bounds = widget.get_selection_bounds()
-                if bounds and bounds[1] - bounds[0] == len(widget.get_text()):
+                # GTK4 returns (has_selection, start, end) instead of an empty/filled tuple
+                has_selection, bound_start, bound_end = widget.get_selection_bounds()
+                if has_selection and bound_end - bound_start == len(widget.get_text()):
                     # if text is fully selected stay in front as far as possible
                     rel_pos = cell_rect_of_entry_widget.x
                     if self._horizontal_scrollbar_stay_in_front_if_possible():
@@ -367,7 +418,7 @@ class AbstractTreeViewController(ExtendedController):
                 else:
                     # try to stay long at the beginning of the columns if the columns fully fit in
                     rel_space = adjustment.get_page_size() - cell_rect_of_entry_widget.x
-                    if cell_rect_of_entry_widget.x + widget.get_layout().get_pixel_size()[0] < \
+                    if cell_rect_of_entry_widget.x + layout_pixel_width < \
                             adjustment.get_page_size():
                         rel_pos = 0.
                     elif rel_space and rel_pos <= rel_space:
@@ -399,11 +450,10 @@ class AbstractTreeViewController(ExtendedController):
     def on_key_release_event(self, widget, event):
         self.expose_event_count_after_key_release = 0
 
-    def on_entry_widget_draw_event(self, widget, event):
-        # take three signals because sometimes expose events come before cursor is set
-        if self.expose_event_count_after_key_release < 3:
-            AbstractTreeViewController.tree_view_keypress_callback(self, widget, event)
-        self.expose_event_count_after_key_release += 1
+    def on_entry_widget_cursor_position_changed(self, widget, param):
+        # adjust the scrollbar whenever the cursor inside the entry moves
+        # (replaces the GTK3 hack of watching the first draw/expose events after a key release)
+        AbstractTreeViewController.tree_view_keypress_callback(self, widget, None)
 
 
 class ListViewController(AbstractTreeViewController):
@@ -429,7 +479,21 @@ class ListViewController(AbstractTreeViewController):
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
         super(ListViewController, self).register_view(view)
-        self.tree_view.connect('button_press_event', self.mouse_click)
+        # GTK4: button events come from a click gesture; button 0 listens to all buttons
+        click_gesture = Gtk.GestureClick()
+        click_gesture.set_button(0)
+        click_gesture.connect('pressed', self._on_tree_view_button_pressed)
+        self.tree_view.add_controller(click_gesture)
+
+    def _on_tree_view_button_pressed(self, gesture, n_press, x, y):
+        """Translates a click gesture into the former Gdk button press event handling"""
+        event_type = DOUBLE_BUTTON_PRESS if n_press == 2 else Gdk.EventType.BUTTON_PRESS
+        bin_x, bin_y = self.tree_view.convert_widget_to_bin_window_coords(int(x), int(y))
+        event = ButtonEventShim(event_type, bin_x, bin_y, gesture.get_current_button(),
+                                gesture.get_current_event_state())
+        if self.mouse_click(self.tree_view, event):
+            # suppress the default tree view click handling (GTK3: returning True from the handler)
+            gesture.set_state(Gtk.EventSequenceState.CLAIMED)
 
     def on_remove(self, widget, data=None):
         """Removes respective selected core elements and select the next one"""
@@ -524,7 +588,7 @@ class ListViewController(AbstractTreeViewController):
                     self._tree_selection.select_path(pthinfo[0])
                     return True
 
-        elif event.type == Gdk.EventType._2BUTTON_PRESS:
+        elif event.type is DOUBLE_BUTTON_PRESS:
             self._handle_double_click(event)
 
     def _handle_double_click(self, event):

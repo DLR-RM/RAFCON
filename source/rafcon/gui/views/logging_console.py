@@ -136,7 +136,7 @@ class LoggingConsoleView(View):
         else:
             self._insert( message + "\n")
 
-        if not self.quit_flag and self._enables['CONSOLE_FOLLOW_LOGGING']:
+        if not self.quit_flag and self._enables.get('CONSOLE_FOLLOW_LOGGING', True):
             self.scroll_to_cursor_onscreen()
 
     @staticmethod
@@ -177,7 +177,7 @@ class LoggingConsoleView(View):
         """ Register or un-register signals for follow mode """
         # GTK4 removed the size-allocate signal; growing content is tracked via the vadjustment instead
         vadjustment = self['scrollable'].get_vadjustment()
-        if self._enables['CONSOLE_FOLLOW_LOGGING']:
+        if self._enables.get('CONSOLE_FOLLOW_LOGGING', True):
             if self._auto_scroll_handler_id is None:
                 self._auto_scroll_handler_id = vadjustment.connect("changed", self._auto_scroll)
         else:

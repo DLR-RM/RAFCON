@@ -25,6 +25,8 @@ import os
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import Gio
+from gi.repository import GLib
 from functools import partial
 
 from rafcon.core.singleton import state_machine_manager, library_manager
@@ -78,12 +80,16 @@ class MenuBarController(ExtendedController):
         # of the monitoring plugin
         self.state_machine_execution_engine = sm_execution_engine
         self.full_screen_flag = False
-        self.full_screen_window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
+        self.full_screen_window = Gtk.Window()
         self.sm_notebook = self.main_window_view.state_machines_editor['notebook']
-        self.full_screen_window.add_accel_group(self.shortcut_manager.accel_group)
-        self.main_window_view.right_bar_window.get_parent_widget().add_accel_group(self.shortcut_manager.accel_group)
-        self.main_window_view.left_bar_window.get_parent_widget().add_accel_group(self.shortcut_manager.accel_group)
-        self.main_window_view.console_window.get_parent_widget().add_accel_group(self.shortcut_manager.accel_group)
+        # the Gio.ActionMap the menu actions live in (Gtk.Application or fallback action group)
+        self.action_container = None
+        self._recently_opened_paths = []
+        # GTK4 removed Gtk.AccelGroup; the shortcut manager attaches a shortcut controller per window
+        self.shortcut_manager.add_window(self.full_screen_window)
+        self.shortcut_manager.add_window(self.main_window_view.right_bar_window.get_parent_widget())
+        self.shortcut_manager.add_window(self.main_window_view.left_bar_window.get_parent_widget())
+        self.shortcut_manager.add_window(self.main_window_view.console_window.get_parent_widget())
 
     def destroy(self):
         super(MenuBarController, self).destroy()
@@ -102,23 +108,27 @@ class MenuBarController(ExtendedController):
     def register_view(self, view):
         """Called when the View was registered"""
         super(MenuBarController, self).register_view(view)
-        data_flow_mode = global_runtime_config.get_config_value("DATA_FLOW_MODE", False)
-        view["data_flow_mode"].set_active(data_flow_mode)
 
-        show_data_flows = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
-        view["show_data_flows"].set_active(show_data_flows)
+        # GTK4: the menu entries are backed by Gio actions (see MenuBarView); they live on the
+        # Gtk.Application if one is running, otherwise on an action group inserted at the windows
+        app = Gio.Application.get_default()
+        if isinstance(app, Gtk.Application):
+            self.action_container = app
+        else:
+            self.action_container = Gio.SimpleActionGroup()
+            self.main_window_view.get_parent_widget().insert_action_group('app', self.action_container)
+            self.full_screen_window.insert_action_group('app', self.action_container)
+        view.action_container = self.action_container
 
-        show_transitions = global_runtime_config.get_config_value("SHOW_TRANSITIONS", True)
-        view["show_transitions"].set_active(show_transitions)
-
-        show_data_values = global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
-        view["show_data_values"].set_active(show_data_values)
-
-        show_aborted_preempted = global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
-        view["show_aborted_preempted"].set_active(show_aborted_preempted)
-
-        view["expert_view"].hide()
-        view["grid"].hide()
+        # actions backing the recently-opened submenu entries
+        clean_recent_action = Gio.SimpleAction.new('open_recent_clean', None)
+        clean_recent_action.connect('activate',
+                                    lambda action, param:
+                                    global_runtime_config.clean_recently_opened_state_machines())
+        self.action_container.add_action(clean_recent_action)
+        open_recent_action = Gio.SimpleAction.new('open_recent', GLib.VariantType.new('i'))
+        open_recent_action.connect('activate', self._on_open_recent_activate)
+        self.action_container.add_action(open_recent_action)
 
         # use dedicated function to connect the buttons to be able to access the handler id later on
         self.connect_button_to_function('new', 'activate', self.on_new_activate)
@@ -169,8 +179,40 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('step_out', 'activate', self.on_step_out_activate)
         self.connect_button_to_function('backward_step', 'activate', self.on_backward_step_activate)
         self.connect_button_to_function('about', 'activate', self.on_about_activate)
-        self.full_screen_window.connect('key_press_event', self.on_escape_key_press_event_leave_full_screen)
-        self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
+
+        # initial states of the former check menu items, now stateful actions
+        data_flow_mode = global_runtime_config.get_config_value("DATA_FLOW_MODE", False)
+        view["data_flow_mode"].set_active(data_flow_mode)
+
+        show_data_flows = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
+        view["show_data_flows"].set_active(show_data_flows)
+
+        show_transitions = global_runtime_config.get_config_value("SHOW_TRANSITIONS", True)
+        view["show_transitions"].set_active(show_transitions)
+
+        show_data_values = global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
+        view["show_data_values"].set_active(show_data_values)
+
+        show_aborted_preempted = global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
+        view["show_aborted_preempted"].set_active(show_aborted_preempted)
+
+        view["expert_view"].hide()
+        view["grid"].hide()
+
+        # register the accelerators recorded by the view on the application
+        if isinstance(app, Gtk.Application):
+            for action_name, accel_code in view.accelerators.items():
+                if self.action_container.lookup_action(action_name):
+                    app.set_accels_for_action("app.{}".format(action_name), [accel_code])
+
+        # leave full screen mode with Escape (GTK4: key controller instead of key_press_event)
+        key_controller = Gtk.EventControllerKey()
+        key_controller.connect('key-pressed', self.on_escape_key_press_event_leave_full_screen)
+        self.full_screen_window.add_controller(key_controller)
+
+        # GMenu items provide no 'select' signal, so the edit menu status cannot be refreshed on
+        # menu-open anymore; update it once here, the callbacks check the selection themselves
+        self.check_edit_menu_items_status(None)
         self.registered_view = True
         self._update_recently_opened_state_machines()
         # do not move next line - here to show warning in GUI debug console
@@ -204,33 +246,33 @@ class MenuBarController(ExtendedController):
         if not self.registered_view:
             return
 
-        for item in self.view.sub_menu_open_recently.get_children():
-            self.view.sub_menu_open_recently.remove(item)
+        # the sub menu is a Gio.Menu section; entries activate app.open_recent(<index>)
+        sub_menu = self.view.sub_menu_open_recently
+        sub_menu.remove_all()
 
-        menu_item = gui_helper_label.create_menu_item("remove invalid paths", constants.ICON_ERASE,
-                                                      global_runtime_config.clean_recently_opened_state_machines)
-        self.view.sub_menu_open_recently.append(menu_item)
-        self.view.sub_menu_open_recently.append(Gtk.SeparatorMenuItem())
+        clean_section = Gio.Menu()
+        clean_section.append("remove invalid paths", "app.open_recent_clean")
+        sub_menu.append_section(None, clean_section)
 
-        for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
+        self._recently_opened_paths = list(global_runtime_config.get_config_value(
+            "recently_opened_state_machines", []))
+        recent_section = Gio.Menu()
+        for index, sm_path in enumerate(self._recently_opened_paths):
             # define label string
             root_state_name = gui_helper_state_machine.get_root_state_name_of_sm_file_system_path(sm_path)
             if root_state_name is None and not os.path.isdir(sm_path):
                 root_state_name = 'NOT_ACCESSIBLE'
             label_string = "'{0}' in {1}".format(root_state_name, sm_path) if root_state_name is not None else sm_path
 
-            # define icon of menu item
-            is_in_libs = library_manager.is_os_path_within_library_root_paths(sm_path)
-            button_image = constants.SIGN_LIB if is_in_libs else constants.BUTTON_OPEN
+            item = Gio.MenuItem.new(label_string, None)
+            item.set_action_and_target_value("app.open_recent", GLib.Variant.new_int32(index))
+            recent_section.append_item(item)
+        sub_menu.append_section(None, recent_section)
 
-            # prepare state machine open call_back function
-            sm_open_function = partial(self.on_open_activate, path=sm_path)
-
-            # create and insert new menu item
-            menu_item = gui_helper_label.create_menu_item(label_string, button_image, sm_open_function)
-            self.view.sub_menu_open_recently.append(menu_item)
-
-        self.view.sub_menu_open_recently.show_all()
+    def _on_open_recent_activate(self, action, parameter):
+        index = parameter.get_int32()
+        if 0 <= index < len(self._recently_opened_paths):
+            self.on_open_activate(path=self._recently_opened_paths[index])
 
     def on_toggle_full_screen_mode(self, *args, **kwargs):
             self.view["full_screen"].set_active(False if self.view["full_screen"].get_active() else True)
@@ -247,11 +289,12 @@ class MenuBarController(ExtendedController):
             self.on_full_screen_deactivate()
         return True
 
-    def on_escape_key_press_event_leave_full_screen(self, widget, event):
-        keyname = Gdk.keyval_name(event.keyval)
-        if keyname == "Escape" and 'fullscreen' in self.full_screen_window.get_window().get_state().value_nicks:
+    def on_escape_key_press_event_leave_full_screen(self, controller, keyval, keycode, state):
+        keyname = Gdk.keyval_name(keyval)
+        if keyname == "Escape" and self.full_screen_window.is_fullscreen():
             self.view["full_screen"].set_active(False)
             return True
+        return False
 
     def on_full_screen_activate(self, *args):
         """
@@ -268,51 +311,81 @@ class MenuBarController(ExtendedController):
         self.main_window_view['console_return_button'].hide()
 
         # Move whole VBox into fullscreen window
-        self.main_window_view['central_v_pane'].remove(self.main_window_view['central_vbox'])
-        self.full_screen_window.add(self.main_window_view['central_vbox'])
+        self.main_window_view['central_v_pane'].set_start_child(None)
+        self.full_screen_window.set_child(self.main_window_view['central_vbox'])
 
-        # Show fullscreen window undecorated in same screen as main window
-        position = self.main_window_view.get_parent_widget().get_position()
-        self.full_screen_window.show()
-        self.full_screen_window.move(position[0], position[1])
+        # Show fullscreen window undecorated on the monitor of the main window
+        # (GTK4 windows cannot be positioned; fullscreen_on_monitor replaces move + fullscreen)
+        main_window = self.main_window_view.get_parent_widget()
         self.full_screen_window.set_decorated(False)
-        self.full_screen_window.fullscreen()
-        self.main_window_view.get_parent_widget().iconify()
+        self.full_screen_window.present()
+        monitor = None
+        if main_window.get_surface() is not None:
+            monitor = main_window.get_display().get_monitor_at_surface(main_window.get_surface())
+        if monitor is not None:
+            self.full_screen_window.fullscreen_on_monitor(monitor)
+        else:
+            self.full_screen_window.fullscreen()
+        main_window.minimize()
 
     def on_full_screen_deactivate(self):
         # Move whole VBox back into main window
-        self.full_screen_window.remove(self.main_window_view['central_vbox'])
-        self.main_window_view['central_v_pane'].pack1(self.main_window_view['central_vbox'], True, False)
+        self.full_screen_window.set_child(None)
+        central_v_pane = self.main_window_view['central_v_pane']
+        central_v_pane.set_start_child(self.main_window_view['central_vbox'])
+        central_v_pane.set_resize_start_child(True)
+        central_v_pane.set_shrink_start_child(False)
 
         self.sm_notebook.set_show_tabs(True)
 
         # Show elements of VBox again
         self.main_window_view['graphical_editor_label_event_box'].show()
         self.main_window_view['graphical_editor_toolbar'].show()
-        if not self.main_window_view['central_v_pane'].get_child2():
+        if not central_v_pane.get_end_child():
             self.main_window_view['console_return_button'].show()
 
         self.main_window_view.get_parent_widget().present()
-        self.full_screen_window.hide()
+        self.full_screen_window.set_visible(False)
 
     def connect_button_to_function(self, view_index, button_state, function):
         """
-        Connect callback to a button
-        :param view_index: the index of the button in the view
-        :param button_state: the state of the button the function should be connected to
+        Create the Gio action backing the menu entry 'app.<view_index>' and connect the callback
+
+        GTK4 menu entries are no widgets; instead of connecting to a widget signal, a
+        Gio.SimpleAction is created (stateful for the former check menu items) and the callback
+        is wired to its activation/state change. The former Gtk.(Check)MenuItem callback
+        signatures are kept by passing the view's action proxy as 'widget' argument.
+
+        :param view_index: the name of the menu entry action
+        :param button_state: former widget signal name (kept for call-site compatibility, unused)
         :param function: the function to be connected
         :return:
         """
-        handler_id = self.view[view_index].connect(button_state, function)
-        self.handler_ids[view_index] = handler_id
+        if view_index in self.view.toggle_actions:
+            action = Gio.SimpleAction.new_stateful(view_index, None, GLib.Variant.new_boolean(False))
+
+            def on_change_state(action, value, callback=function, name=view_index):
+                action.set_state(value)
+                callback(self.view[name])
+
+            handler_id = action.connect('change-state', on_change_state)
+        else:
+            action = Gio.SimpleAction.new(view_index, None)
+
+            def on_activate(action, parameter, callback=function):
+                callback(action)
+
+            handler_id = action.connect('activate', on_activate)
+        self.action_container.add_action(action)
+        self.handler_ids[view_index] = (action, handler_id)
 
     def unregister_view(self):
         """import log
         Unregister all registered functions to a view element
         :return:
         """
-        for handler_id in self.handler_ids.keys():
-            self.view[handler_id].disconnect(self.handler_ids[handler_id])
+        for action, handler_id in self.handler_ids.values():
+            action.disconnect(handler_id)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -495,7 +568,7 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager.remove_shortcuts()
         self.shortcut_manager.update_shortcuts()
         for item_name, shortcuts in global_gui_config.get_config_value('SHORTCUTS', {}).items():
-            if shortcuts and item_name in self.view.buttons:
+            if shortcuts and item_name in self.view.actions:
                 self.view.set_menu_item_accelerator(item_name, shortcuts[0], remove_old=True)
         self.create_logger_warning_if_shortcuts_are_overwritten_by_menu_bar()
 
@@ -741,11 +814,10 @@ class MenuBarController(ExtendedController):
     ######################################################
     @staticmethod
     def on_about_activate(widget, data=None):
+        # GTK4 Gtk.AboutDialog is a plain window without run()/response; closing destroys it
         about = AboutDialogView()
         gui_helper_label.set_button_children_size_request(about)
-        response = about.run()
-        if response == Gtk.ResponseType.DELETE_EVENT or response == Gtk.ResponseType.CANCEL:
-            about.destroy()
+        about.present()
 
     def check_edit_menu_items_status(self, widget):
 

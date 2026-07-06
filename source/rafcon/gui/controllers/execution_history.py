@@ -39,7 +39,9 @@ from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.states.execution_state import ExecutionState
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.controllers.utils.tree_view_controller import ButtonEventShim, DOUBLE_BUTTON_PRESS
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
+from rafcon.gui.utils.context_menu import ContextMenu, ContextMenuItem
 from rafcon.gui.views.execution_history import ExecutionHistoryView
 from rafcon.gui.singleton import state_machine_execution_model
 from rafcon.gui.config import global_gui_config
@@ -92,7 +94,11 @@ class ExecutionHistoryTreeController(ExtendedController):
 
     def register_view(self, view):
         super(ExecutionHistoryTreeController, self).register_view(view)
-        self.history_tree.connect('button_press_event', self.mouse_click)
+        # GTK4: clicks come from gestures; button 0 listens to all buttons
+        click_gesture = Gtk.GestureClick()
+        click_gesture.set_button(0)
+        click_gesture.connect('pressed', self._on_button_pressed)
+        self.history_tree.add_controller(click_gesture)
         view['reload_button'].connect('clicked', self.reload_history)
         view['clean_button'].connect('clicked', self.clean_history)
         view['open_separately_button'].connect('clicked', self.open_selected_history_separately)
@@ -176,13 +182,20 @@ class ExecutionHistoryTreeController(ExtendedController):
             logger.info("Set FILE_SYSTEM_EXECUTION_HISTORY_ENABLE to True in your config in order to "
                         "activate execution file logging and to use the external execution history viewer.")
 
+    def _on_button_pressed(self, gesture, n_press, x, y):
+        event_type = DOUBLE_BUTTON_PRESS if n_press == 2 else Gdk.EventType.BUTTON_PRESS
+        bin_x, bin_y = self.history_tree.convert_widget_to_bin_window_coords(int(x), int(y))
+        event = ButtonEventShim(event_type, bin_x, bin_y, gesture.get_current_button(),
+                                gesture.get_current_event_state())
+        if self.mouse_click(self.history_tree, event):
+            gesture.set_state(Gtk.EventSequenceState.CLAIMED)
+
     def append_string_to_menu(self, popup_menu, menu_item_string):
         final_string = menu_item_string
         if len(menu_item_string) > 2000:
             final_string = menu_item_string[:1000] + "\n...\n" + menu_item_string[-1000:]
-        menu_item = Gtk.MenuItem(final_string)
+        menu_item = ContextMenuItem(final_string)
         menu_item.set_sensitive(False)
-        menu_item.show()
         popup_menu.append(menu_item)
 
     def mouse_click(self, widget, event=None):
@@ -191,7 +204,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         element.
         """
         # This is left clicking to highlight the state machine in the editor and open hierarchy
-        if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
+        if event.type is DOUBLE_BUTTON_PRESS and event.get_button()[1] == 1:
             if not self.check_locked_view():
                 return
             (model, row) = self.history_tree.get_selection().get_selected()
@@ -261,14 +274,13 @@ class ExecutionHistoryTreeController(ExtendedController):
         if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
             x = int(event.x)
             y = int(event.y)
-            time = event.time
             pthinfo = self.history_tree.get_path_at_pos(x, y)
             if pthinfo is not None:
                 path, col, cellx, celly = pthinfo
                 self.history_tree.grab_focus()
                 self.history_tree.set_cursor(path, col, 0)
 
-                popup_menu = Gtk.Menu()
+                popup_menu = ContextMenu()
 
                 model, row = self.history_tree.get_selection().get_selected()
                 history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
@@ -309,17 +321,13 @@ class ExecutionHistoryTreeController(ExtendedController):
 
                 # Add "Start From Here" menu item for CallItem and type 'EXECUTE'
                 if isinstance(history_item, CallItem) and history_item.call_type_str == 'EXECUTE':
-                    separator = Gtk.SeparatorMenuItem()
-                    separator.show()
-                    popup_menu.append(separator)
+                    popup_menu.append_separator()
+                    popup_menu.append(ContextMenuItem("Start From Here",
+                                                      lambda item: self._on_start_from_here(history_item)))
 
-                    menu_item = Gtk.MenuItem("Start From Here")
-                    menu_item.connect("activate", lambda w: self._on_start_from_here(history_item))
-                    menu_item.show()
-                    popup_menu.append(menu_item)
-
-                popup_menu.show()
-                popup_menu.popup(None, None, None, None, event.get_button()[1], time)
+                # the event holds bin window coordinates; the popover expects widget coordinates
+                widget_x, widget_y = self.history_tree.convert_bin_window_to_widget_coords(x, y)
+                popup_menu.popup_at(self.history_tree, widget_x, widget_y)
 
             return True
 

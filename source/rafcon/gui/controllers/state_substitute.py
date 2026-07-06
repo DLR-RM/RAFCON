@@ -22,6 +22,7 @@ from gi.repository import Gdk
 
 from rafcon.gui.views.library_tree import LibraryTreeView
 from rafcon.gui.controllers.library_tree import LibraryTreeController
+from rafcon.gui.controllers.utils.tree_view_controller import DOUBLE_BUTTON_PRESS
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.singleton import global_gui_config
 
@@ -42,7 +43,7 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
 
     def mouse_click(self, widget, event=None):
         # Double click with left mouse button
-        if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
+        if event.type is DOUBLE_BUTTON_PRESS and event.get_button()[1] == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
                 state_row_path = self.tree_store.get_path(row)
@@ -56,7 +57,7 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
             if self.dialog_widget:
                 self.dialog_widget.destroy()
             return True
-        if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 3:
+        if event.type is DOUBLE_BUTTON_PRESS and event.get_button()[1] == 3:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
                 return False
@@ -79,9 +80,8 @@ class StateSubstituteChooseLibraryDialog(RAFCONButtonDialog):
                                                                  flags=Gtk.DialogFlags.MODAL, parent=parent)
 
         self.set_title('Library choose dialog')
-        self.resize(width=width, height=height)
-        if pos is not None:
-            self.move(*pos)
+        # GTK4 windows cannot be resized/moved programmatically; only the default size is set
+        self.set_default_size(width, height)
 
         self.set_resizable(True)
 
@@ -89,17 +89,17 @@ class StateSubstituteChooseLibraryDialog(RAFCONButtonDialog):
         self.widget_view = LibraryTreeView()
         self.widget_ctrl = StateSubstituteChooseLibraryDialogTreeController(self.model, self.widget_view,
                                                                             dialog_widget=self)
-        self.scrollable.add(self.widget_view)
+        self.scrollable.set_child(self.widget_view)
 
         self.keep_name_check_box = Gtk.CheckButton()
         self.keep_name_check_box.set_active(self.widget_ctrl.keep_name)
         self.keep_name_check_box.set_label("Keep state name")
         self.keep_name_check_box.connect('toggled', self.on_toggle_keep_name)
 
-        self.vbox.pack_end(self.keep_name_check_box, False, False, 0)
-        self.vbox.pack_start(self.scrollable, True, True, 0)
+        self.scrollable.set_vexpand(True)
+        self.get_content_area().append(self.scrollable)
+        self.get_content_area().append(self.keep_name_check_box)
 
-        self.vbox.show_all()
         self.grab_focus()
         self.run()
 
@@ -107,7 +107,6 @@ class StateSubstituteChooseLibraryDialog(RAFCONButtonDialog):
         self.widget_ctrl.keep_name = button.get_active()
 
     def destroy(self):
-        self.widget_view.destroy()
         self.widget_ctrl.destroy()
         super(StateSubstituteChooseLibraryDialog, self).destroy()
 

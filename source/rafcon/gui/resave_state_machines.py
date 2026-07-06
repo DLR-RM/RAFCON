@@ -115,13 +115,9 @@ def convert(config_path, source_path, target_path=None, gui_config_path=None):
     if not os.getenv("RAFCON_START_MINIMIZED", False):
         main_window = main_window_view.get_parent_widget()
         size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
-        position = global_runtime_config.get_config_value("WINDOW_POS", None)
         if size:
-            main_window.resize(size[0], size[1])
-        if position:
-            position = (max(0, position[0]), max(0, position[1]))
-            if is_point_on_screen(*position):
-                main_window.move(*position)
+            # GTK4 windows cannot be moved programmatically; only the size is restored
+            main_window.set_default_size(size[0], size[1])
 
     wait_for_gui()
     thread = threading.Thread(target=trigger_gui_signals, args=[sm_manager_model,
@@ -130,7 +126,8 @@ def convert(config_path, source_path, target_path=None, gui_config_path=None):
                                                                 state_machine])
     thread.start()
 
-    Gtk.main()
+    # GTK4 removed Gtk.main(); a plain main loop is stopped by stop_gtk() via on_quit_activate
+    rafcon.gui.start.run_standalone_main_loop()
     logger.debug("Gtk main loop exited!")
     logger.debug("Conversion done")
 

@@ -52,16 +52,17 @@ def create_button(toggle, font_size, icon_code, release_callback=None, *addition
     else:
         button = Gtk.Button()
 
-    button.set_relief(Gtk.ReliefStyle.NONE)
+    button.set_has_frame(False)
     Gtk.Widget.set_focus_on_click(button, True)
     button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
 
     label = Gtk.Label()
     set_label_markup(label, icon_code, is_icon=True, size=font_size)
-    button.add(label)
+    button.set_child(label)
 
     if release_callback:
-        button.connect('released', release_callback, *additional_parameters)
+        # GTK4: buttons have no 'released' signal; 'clicked' fires on release as well
+        button.connect('clicked', release_callback, *additional_parameters)
 
     return button
 
@@ -81,10 +82,10 @@ def create_sticky_button(callback, *additional_parameters):
 
 
 def create_tab_header(title, close_callback, sticky_callback, *additional_parameters):
-    def handle_middle_click(widget, event, callback, *additional_parameters):
-        """Calls `callback` in case the middle mouse button was pressed"""
-        if event.get_button()[1] == 2 and callback:
-            callback(event, *additional_parameters)
+    def handle_middle_click(gesture, n_press, x, y):
+        """Calls the close callback in case the middle mouse button was pressed"""
+        if close_callback:
+            close_callback(None, *additional_parameters)
 
     sticky_button = None
     label = Gtk.Label(label=title)
@@ -95,16 +96,20 @@ def create_tab_header(title, close_callback, sticky_callback, *additional_parame
     if global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
         sticky_button = create_sticky_button(sticky_callback, *additional_parameters)
         sticky_button.set_name('sticky_button')
-        hbox.pack_start(sticky_button, expand=False, fill=False, padding=0)
-    hbox.pack_start(label, expand=True, fill=True, padding=0)
-    hbox.pack_start(close_button, expand=False, fill=False, padding=0)
+        hbox.append(sticky_button)
+    label.set_hexpand(True)
+    hbox.append(label)
+    hbox.append(close_button)
 
-    event_box = Gtk.EventBox()
+    # GTK4 removed Gtk.EventBox; a plain box with a middle-click gesture takes its place
+    event_box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
     event_box.set_name("tab_label")  # required for gtkrc
-    event_box.connect('button-press-event', handle_middle_click, close_callback, *additional_parameters)
+    middle_click_gesture = Gtk.GestureClick()
+    middle_click_gesture.set_button(2)
+    middle_click_gesture.connect('pressed', handle_middle_click)
+    event_box.add_controller(middle_click_gesture)
     event_box.tab_label = label
-    event_box.add(hbox)
-    event_box.show_all()
+    event_box.append(hbox)
 
     return event_box, label, sticky_button
 
@@ -312,7 +317,9 @@ class StatesEditorController(ExtendedController):
                 # observe changed to set the mark dirty flag
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                 state_m)
-                self.view.get_parent_widget().connect('draw', state_editor_view.source_view.on_draw)
+                # GTK4 removed the draw signal; width changes arrive via the size properties
+                self.view.get_parent_widget().connect('notify::default-width',
+                                                      state_editor_view.source_view.on_size_changed)
             else:
                 handler_id = None
             source_code_view_is_dirty = False
@@ -328,7 +335,7 @@ class StatesEditorController(ExtendedController):
         page_id = self.view.notebook.prepend_page(page_content, tab)
         page = self.view.notebook.get_nth_page(page_id)
         self.view.notebook.set_tab_reorderable(page, True)
-        page.show_all()
+
 
         self.view.notebook.show()
         self.tabs[state_identifier] = {'page': page, 'state_m': state_m,

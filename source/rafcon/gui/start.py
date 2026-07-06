@@ -295,6 +295,28 @@ def start_gtk():
             gtk_app = None
 
 
+_standalone_main_loop = None
+
+
+def run_standalone_main_loop():
+    """Runs a plain GLib main loop (GTK4 replacement for Gtk.main())
+
+    Used by helper entry points (execution log viewer, state machine resaving) that show GTK
+    widgets without a full Gtk.Application. The loop is stopped by stop_gtk().
+    """
+    global _standalone_main_loop
+    _standalone_main_loop = GLib.MainLoop()
+    try:
+        _standalone_main_loop.run()
+    finally:
+        _standalone_main_loop = None
+
+
+def _stop_standalone_main_loop():
+    if _standalone_main_loop is not None and _standalone_main_loop.is_running():
+        GLib.idle_add(_standalone_main_loop.quit)
+
+
 def stop_gtk():
     # shutdown twisted correctly
     if reactor_required():
@@ -307,6 +329,7 @@ def stop_gtk():
             GLib.idle_add(gtk_app.quit)
     elif gtk_app is not None:
         GLib.idle_add(gtk_app.quit)
+    _stop_standalone_main_loop()
 
     # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
     wait_for_gui()

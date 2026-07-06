@@ -12,6 +12,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
+from gi.repository import GLib
 from gi.repository import GObject
 
 from rafcon.gui.utils import constants
@@ -25,6 +26,32 @@ def get_root_window():
         return main_window_controller.get_root_window()
     except ImportError:
         pass
+
+
+def run_dialog(dialog):
+    """Blocking replacement for the GTK3 ``Gtk.Dialog.run()``
+
+    GTK4 removed ``Gtk.Dialog.run()``. This presents the dialog and spins a nested main loop
+    until the dialog emits 'response' (closing the window delivers
+    ``Gtk.ResponseType.DELETE_EVENT``), preserving the blocking control flow of the many
+    call sites, including the generic dialog library state machines.
+
+    :param Gtk.Dialog dialog: The dialog to present
+    :return: The response id of the dialog
+    """
+    response = {'id': Gtk.ResponseType.NONE}
+    loop = GLib.MainLoop()
+
+    def on_response(_dialog, response_id):
+        response['id'] = response_id
+        if loop.is_running():
+            loop.quit()
+
+    handler_id = dialog.connect('response', on_response)
+    dialog.present()
+    loop.run()
+    dialog.disconnect(handler_id)
+    return response['id']
 
 
 class RAFCONMessageDialog(Gtk.MessageDialog):
@@ -81,8 +108,11 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
     def add_callback(self, callback, *args):
         self.connect('response', callback, *args)
 
+    def run(self):
+        # GTK4 removed Gtk.Dialog.run(); keep the blocking behavior via a nested main loop
+        return run_dialog(self)
+
     def show_grab_focus_and_run(self, standalone=False):
-        # TODO check if show all can be removed full -> at the moment it interferes grab focus -> dialog is not focused
         # Only grab focus in the highest class, the inheriting classes should have the focus as well because they all
         # execute the init of this class
         self.grab_focus()
@@ -154,7 +184,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
 
         # Create a new Gtk.Hbox to put in the checkbox and entry
         hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, constants.GRID_SIZE)
-        self.get_content_area().add(hbox)
+        self.get_content_area().append(hbox)
 
         # Setup new text entry line
         self.entry = Gtk.Entry()
@@ -166,15 +196,15 @@ class RAFCONInputDialog(RAFCONButtonDialog):
         # This is the same as the first button, so the first button should always be sth. approving the content of the
         # window. Probably a configurable flag would also make sense.
         self.entry.connect('activate', self.forward_response, 1)
-        hbox.pack_start(self.entry, True, True, 1)
+        self.entry.set_hexpand(True)
+        hbox.append(self.entry)
 
         self.checkbox = None
 
         if isinstance(checkbox_text, str):
             # If a checkbox_text is specified by the caller, we can assume that one should be used.
             self.checkbox = Gtk.CheckButton(label=checkbox_text)
-            hbox.pack_end(self.checkbox, False, True, 1)
-        hbox.show_all()
+            hbox.append(self.checkbox)
 
         self.show_grab_focus_and_run(standalone)
 
@@ -216,7 +246,7 @@ class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
                                                          message_type, flags, parent, width, standalone, title, height)
 
         checkbox_vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, constants.GRID_SIZE)
-        self.get_content_area().add(checkbox_vbox)
+        self.get_content_area().append(checkbox_vbox)
         # this is not really needed i guess if I can get the checkboxes over the content area anyway
         # TODO change this to a solution without the list.
 
@@ -225,11 +255,10 @@ class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
 
             for index, checkbox in enumerate(checkbox_texts):
                 self.checkboxes.append(Gtk.CheckButton(label=checkbox))
-                checkbox_vbox.pack_start(self.checkboxes[index], True, True, 1)
+                checkbox_vbox.append(self.checkboxes[index])
         else:
             logger.debug("Argument checkbox_text is None or empty, no checkboxes were created")
 
-        self.show_all()
         self.run() if standalone else None
 
     def get_checkbox_state_by_name(self, checkbox_text):
@@ -300,7 +329,8 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
 
         # create tree view
         self.tree_view = Gtk.TreeView()
-        self.vbox.pack_start(self.tree_view, True, True, 0)
+        self.tree_view.set_vexpand(True)
+        self.get_content_area().append(self.tree_view)
         for index, column_type in enumerate(first_row_data_types):
             if column_type is bool:
                 # create checkbox column
@@ -329,5 +359,4 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
         for row in table_data:
             self.list_store.append(row)
 
-        self.tree_view.show_all()
         self.show_grab_focus_and_run(standalone)

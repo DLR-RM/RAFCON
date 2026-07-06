@@ -31,11 +31,13 @@ from rafcon.core.storage import storage
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.controllers.utils.tree_view_controller import ButtonEventShim, DOUBLE_BUTTON_PRESS
 from rafcon.gui.models.library_manager import LibraryManagerModel
 from rafcon.gui.helpers.label import create_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.helpers.text_formatting import format_folder_name_human_readable
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.utils import constants
+from rafcon.gui.utils.context_menu import ContextMenu
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.gui.interface import open_folder
 from rafcon.utils import log
@@ -70,8 +72,8 @@ class LibraryTreeController(ExtendedController):
         view.set_model(self.filter)
         view.set_tooltip_column(3)
 
-        # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
-        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [Gtk.TargetEntry.new('STRING', 0, 0)], Gdk.DragAction.COPY)
+        # GTK4 TODO (Stage 4): re-enable drag & drop of library states onto the graphical editor
+        # via Gtk.DragSource/Gtk.DropTarget once the gaphas canvas is ported
 
         self.library_row_iter_dict_by_library_path = {}
         self.__expansion_state = None
@@ -80,22 +82,31 @@ class LibraryTreeController(ExtendedController):
 
     def register_view(self, view):
         super(LibraryTreeController, self).register_view(view)
-        self.view.connect('button_press_event', self.mouse_click)
+        # GTK4: clicks come from gestures; button 0 listens to all buttons
+        click_gesture = Gtk.GestureClick()
+        click_gesture.set_button(0)
+        click_gesture.connect('pressed', self._on_button_pressed)
+        self.view.add_controller(click_gesture)
 
-        self.view.connect("drag-data-get", self.on_drag_data_get)
-        self.view.connect("drag-begin", self.on_drag_begin)
+    def _on_button_pressed(self, gesture, n_press, x, y):
+        event_type = DOUBLE_BUTTON_PRESS if n_press == 2 else Gdk.EventType.BUTTON_PRESS
+        bin_x, bin_y = self.view.convert_widget_to_bin_window_coords(int(x), int(y))
+        event = ButtonEventShim(event_type, bin_x, bin_y, gesture.get_current_button(),
+                                gesture.get_current_event_state())
+        if self.mouse_click(self.view, event):
+            gesture.set_state(Gtk.EventSequenceState.CLAIMED)
 
     def generate_right_click_menu(self, kind='library'):
-        menu = Gtk.Menu()
+        menu = ContextMenu()
         if kind == 'library':
             menu.append(create_menu_item("Add as library (link)", constants.BUTTON_ADD,
                                          partial(self.insert_button_clicked, as_template=False)))
             menu.append(create_menu_item("Add as template (copy)", constants.BUTTON_COPY,
                                          partial(self.insert_button_clicked, as_template=True)))
-            menu.append(Gtk.SeparatorMenuItem())
+            menu.append_separator()
             menu.append(create_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
             menu.append(create_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
-            menu.append(Gtk.SeparatorMenuItem())
+            menu.append_separator()
             menu.append(create_menu_item("Rename library", constants.BUTTON_RENAME,
                                          self.menu_item_rename_libraries_or_root_clicked))
             menu.append(create_menu_item("Remove library", constants.BUTTON_DEL,
@@ -142,7 +153,7 @@ class LibraryTreeController(ExtendedController):
 
     def mouse_click(self, widget, event=None):
         # Double click with left mouse button
-        if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
+        if event.type is DOUBLE_BUTTON_PRESS and event.get_button()[1] == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][self.ITEM_STORAGE_ID], dict):  # double click on folder, not library
                 state_row_path = self.tree_store.get_path(row)
@@ -173,7 +184,6 @@ class LibraryTreeController(ExtendedController):
 
             x = int(event.x)
             y = int(event.y)
-            time = event.time
             pthinfo = self.view.get_path_at_pos(x, y)
             if pthinfo is not None:
                 path, col, cellx, celly = pthinfo
@@ -191,7 +201,9 @@ class LibraryTreeController(ExtendedController):
             else:
                 menu = self.generate_right_click_menu('library tree')
             menu.show_all()
-            menu.popup(None, None, None, None, event.get_button()[1], time)
+            # the event holds bin window coordinates; the popover expects widget coordinates
+            widget_x, widget_y = self.view.convert_bin_window_to_widget_coords(x, y)
+            menu.popup_at(self.view, widget_x, widget_y)
             return True
 
     @ExtendedController.observe("library_manager", after=True)
@@ -282,27 +294,6 @@ class LibraryTreeController(ExtendedController):
             for child_library_key, child_library_item in library_item.items():
                 self.insert_rec(tree_item, child_library_key, child_library_item, library_path, library_root_path)
 
-    def on_drag_data_get(self, widget, context, data, info, time):
-        """dragged state is inserted and its state_id sent to the receiver
-
-        :param widget:
-        :param context:
-        :param data: SelectionData: contains state_id
-        :param info:
-        :param time:
-        """
-        library_state = self._get_selected_library_state()
-        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-        gui_helper_state_machine.add_state_by_drag_and_drop(library_state, data)
-
-    def on_drag_begin(self, widget, context):
-        """replace drag icon
-
-        :param widget:
-        :param context:
-        """
-        pass
-
     def insert_button_clicked(self, widget, as_template=False):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         gui_helper_state_machine.insert_state_into_selected_state(self._get_selected_library_state(), as_template)
@@ -348,10 +339,8 @@ class LibraryTreeController(ExtendedController):
         return state_machine
 
     def get_menu_item_text(self, menu_item):
-        assert isinstance(menu_item, Gtk.MenuItem)
-        menu_box = menu_item.get_child()
-        assert isinstance(menu_box, Gtk.Box)
-        return menu_box.get_children()[1].get_text()
+        # context menu entries carry their label directly (GTK4 port)
+        return menu_item.label
 
     def menu_item_add_library_root_clicked(self, widget):
 

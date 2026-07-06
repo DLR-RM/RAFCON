@@ -80,8 +80,13 @@ class StateOverviewController(ExtendedController):
         super(StateOverviewController, self).register_view(view)
         self.allowed_state_classes = self.get_allowed_state_classes(self.model.state)
 
-        view['entry_name'].connect('focus-out-event', self.on_focus_out)
-        view['entry_name'].connect('key-press-event', self.check_for_enter)
+        # GTK4: focus and key events come from event controllers
+        focus_controller = Gtk.EventControllerFocus()
+        focus_controller.connect('leave', self.on_focus_out)
+        view['entry_name'].add_controller(focus_controller)
+        key_controller = Gtk.EventControllerKey()
+        key_controller.connect('key-pressed', self.check_for_enter)
+        view['entry_name'].add_controller(key_controller)
         if self.model.state.name:
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
@@ -91,7 +96,6 @@ class StateOverviewController(ExtendedController):
         combo.set_name("state_type_combo")
         Gtk.Widget.set_focus_on_click(combo, True)
         combo.set_model(l_store)
-        combo.show_all()
         self.view['properties_widget'].attach(combo, 1, 3, 1, 1)
         combo.set_hexpand(True)
 
@@ -227,7 +231,8 @@ class StateOverviewController(ExtendedController):
         if self.view is not None and info['method_name'] == 'name':
             self.view['entry_name'].set_text(self.model.state.name)
 
-    def on_focus_out(self, entry, event):
+    def on_focus_out(self, focus_controller):
+        entry = focus_controller.get_widget()
         self.change_name(entry.get_text())
 
     def change_name(self, new_name):
@@ -267,7 +272,8 @@ class StateOverviewController(ExtendedController):
 
         del on_change
 
-    def check_for_enter(self, entry, event):
-        key_name = Gdk.keyval_name(event.keyval)
+    def check_for_enter(self, key_controller, keyval, keycode, state):
+        key_name = Gdk.keyval_name(keyval)
         if key_name in ["Return", "KP_Enter"]:
+            entry = key_controller.get_widget()
             self.change_name(entry.get_text())

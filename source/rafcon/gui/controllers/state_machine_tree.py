@@ -29,7 +29,8 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import StateType
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
-from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController
+from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController, ButtonEventShim, \
+    DOUBLE_BUTTON_PRESS
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models import ContainerStateModel, LibraryStateModel, AbstractStateModel
@@ -82,9 +83,22 @@ class StateMachineTreeController(TreeViewController):
     def register_view(self, view):
         """Called when the view was registered"""
         super(StateMachineTreeController, self).register_view(view)
-        self.view.connect('button_press_event', self.mouse_click)
+        # GTK4: double clicks come from a click gesture instead of button_press_event
+        double_click_gesture = Gtk.GestureClick()
+        double_click_gesture.set_button(1)
+        double_click_gesture.connect('pressed', self._on_double_click_pressed)
+        self.view.add_controller(double_click_gesture)
         self.view_is_registered = True
         self.update(with_expand=True)
+
+    def _on_double_click_pressed(self, gesture, n_press, x, y):
+        if n_press != 2:
+            return
+        bin_x, bin_y = self.view.convert_widget_to_bin_window_coords(int(x), int(y))
+        event = ButtonEventShim(DOUBLE_BUTTON_PRESS, bin_x, bin_y, gesture.get_current_button(),
+                                gesture.get_current_event_state())
+        if self.mouse_click(self.view, event):
+            gesture.set_state(Gtk.EventSequenceState.CLAIMED)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -485,7 +499,7 @@ class StateMachineTreeController(TreeViewController):
             return None, set()
 
     def mouse_click(self, widget, event=None):
-        if event.type == Gdk.EventType._2BUTTON_PRESS:
+        if event.type is DOUBLE_BUTTON_PRESS:
             return self._handle_double_click(event)
 
     def _handle_double_click(self, event):

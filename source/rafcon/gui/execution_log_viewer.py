@@ -10,7 +10,7 @@ from rafcon.utils import log
 logger = log.get_logger("rafcon.gui.execution_log_viewer")
 
 def main():
-    from gi.repository import Gtk  # import here to avoid warning
+    from gi.repository import GLib
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("file", help="path to the log file")
@@ -29,7 +29,15 @@ def main():
     single_view = SingleWidgetWindowView(ExecutionLogTreeView, 1024, 786, f"Execution Log Viewer: '{state_machine_name}' {args.title_addition}")
     log_tree_ctrl = SingleWidgetWindowController(None, single_view, ExecutionLogTreeController, args.file, args.run_id)
 
-    Gtk.main()
+    # GTK4 removed Gtk.main(); run a plain main loop until the window is closed
+    main_loop = GLib.MainLoop()
+
+    def on_close_request(window):
+        main_loop.quit()
+        return False
+
+    single_view.get_parent_widget().connect('close-request', on_close_request)
+    main_loop.run()
 
 
 if __name__ == "__main__":

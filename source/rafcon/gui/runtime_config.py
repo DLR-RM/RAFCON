@@ -55,10 +55,10 @@ class RuntimeConfig(ObservableConfig):
             self.set_config_value('{0}_MAXIMIZED'.format(widget_name), maximized)
             if maximized:
                 return
-            size = widget.get_size()
-            self.set_config_value('{0}_SIZE'.format(widget_name), tuple(size))
-            position = widget.get_position()
-            self.set_config_value('{0}_POS'.format(widget_name), tuple(position))
+            # GTK4 removed window positioning; only the size is stored
+            size = (widget.get_width(), widget.get_height())
+            if size[0] > 0 and size[1] > 0:
+                self.set_config_value('{0}_SIZE'.format(widget_name), size)
         else:  # Gtk.Paned
             position = widget.get_position()
             self.set_config_value('{0}_POS'.format(widget_name), position)

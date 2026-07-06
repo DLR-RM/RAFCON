@@ -1427,15 +1427,17 @@ def ungroup_selected_state():
 
 
 def change_background_color(state_model):
-    from rafcon.gui.utils.dialog import get_root_window
-    dialog = Gtk.ColorSelectionDialog('Change Background Color', parent=get_root_window())
+    from rafcon.gui.utils.dialog import get_root_window, run_dialog
+    # GTK4 removed Gtk.ColorSelectionDialog; Gtk.ColorChooserDialog takes its place
+    dialog = Gtk.ColorChooserDialog(title='Change Background Color', transient_for=get_root_window())
     default_button_response = -7
     dialog.add_button('Set to Default', default_button_response)
-    response = dialog.run()
+    response = run_dialog(dialog)
     changed = False
-    if response == -5:
-        current_color = dialog.get_color_selection().get_current_color()
-        state_model.set_meta_data_editor('background_color', (current_color.red_float, current_color.green_float, current_color.blue_float))
+    if response == Gtk.ResponseType.OK:
+        current_color = dialog.get_rgba()
+        state_model.set_meta_data_editor('background_color',
+                                         (current_color.red, current_color.green, current_color.blue))
         changed = True
     elif response == default_button_response:
         state_model.set_meta_data_editor('background_color', False)

@@ -18,6 +18,7 @@ import os.path
 
 import rafcon.utils.execution_log as log_helper
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.controllers.utils.tree_view_controller import ButtonEventShim, DOUBLE_BUTTON_PRESS
 
 from rafcon.utils import log
 
@@ -68,7 +69,11 @@ class ExecutionLogTreeController(ExtendedController):
                 elements = new_elements
 
         view.tree_view.get_selection().connect('changed', self.on_treeview_selection_changed)
-        view.tree_view.connect('button_press_event', self.mouse_click)
+        # GTK4: double clicks come from a click gesture instead of button_press_event
+        double_click_gesture = Gtk.GestureClick()
+        double_click_gesture.set_button(1)
+        double_click_gesture.connect('pressed', self._on_double_click_pressed)
+        view.tree_view.add_controller(double_click_gesture)
 
         # optional select a element of generated tree
         if self.run_id_to_select in self.item_iter:
@@ -123,8 +128,17 @@ class ExecutionLogTreeController(ExtendedController):
         import pprint as pp
         self.view.text_view.get_buffer().set_text(pp.pformat(item))
 
+    def _on_double_click_pressed(self, gesture, n_press, x, y):
+        if n_press != 2:
+            return
+        tree_view = self.view.tree_view
+        bin_x, bin_y = tree_view.convert_widget_to_bin_window_coords(int(x), int(y))
+        event = ButtonEventShim(DOUBLE_BUTTON_PRESS, bin_x, bin_y, gesture.get_current_button(),
+                                gesture.get_current_event_state())
+        self.mouse_click(tree_view, event)
+
     def mouse_click(self, widget, event=None):
-        if event.type == Gdk.EventType._2BUTTON_PRESS:
+        if event.type is DOUBLE_BUTTON_PRESS:
             return self._handle_double_click(event)
 
     def _handle_double_click(self, event):

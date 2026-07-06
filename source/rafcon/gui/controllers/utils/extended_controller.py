@@ -18,6 +18,8 @@
 
 """
 
+from gi.repository import Gtk
+
 from rafcon.design_patterns.mvc.controller import Controller
 
 from rafcon.gui.shortcut_manager import ShortcutManager
@@ -201,7 +203,12 @@ class ExtendedController(Controller):
         if self.parent:
             self.__parent = None
         if self._view_initialized:
-            self.view.get_parent_widget().destroy()
+            # GTK4 removed gtk_widget_destroy for non-windows; those are dropped by unparenting
+            parent_widget = self.view.get_parent_widget()
+            if isinstance(parent_widget, Gtk.Window):
+                parent_widget.destroy()
+            elif parent_widget is not None and parent_widget.get_parent() is not None:
+                parent_widget.unparent()
             self.view = None
             self.observable_to_methods.clear()
         else:

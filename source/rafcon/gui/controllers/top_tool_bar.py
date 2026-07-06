@@ -55,7 +55,7 @@ class TopToolBarController(ExtendedController):
         self.update_maximize_button()
 
     def on_minimize_button_clicked(self, widget, data=None):
-        self.top_level_window.iconify()
+        self.top_level_window.minimize()
 
     def on_maximize_button_clicked(self, widget, data=None):
         if self.full_screen:
@@ -69,10 +69,10 @@ class TopToolBarController(ExtendedController):
 
     def update_maximize_button(self):
         if self.full_screen:
-            self.view['maximize_button'].set_icon_widget(gui_helper_label.create_button_label(constants.BUTTON_COLLAPSE))
+            self.view['maximize_button'].set_child(gui_helper_label.create_button_label(constants.BUTTON_COLLAPSE))
             self.view['maximize_button'].set_tooltip_text("Un-maximize window")
         else:
-            self.view['maximize_button'].set_icon_widget(gui_helper_label.create_button_label(constants.BUTTON_EXP))
+            self.view['maximize_button'].set_child(gui_helper_label.create_button_label(constants.BUTTON_EXP))
             self.view['maximize_button'].set_tooltip_text("Maximize window")
 
 

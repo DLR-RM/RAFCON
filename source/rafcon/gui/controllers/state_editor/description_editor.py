@@ -17,6 +17,8 @@
 
 """
 
+from gi.repository import Gtk
+
 from rafcon.core.states.library_state import LibraryState
 
 from rafcon.gui.controllers.utils.editor import EditorController
@@ -41,7 +43,8 @@ class DescriptionEditorController(EditorController):
     def register_view(self, view):
         super(DescriptionEditorController, self).register_view(view)
 
-        view.textview.connect('size-allocate', self.scroll_to_bottom)
+        # GTK4 removed size-allocate; the vertical adjustment signals content size changes
+        view.scrollable.get_vadjustment().connect('changed', self.scroll_to_bottom)
 
         if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
             view.textview.set_sensitive(True)
@@ -50,7 +53,10 @@ class DescriptionEditorController(EditorController):
             view.textview.get_buffer().set_text(description)
             view.textview.set_editable(False)
         else:
-            view.textview.connect('focus-out-event', self.on_focus_out)
+            # GTK4: focus-out-event is replaced by a focus event controller
+            focus_controller = Gtk.EventControllerFocus()
+            focus_controller.connect('leave', self.on_focus_out)
+            view.textview.add_controller(focus_controller)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions

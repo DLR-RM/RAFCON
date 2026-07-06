@@ -19,6 +19,7 @@
 """
 import os
 from gi.repository import Gtk
+from gi.repository import GLib
 import contextlib
 from pylint import lint
 try:
@@ -154,8 +155,9 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
         # Without the loop, this function would block the GTK main loop and the log message would appear after the
         # function has finished
         # TODO: run parser in separate thread
-        while Gtk.events_pending():
-            Gtk.main_iteration_do(False)
+        main_context = GLib.MainContext.default()
+        while main_context.pending():
+            main_context.iteration(False)
 
         # get script
         current_text = self.view.get_text()

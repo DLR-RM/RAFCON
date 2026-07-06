@@ -57,10 +57,10 @@ class View:
         """
         Connects the signals of the widgets to the custom callbacks
 
-        GTK4 removed Gtk.Builder.connect_signals(); signal handlers must be supplied as a builder scope
-        object at parse time instead. No view uses this mechanism anymore.
+        GTK4 removed Gtk.Builder.connect_signals(); signal handlers would have to be supplied as a
+        builder scope object at parse time instead. No .ui file declares <signal> handlers anymore,
+        all signals are connected explicitly in the controllers, so this is a no-op kept for the
+        generic controller initialization.
         """
 
-        raise NotImplementedError(
-            "Gtk.Builder.connect_signals() was removed in GTK4 — pass a scope object to Gtk.Builder "
-            "and declare handlers in the .ui file, or connect signals explicitly in the controller.")
+        pass

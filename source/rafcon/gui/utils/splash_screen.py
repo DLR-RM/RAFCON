@@ -12,6 +12,7 @@
 
 import os
 from gi.repository import Gtk
+from gi.repository import GLib
 from gi.repository import GdkPixbuf
 import random
 
@@ -22,28 +23,39 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
+def _pump_main_context():
+    """Processes pending main loop events (GTK4 replacement for Gtk.events_pending loops)"""
+    context = GLib.MainContext.default()
+    while context.pending():
+        context.iteration(False)
+
+
 class SplashScreen(Gtk.Window):
 
     def __init__(self, width=530, height=350, contains_image=False):
-        # init Gtk.Window with type popup
-        super(SplashScreen, self).__init__(type=Gtk.WindowType.POPUP)
+        # GTK4 has no popup window type or window positioning; an undecorated window is used
+        super(SplashScreen, self).__init__()
+        self.set_decorated(False)
 
         # index for the image rotator
         self.image_index = 0
 
+        # remember the requested size; GTK4 windows cannot be queried before mapping
+        self.width = width
+        self.height = height
+
         # Set the title to rafcon so it is detectable in taskbars
-        # set width and height to parameter values and position the window in the center
         self.set_title('RAFCON')
         self.set_default_size(width, height)
-        self.set_position(Gtk.WindowPosition.CENTER)
 
         main_vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
-        self.add(main_vbox)
+        self.set_child(main_vbox)
         self.image = Gtk.Image()
         # If an img path was defined, create a gtk img and fill it from a pixelbuffer which is created from the
         # set file path
         if contains_image:
-            main_vbox.pack_start(self.image, True, True, 0)
+            self.image.set_vexpand(True)
+            main_vbox.append(self.image)
 
         if global_design_config.get_config_value("SPLASH_SCREEN_SHOW_TEXT", True):
             # add label to display text, the text can be changed by the text() method.
@@ -51,31 +63,29 @@ class SplashScreen(Gtk.Window):
             self.label = Gtk.Label(label="")
             self.label.set_xalign(0.5)
             self.label.set_yalign(0.5)
-            main_vbox.pack_start(self.label, False, True, 10)
+            main_vbox.append(self.label)
             main_vbox.set_spacing(0)
             label_height = global_design_config.get_config_value("SPLASH_SCREEN_LABEL_HEIGHT", 0)
             self.label.set_size_request(-1, label_height)
 
         if not os.getenv("RAFCON_START_MINIMIZED", False):
-            self.show_all()
+            self.present()
 
     def set_text(self, text):
         if not global_design_config.get_config_value("SPLASH_SCREEN_SHOW_TEXT", True):
             return
         logger.info(text)
         self.label.set_text(text)
-        while Gtk.events_pending():
-            Gtk.main_iteration_do(False)
+        _pump_main_context()
         return
 
     def load_image(self, image_path):
         if image_path:
             horizontal_spacing = global_design_config.get_config_value("SPLASH_SCREEN_HORIZONTAL_SPACING", 50)
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(image_path, self.get_size()[0] - horizontal_spacing,
-                                                            self.get_size()[1] - horizontal_spacing)
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(image_path, self.width - horizontal_spacing,
+                                                            self.height - horizontal_spacing)
             self.image.set_from_pixbuf(pixbuf)
-            while Gtk.events_pending():
-                Gtk.main_iteration_do(False)
+            _pump_main_context()
         else:
             logger.debug("Splash screen image path is None")
 
@@ -98,4 +108,3 @@ class SplashScreen(Gtk.Window):
             self.image_index += 1
 
         self.load_image(image_path)
-

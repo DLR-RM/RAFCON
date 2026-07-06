@@ -35,6 +35,7 @@ from rafcon.gui.helpers.label import create_menu_item, create_check_menu_item, a
 from rafcon.gui.models import AbstractStateModel, ContainerStateModel, LibraryStateModel, ScopedVariableModel, \
     TransitionModel, DataFlowModel
 from rafcon.gui.utils import constants
+from rafcon.gui.utils.context_menu import ContextMenu
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -59,10 +60,11 @@ class StateMachineRightClickMenu(object):
         from rafcon.gui.singleton import main_window_controller
         shortcut_manager = main_window_controller.shortcut_manager
         self.shortcut_manager = shortcut_manager
-        self.accel_group = shortcut_manager.accel_group
+        # GTK4 removed Gtk.AccelGroup; the argument is kept as None for the helper signatures
+        self.accel_group = None
 
     def generate_right_click_menu_state(self):
-        menu = Gtk.Menu()
+        menu = ContextMenu()
         accel_group = self.accel_group
         shortcuts_dict = global_gui_config.get_config_value('SHORTCUTS')
 
@@ -70,7 +72,7 @@ class StateMachineRightClickMenu(object):
 
         self.insert_execution_sub_menu_in_menu(menu, shortcuts_dict, accel_group)
 
-        menu.append(Gtk.SeparatorMenuItem())
+        menu.append_separator()
 
         add_sub_menu_item, add_sub_menu = append_sub_menu_to_parent_menu("Add", menu, constants.BUTTON_ADD)
 
@@ -94,7 +96,7 @@ class StateMachineRightClickMenu(object):
                                                    accel_code=shortcuts_dict['add_barrier_state'][0],
                                                    accel_group=accel_group))
 
-        add_sub_menu.append(Gtk.SeparatorMenuItem())
+        add_sub_menu.append_separator()
 
         add_sub_menu.append(create_menu_item("Outcome", constants.BUTTON_ADD, self.on_add_outcome,
                                              accel_code=shortcuts_dict['add_outcome'][0], accel_group=accel_group))
@@ -107,7 +109,7 @@ class StateMachineRightClickMenu(object):
                                              accel_group=accel_group))
         menu.append(create_menu_item("Delete", constants.BUTTON_DEL, self.on_delete,
                                      accel_code=shortcuts_dict['delete'][0], accel_group=accel_group))
-        menu.append(Gtk.SeparatorMenuItem())
+        menu.append_separator()
 
         self.insert_copy_cut_paste_in_menu(menu, shortcuts_dict, accel_group)
 
@@ -147,7 +149,7 @@ class StateMachineRightClickMenu(object):
                     if isinstance(selected_state_m.state, state_class):
                         class_item.set_sensitive(False)
                     change_type_sub_menu.append(class_item)
-        menu.append(Gtk.SeparatorMenuItem())
+        menu.append_separator()
 
         # save state as but not for root state, therefore the user should use save state machine as
         if len(selection.states) == 1 and not selected_state_m.state.is_root_state:
@@ -189,7 +191,7 @@ class StateMachineRightClickMenu(object):
                                                                  callback_function,
                                                                  accel_code=None, accel_group=accel_group))
         self.insert_breakpoint_in_menu(menu)
-        menu.append(Gtk.SeparatorMenuItem())
+        menu.append_separator()
         callback_function = partial(self.on_change_background_color, state_model=selected_state_m)
         menu.append(create_menu_item("Change Background Color",
                                      constants.BUTTON_CHANGE_BACKGROUND_COLOR,
@@ -259,7 +261,7 @@ class StateMachineRightClickMenu(object):
                                          accel_code=shortcuts_dict['cut'][0], accel_group=accel_group))
 
     def generate_right_click_menu_library(self):
-        menu = Gtk.Menu()
+        menu = ContextMenu()
         accel_group = self.accel_group
         shortcuts_dict = global_gui_config.get_config_value('SHORTCUTS')
 
@@ -293,7 +295,7 @@ class StateMachineRightClickMenu(object):
         
         self.insert_breakpoint_in_menu(menu)
 
-        menu.append(Gtk.SeparatorMenuItem())
+        menu.append_separator()
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         selected_state_m = selection.get_selected_state()
         callback_function = partial(self.on_change_background_color, state_model=selected_state_m)
@@ -435,10 +437,10 @@ class StateMachineRightClickMenu(object):
             else:
                 menu = self.generate_right_click_menu_state()
             menu.show_all()
-            return self.activate_menu(event, menu)
+            return self.activate_menu(event, menu, widget)
 
-    def activate_menu(self, event, menu):
-        menu.popup(None, None, None, None, event.get_button()[1], event.time)
+    def activate_menu(self, event, menu, widget):
+        menu.popup_at(widget, event.x, event.y)
         return True
 
 
@@ -456,9 +458,21 @@ class StateMachineTreeRightClickMenuController(StateMachineRightClickMenuControl
 
     def register_view(self, view):
         ExtendedController.register_view(self, view)
-        view.connect('button_press_event', self.mouse_click)
+        # GTK4: right clicks come from a click gesture instead of button_press_event
+        right_click_gesture = Gtk.GestureClick()
+        right_click_gesture.set_button(3)
+        right_click_gesture.connect('pressed', self._on_right_click_pressed)
+        view.add_controller(right_click_gesture)
 
-    def activate_menu(self, event, menu):
+    def _on_right_click_pressed(self, gesture, n_press, x, y):
+        from rafcon.gui.controllers.utils.tree_view_controller import ButtonEventShim
+        bin_x, bin_y = self.view.convert_widget_to_bin_window_coords(int(x), int(y))
+        event = ButtonEventShim(Gdk.EventType.BUTTON_PRESS, bin_x, bin_y, gesture.get_current_button(),
+                                gesture.get_current_event_state())
+        if self.mouse_click(self.view, event):
+            gesture.set_state(Gtk.EventSequenceState.CLAIMED)
+
+    def activate_menu(self, event, menu, widget):
         pthinfo = self.view.get_path_at_pos(int(event.x), int(event.y))
 
         if pthinfo is not None:
@@ -466,7 +480,9 @@ class StateMachineTreeRightClickMenuController(StateMachineRightClickMenuControl
             self.view.grab_focus()
             self.view.set_cursor(path, col, 0)
 
-            menu.popup(None, None, None, None, event.get_button()[1], event.time)
+            # the event holds bin window coordinates; the popover expects widget coordinates
+            widget_x, widget_y = self.view.convert_bin_window_to_widget_coords(int(event.x), int(event.y))
+            menu.popup_at(self.view, widget_x, widget_y)
         return True
 
 
@@ -475,14 +491,16 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
 
     """
 
-    def activate_menu(self, event, menu):
+    def activate_menu(self, event, menu, widget):
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
-            from rafcon.gui.helpers.coordinates import screen2main_window
-            menu.popup(None, None, None, None, event.get_button()[1], event.time)
-            # The pointer in screen coordinates.
-            pointer = menu.get_root_window().get_pointer()
-            self.menu_position = screen2main_window((pointer.x, pointer.y))
+            from rafcon.gui.helpers.coordinates import graphical_editor2main_window
+            menu.popup_at(widget, event.x, event.y)
+            # remember the menu position (main window coordinates) for e.g. paste actions
+            try:
+                self.menu_position = graphical_editor2main_window((event.x, event.y))
+            except Exception:
+                self.menu_position = None
             return True
         else:
             return False

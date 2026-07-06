@@ -30,17 +30,25 @@ import rafcon.core.singleton
 from rafcon.core.states.hierarchy_state import HierarchyState
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.controllers.graphical_editor_gaphas import GraphicalEditorController as \
-    GraphicalEditorGaphasController
+try:
+    from rafcon.gui.controllers.graphical_editor_gaphas import GraphicalEditorController as \
+        GraphicalEditorGaphasController
+    from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
+except (NotImplementedError, ImportError):
+    # mygaphas not yet ported to gaphas 5 (Stage 4 of the GTK4 migration): boot with a placeholder
+    from rafcon.gui.controllers.graphical_editor_placeholder import \
+        GraphicalEditorController as GraphicalEditorGaphasController, \
+        GraphicalEditorView as GraphicalEditorGaphasView
 from rafcon.gui.models.state_machine import StateMachineModel, StateMachine
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
-from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
 from rafcon.gui.helpers import text_formatting
 from rafcon.gui.helpers.state_machine import new_state_machine
 from rafcon.gui.helpers.label import create_menu_item, set_label_markup
+from rafcon.gui.controllers.utils.tree_view_controller import ButtonEventShim
+from rafcon.gui.utils.context_menu import ContextMenu
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -54,36 +62,48 @@ def create_tab_close_button(callback, *additional_parameters):
     set_label_markup(close_label, constants.BUTTON_CLOSE, is_icon=True, size=constants.FONT_SIZE_SMALL)
     close_button = Gtk.Button()
     close_button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
-    close_button.set_relief(Gtk.ReliefStyle.NONE)
+    close_button.set_has_frame(False)
     Gtk.Widget.set_focus_on_click(close_button, True)
-    close_button.add(close_label)
+    close_button.set_child(close_label)
 
-    close_button.connect('released', callback, *additional_parameters)
+    # GTK4: Gtk.Button has no 'released' signal; 'clicked' fires on release as well.
+    # The close callbacks expect an event as first argument (only inspected for modifiers),
+    # so None is passed in its place.
+    close_button.connect('clicked', lambda button: callback(None, *additional_parameters))
 
     return close_button
 
 
 def create_tab_header(title, close_callback, right_click_callback, *additional_parameters):
-    def handle_click(widget, event, *additional_parameters):
+    def handle_click(gesture, n_press, x, y):
         """Calls `callback` in case the mouse button was pressed"""
-        if event.get_button()[1] == 2 and close_callback:
+        button = gesture.get_current_button()
+        event = ButtonEventShim(Gdk.EventType.BUTTON_PRESS, x, y, button, gesture.get_current_event_state())
+        event.widget = gesture.get_widget()
+        if button == 2 and close_callback:
             close_callback(event, *additional_parameters)
-        if event.get_button()[1] == 3 and right_click_callback:
+        if button == 3 and right_click_callback:
             right_click_callback(event, *additional_parameters)
 
     label = Gtk.Label(label=title)
     close_button = create_tab_close_button(close_callback, *additional_parameters)
 
     hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
-    hbox.pack_start(label, expand=True, fill=True, padding=constants.GRID_SIZE)
-    hbox.pack_start(close_button, expand=False, fill=False, padding=0)
+    label.set_hexpand(True)
+    label.set_margin_start(constants.GRID_SIZE)
+    label.set_margin_end(constants.GRID_SIZE)
+    hbox.append(label)
+    hbox.append(close_button)
 
-    event_box = Gtk.EventBox()
+    # GTK4 removed Gtk.EventBox; a plain box with a click gesture takes its place
+    event_box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
     event_box.set_name("tab_label")  # required for gtkrc
-    event_box.connect('button-press-event', handle_click, *additional_parameters)
+    click_gesture = Gtk.GestureClick()
+    click_gesture.set_button(0)
+    click_gesture.connect('pressed', handle_click)
+    event_box.add_controller(click_gesture)
     event_box.tab_label = label
-    event_box.add(hbox)
-    event_box.show_all()
+    event_box.append(hbox)
 
     return event_box, label
 
@@ -213,7 +233,7 @@ class StateMachinesEditorController(ExtendedController):
 
         self.view.notebook.append_page(page, tab)
         self.view.notebook.set_tab_reorderable(page, True)
-        page.show_all()
+        
 
         self.tabs[sm_id] = {'page': page,
                             'state_machine_m': state_machine_m,
@@ -235,21 +255,10 @@ class StateMachinesEditorController(ExtendedController):
 
         page_id = self.get_page_num(selected_state_machine_id)
 
-        # to retrieve the current tab colors
-        number_of_pages = self.view["notebook"].get_n_pages()
-        old_label_colors = list(range(number_of_pages))
-        for p in range(number_of_pages):
-            page = self.view["notebook"].get_nth_page(p)
-            label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
-            old_label_colors[p] = label.get_style_context().get_color(Gtk.StateType.NORMAL)
-
+        # (the GTK3 code snapshotted the tab label colors here via Gtk.StateType, which GTK4
+        # removed; the colors were never re-applied, so the snapshot is simply dropped)
         if not self.view.notebook.get_current_page() == page_id:
             self.view.notebook.set_current_page(page_id)
-
-        # set the old colors
-        for p in range(number_of_pages):
-            page = self.view["notebook"].get_nth_page(p)
-            label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
 
     def set_active_state_machine(self, state_machine_id):
         page_num = self.get_page_num(state_machine_id)
@@ -291,7 +300,7 @@ class StateMachinesEditorController(ExtendedController):
                     not self.tabs[sm_id]['file_system_path'] == sm.file_system_path or \
                     not self.tabs[sm_id]['root_state_name'] == sm.root_state.name:
 
-                label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_child().get_children()[0]
+                label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).tab_label
                 set_tab_label_texts(label, state_machine_m, unsaved_changes=sm.marked_dirty)
 
                 self.tabs[sm_id]['file_system_path'] = sm.file_system_path
@@ -302,7 +311,7 @@ class StateMachinesEditorController(ExtendedController):
 
     def on_mouse_right_click(self, event, state_machine_m, result):
 
-        menu = Gtk.Menu()
+        menu = ContextMenu()
         for sm_id, sm_m in self.model.state_machines.items():
             menu_item = create_menu_item(sm_m.root_state.state.name, constants.BUTTON_EXCHANGE,
                                          callback=self.change_selected_state_machine_id, callback_args=[sm_id])
@@ -322,7 +331,9 @@ class StateMachinesEditorController(ExtendedController):
         menu.append(menu_item)
 
         menu.show_all()
-        menu.popup(None, None, None, None, event.get_button()[1], event.time)
+        # pop up on the clicked tab header (attached to the event by the tab click gesture)
+        menu_parent = getattr(event, 'widget', None) or self.view['notebook']
+        menu.popup_at(menu_parent, event.x, event.y)
         return True
 
     def change_selected_state_machine_id(self, widget, new_selected_state_machine_id):
@@ -521,12 +532,12 @@ class StateMachinesEditorController(ExtendedController):
         if active_state_machine_id is None:
             # un-mark all state machine that are marked with execution-running style class
             for tab in self.tabs.values():
-                label = notebook.get_tab_label(tab['page']).get_child().get_children()[0]
+                label = notebook.get_tab_label(tab["page"]).tab_label
                 if label.get_style_context().has_class(constants.execution_running_style_class):
                     label.get_style_context().remove_class(constants.execution_running_style_class)
         else:
             # mark active state machine with execution-running style class
             page = self.get_page_for_state_machine_id(active_state_machine_id)
             if page:
-                label = notebook.get_tab_label(page).get_child().get_children()[0]
+                label = notebook.get_tab_label(page).tab_label
                 label.get_style_context().add_class(constants.execution_running_style_class)

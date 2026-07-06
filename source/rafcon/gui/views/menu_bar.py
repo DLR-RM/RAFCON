@@ -14,11 +14,51 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gi.repository import Gio, Gtk
+from gi.repository import Gio, GLib, Gtk
 from rafcon.design_patterns.mvc.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.config import global_gui_config
+
+
+class MenuActionProxy(object):
+    """Widget-like facade for a menu entry backed by a Gio action
+
+    GTK4 menu entries are not widgets. This proxy emulates the small part of the former
+    Gtk.(Check)MenuItem API used by the controllers (get_active/set_active/set_sensitive/
+    hide/show) on top of the backing Gio.SimpleAction, so call sites stay unchanged.
+    """
+
+    def __init__(self, view, name):
+        self._view = view
+        self._name = name
+
+    @property
+    def _action(self):
+        container = self._view.action_container or Gio.Application.get_default()
+        return container.lookup_action(self._name) if container else None
+
+    def get_active(self):
+        action = self._action
+        state = action.get_state() if action else None
+        return bool(state.get_boolean()) if state is not None else False
+
+    def set_active(self, active):
+        action = self._action
+        if action is not None:
+            action.change_state(GLib.Variant.new_boolean(bool(active)))
+
+    def set_sensitive(self, sensitive):
+        action = self._action
+        if action is not None:
+            action.set_enabled(sensitive)
+
+    def hide(self):
+        # menu entries of a GMenu model cannot be hidden; disabling is the closest equivalent
+        self.set_sensitive(False)
+
+    def show(self):
+        self.set_sensitive(True)
 
 
 class MenuBarView(View):
@@ -54,6 +94,10 @@ class MenuBarView(View):
     def __init__(self):
         super().__init__(builder_filename=glade.get_glade_path('menu_bar.ui'), parent='menubar')
 
+        # the Gio.ActionMap holding the menu actions (Gtk.Application or a Gio.SimpleActionGroup);
+        # set by the menu bar controller when the actions are created
+        self.action_container = None
+
         # menu section the controller fills with the recently opened state machines
         self.sub_menu_open_recently = self['open_recent_section']
 
@@ -73,14 +117,20 @@ class MenuBarView(View):
                 main_shortcut = action_shortcuts[0] if isinstance(action_shortcuts, list) else action_shortcuts
                 self.set_menu_item_accelerator(action_name, main_shortcut)
 
+    def __getitem__(self, key):
+        # menu entries are not widgets anymore; hand out an action proxy for them
+        if key in self.actions:
+            return MenuActionProxy(self, key)
+        return super().__getitem__(key)
+
     def set_menu_item_icon(self, menu_item_name, uni_code=None):
         """No-op: GMenu entries are not widgets, so the FontAwesome icon boxes of GTK3 are gone"""
         pass
 
     def set_menu_item_sensitive(self, menu_item_name, sensitive):
         """Enable/disable the application action backing the menu entry"""
-        app = Gio.Application.get_default()
-        action = app.lookup_action(menu_item_name) if app else None
+        container = self.action_container or Gio.Application.get_default()
+        action = container.lookup_action(menu_item_name) if container else None
         if action is not None:
             action.set_enabled(sensitive)
 
@@ -91,5 +141,6 @@ class MenuBarView(View):
             return
         self.accelerators[menu_item_name] = accel_code
         app = Gio.Application.get_default()
-        if isinstance(app, Gtk.Application) and app.lookup_action(menu_item_name):
+        container = self.action_container or app
+        if isinstance(app, Gtk.Application) and container and container.lookup_action(menu_item_name):
             app.set_accels_for_action("app.{}".format(menu_item_name), [accel_code])

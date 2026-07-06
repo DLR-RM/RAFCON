@@ -19,11 +19,13 @@
 """
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import Gio
 from gi.repository import GObject
 import yaml_configuration.config
-from os.path import dirname
+from os.path import dirname, isdir
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.utils.dialog import run_dialog
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models.config_model import ConfigModel
 from rafcon.gui.views.preferences_window import PreferencesWindowView
@@ -78,10 +80,15 @@ class PreferencesWindowController(ExtendedController):
         self.view['add_library_button'].connect('clicked', self._on_add_library)
         self.view["remove_library_button"].connect('clicked', self._on_remove_library)
 
-        self.view['config_tree_view'].connect("button_press_event", self._on_row_clicked_trigger_toggle_of_boolean,
-                                              self.core_config_model, self.core_list_store)
-        self.view['gui_tree_view'].connect("button_press_event", self._on_row_clicked_trigger_toggle_of_boolean,
-                                           self.gui_config_model, self.gui_list_store)
+        # GTK4: clicks come from gestures instead of button_press_event
+        for tree_view_name, config_model, list_store in (
+                ('config_tree_view', self.core_config_model, self.core_list_store),
+                ('gui_tree_view', self.gui_config_model, self.gui_list_store)):
+            click_gesture = Gtk.GestureClick()
+            click_gesture.set_button(1)
+            click_gesture.connect('pressed', self._on_row_clicked_trigger_toggle_of_boolean,
+                                  self.view[tree_view_name], config_model, list_store)
+            self.view[tree_view_name].add_controller(click_gesture)
 
         self.view['core_config_value_renderer'].set_property('editable', True)
         self.view['core_config_value_renderer'].connect('edited', self._on_config_value_changed, self.core_config_model,
@@ -112,7 +119,8 @@ class PreferencesWindowController(ExtendedController):
         self.view['import_button'].connect("clicked", self._on_import_config)
         self.view['export_button'].connect('clicked', self._on_export_config)
 
-        self.view['preferences_window'].connect('delete_event', self._on_delete_event)
+        # GTK4 replaced delete-event with close-request
+        self.view['preferences_window'].connect('close-request', self._on_delete_event)
 
         self.update_all()
 
@@ -336,18 +344,16 @@ class PreferencesWindowController(ExtendedController):
         config_value ^= True
         config_m.set_preliminary_config_value(config_key, config_value)
 
-    def _on_row_clicked_trigger_toggle_of_boolean(self, widget, event, config_model, list_store):
+    def _on_row_clicked_trigger_toggle_of_boolean(self, gesture, n_press, x, y, widget, config_model, list_store):
         # click with left mouse button
-        if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 1:
-            x = int(event.x)
-            y = int(event.y)
-            pthinfo = widget.get_path_at_pos(x, y)
-            if pthinfo is not None:
-                path, col, _, _ = pthinfo
-                widget.grab_focus()
-                widget.set_cursor(path, col, 0)
-                if list_store[path][self.TOGGLE_VISIBLE_STORAGE_ID]:
-                    self._on_checkbox_toggled(None, path[0], config_model, list_store)
+        bin_x, bin_y = widget.convert_widget_to_bin_window_coords(int(x), int(y))
+        pthinfo = widget.get_path_at_pos(bin_x, bin_y)
+        if pthinfo is not None:
+            path, col, _, _ = pthinfo
+            widget.grab_focus()
+            widget.set_cursor(path, col, 0)
+            if list_store[path][self.TOGGLE_VISIBLE_STORAGE_ID]:
+                self._on_checkbox_toggled(None, path[0], config_model, list_store)
 
     def _on_import_config(self, *args):
         """Callback method the the import button was clicked
@@ -355,15 +361,19 @@ class PreferencesWindowController(ExtendedController):
         Shows a dialog allowing to import an existing configuration file
         """
         def handle_import(dialog_text, path_name):
-            chooser = Gtk.FileChooserDialog(dialog_text, None,
-                                            Gtk.FileChooserAction.SAVE,
-                                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                             Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT))
-            chooser.set_current_folder(path_name)
-            response = chooser.run()
+            chooser = Gtk.FileChooserDialog(title=dialog_text, action=Gtk.FileChooserAction.SAVE)
+            chooser.add_buttons("_Cancel", Gtk.ResponseType.CANCEL,
+                                "_Open", Gtk.ResponseType.ACCEPT)
+            if path_name and isdir(path_name):
+                chooser.set_current_folder(Gio.File.new_for_path(path_name))
+            response = run_dialog(chooser)
             if response == Gtk.ResponseType.ACCEPT:
-                # get_filename() returns the whole file path inclusively the filename
-                config_file = chooser.get_filename()
+                # the whole file path inclusively the filename
+                selected_file = chooser.get_file()
+                config_file = selected_file.get_path() if selected_file else None
+                if config_file is None:
+                    chooser.destroy()
+                    return
                 config_path = dirname(config_file)
                 self._last_path = config_path
                 config_dict = yaml_configuration.config.load_dict_from_yaml(config_file)
@@ -398,14 +408,15 @@ class PreferencesWindowController(ExtendedController):
             return
 
         def handle_export(dialog_text, path, config_m):
-            chooser = Gtk.FileChooserDialog(dialog_text, None,
-                                            Gtk.FileChooserAction.SAVE,
-                                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                             Gtk.STOCK_SAVE_AS, Gtk.ResponseType.ACCEPT))
-            chooser.set_current_folder(path)
-            response = chooser.run()
+            chooser = Gtk.FileChooserDialog(title=dialog_text, action=Gtk.FileChooserAction.SAVE)
+            chooser.add_buttons("_Cancel", Gtk.ResponseType.CANCEL,
+                                "Save _As", Gtk.ResponseType.ACCEPT)
+            if path and isdir(path):
+                chooser.set_current_folder(Gio.File.new_for_path(path))
+            response = run_dialog(chooser)
             if response == Gtk.ResponseType.ACCEPT:
-                config_file = chooser.get_filename()
+                selected_file = chooser.get_file()
+                config_file = selected_file.get_path() if selected_file else None
                 if not config_file:
                     logger.error("Configuration could not be exported! Invalid file name!")
                 else:
@@ -467,24 +478,23 @@ class PreferencesWindowController(ExtendedController):
         changes_str = ''
         if self.core_config_model.changed_keys_requiring_restart or \
                 self.gui_config_model.changed_keys_requiring_restart:
-            message = Gtk.MessageDialog(parent=self.view["preferences_window"], flags=Gtk.DialogFlags.MODAL,
-                                        type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK)
+            message = Gtk.MessageDialog(transient_for=self.view["preferences_window"], modal=True,
+                                        message_type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK)
             message_string = "You must restart RAFCON to apply following changes: \n"
             for key in (self.core_config_model.changed_keys_requiring_restart |
                         self.gui_config_model.changed_keys_requiring_restart):
                 changes_str = ("%s\n%s" % (changes_str, key))
             message.set_markup("%s %s" % (message_string, changes_str))
-            message.run()
+            run_dialog(message)
             message.destroy()
 
     @staticmethod
-    def _on_delete_event(window, event):
-        """Called when the window gets destroyed
+    def _on_delete_event(window):
+        """Called on the close request of the window
 
         Hides the window.
 
         :param Gtk.Window window: The window
-        :param Gdk.Event event: Event data
         """
         window.hide()
         return True
@@ -592,21 +602,19 @@ class PreferencesWindowController(ExtendedController):
         :param title_text: Title text
         :param description: Description
         """
-        dialog = Gtk.Dialog(title=title_text, transient_for=self.view["preferences_window"], flags=0)
-        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT, Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
+        dialog = Gtk.Dialog(title=title_text, transient_for=self.view["preferences_window"])
+        dialog.add_buttons("_Cancel", Gtk.ResponseType.REJECT, "_OK", Gtk.ResponseType.ACCEPT)
         label = Gtk.Label(label=description)
         label.set_margin_start(10)
         label.set_margin_end(10)
         label.set_margin_top(10)
         label.set_margin_bottom(10)
-        dialog.vbox.pack_start(label, True, True, 0)
-        label.show()
+        content_area = dialog.get_content_area()
+        content_area.append(label)
         self._gui_checkbox = Gtk.CheckButton(label="GUI Config")
-        dialog.vbox.pack_start(self._gui_checkbox, True, True, 0)
-        self._gui_checkbox.show()
+        content_area.append(self._gui_checkbox)
         self._core_checkbox = Gtk.CheckButton(label="Core Config")
-        self._core_checkbox.show()
-        dialog.vbox.pack_start(self._core_checkbox, True, True, 0)
-        response = dialog.run()
+        content_area.append(self._core_checkbox)
+        response = run_dialog(dialog)
         dialog.destroy()
         return response
