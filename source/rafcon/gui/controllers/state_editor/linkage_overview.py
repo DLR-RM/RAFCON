@@ -38,7 +38,10 @@ class LinkageOverviewController(ExtendedController, ModelMT):
         self.add_controller('scoped_variables', ScopedVariableListController(scoped_variable_state_m, view.scope_view))
 
         if not isinstance(scoped_variable_state_m, ContainerStateModel):
-            view['scoped_box'].destroy()
+            # GTK4 removed Gtk.Widget.destroy; detach the box from its parent instead
+            scoped_box = view['scoped_box']
+            if scoped_box.get_parent() is not None:
+                scoped_box.get_parent().remove(scoped_box)
 
         view.inputs_view.show()
         view.outputs_view.show()

@@ -8,8 +8,8 @@ gi.require_version('Gtk', '4.0')
 # --------------- unit tests --------------------    
 def _make_view(width=800, height=600):
     view = MagicMock()
-    view.get_allocated_width.return_value = width
-    view.get_allocated_height.return_value = height
+    view.get_width.return_value = width
+    view.get_height.return_value = height
     view.matrix = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0] # Zoom
     return view
 
@@ -152,8 +152,6 @@ def test_on_autoscroll_corner_diagonal(monkeypatch):
     assert dx > 0, dy > 0  # bottom-right -> +x,+y (diagonal)
 
 def test_on_autoscroll_stops_when_not_dragging(monkeypatch):
-    import rafcon.gui.mygaphas.tools as tools_module
-    monkeypatch.setattr(tools_module.GObject, "source_remove", lambda tid: None)
     tool = _make_dummy_tool(_make_view())
     tool._last_event_pos = (795, 300)
     frame_clock = MagicMock()

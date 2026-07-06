@@ -68,43 +68,41 @@ def get_state_handle_pos(view, state_v, handle):
 
 
 def resize_state(gui, view, state_v, rel_size, num_motion_events, recursive, monkeypatch):
-    from gi.repository import Gdk
-    from rafcon.gui.mygaphas.tools import MoveHandleTool
+    from rafcon.gui.mygaphas.tools import HandleMoveMode
     from rafcon.gui.utils.constants import RECURSIVE_RESIZE_MODIFIER
-    from gaphas.item import SE, NW
+    from gaphas.item import SE
 
-    def get_resize_handle(x, y, distance=None):
+    def get_resize_handle(*args, **kwargs):
         return state_v, state_v.handles()[SE]
 
     monkeypatch.setattr("rafcon.gui.mygaphas.aspect.StateHandleFinder.get_handle_at_point", get_resize_handle)
     monkeypatch.setattr("rafcon.gui.mygaphas.aspect.ItemHandleFinder.get_handle_at_point", get_resize_handle)
     # Deactivate guides (snapping)
     monkeypatch.setattr("rafcon.gui.mygaphas.guide.GuidedStateMixin.MARGIN", 0)
+    # Deactivate autoscrolling: depending on the window layout, the resize handle can get close
+    # to the editor border, which would arm the autoscroll frame-clock callback and drag the
+    # handle away under the test's feet (autoscroll has its own tests)
+    monkeypatch.setattr("rafcon.gui.mygaphas.tools.AutoscrollMixin.handle_autoscroll",
+                        lambda self, x, y: None)
 
-    resize_tool = gui(MoveHandleTool, view)
+    resize_mode = gui(HandleMoveMode, view)
     start_pos_handle = gui(get_state_handle_pos, view, state_v, state_v.handles()[SE])
 
+    modifiers = RECURSIVE_RESIZE_MODIFIER if recursive else 0
+    print("\nsent modifiers", modifiers)
+
     # Start resize: Press button
-    # Gtk TODO: Check if button can be set like this
-    button_press_event = Gdk.Event.new(type=Gdk.EventType.BUTTON_PRESS)
-    button_press_event.button = 1
-    gui(resize_tool.on_button_press, button_press_event)
+    assert gui(resize_mode.begin, start_pos_handle[0], start_pos_handle[1], modifiers), \
+        "resize mode did not grab the handle"
     # Do resize: Move mouse
-    motion_event = Gdk.Event.new(Gdk.EventType.MOTION_NOTIFY)
-    motion_event.state = motion_event.get_state()[1] | Gdk.EventMask.BUTTON_PRESS_MASK
-    if recursive:
-        motion_event.state = motion_event.get_state()[1] | RECURSIVE_RESIZE_MODIFIER
-    print("\nsent motion_event.state", motion_event.get_state())
+    x, y = start_pos_handle
     for i in range(num_motion_events):
-        motion_event.x = start_pos_handle[0] + rel_size[0] * (float(i + 1) / num_motion_events)
-        motion_event.y = start_pos_handle[1] + rel_size[1] * (float(i + 1) / num_motion_events)
-        gui(resize_tool.on_motion_notify, motion_event)
+        x = start_pos_handle[0] + rel_size[0] * (float(i + 1) / num_motion_events)
+        y = start_pos_handle[1] + rel_size[1] * (float(i + 1) / num_motion_events)
+        gui(resize_mode.update, x, y, modifiers)
 
     # Stop resize: Release button
-    # Gtk TODO: Check if button can be set like this
-    button_release_event = Gdk.Event.new(type=Gdk.EventType.BUTTON_RELEASE)
-    button_release_event.button = 1
-    gui(resize_tool.on_button_release, button_release_event)
+    gui(resize_mode.end, x, y, modifiers)
 
     monkeypatch.undo()
     monkeypatch.undo()

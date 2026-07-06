@@ -4,7 +4,7 @@ FONTS_FOLDER: $RELATIVE_PATH{../share/fonts}
 PRIMARY_FONT: "SourceSansPro"
 THEMES_FOLDER: $RELATIVE_PATH{../share/themes}
 THEME_NAME: RAFCON
-SOURCE_VIEW_FOLDER: $RELATIVE_PATH{../share/gtksourceview-3.0}
+SOURCE_VIEW_FOLDER: $RELATIVE_PATH{../share/gtksourceview-5}
 # overwrites gui_config.SOURCE_EDITOR_STYLE
 SOURCE_VIEW_THEME: rafcon-dark
 ICONS_FOLDER: $RELATIVE_PATH{../share/icons}

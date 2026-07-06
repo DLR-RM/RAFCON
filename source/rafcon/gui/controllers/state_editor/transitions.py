@@ -118,7 +118,10 @@ class StateTransitionsListController(LinkageListController):
             self.connect_signal(view['to_state_combo'], "edited", self.on_combo_changed_to_state)
             self.connect_signal(view['to_outcome_combo'], "edited", self.on_combo_changed_to_outcome)
 
-        view.tree_view.connect("grab-focus", self.on_focus)
+        # GTK4 removed the "grab-focus" signal; use a focus event controller instead
+        focus_controller = Gtk.EventControllerFocus()
+        focus_controller.connect("enter", self.on_focus)
+        view.tree_view.add_controller(focus_controller)
         self.update(initiator='"register view"')
 
     def on_focus(self, widget, data=None):

@@ -83,26 +83,25 @@ def close_test_state_machine(gui):
     testing_utils.wait_for_gui()
 
 def _center_state_in_view(view, state_v):
-    from gi.repository import Gdk
-    from rafcon.gui.mygaphas.tools import MoveItemTool
-
-    view_center_x = view.get_allocated_width()/2
-    view_center_y = view.get_allocated_height()/2
+    view_center_x = view.get_width()/2
+    view_center_y = view.get_height()/2
     # pos state in view coordinates
     i_x, i_y = view.get_matrix_i2v(state_v).transform_point(state_v.width/2, state_v.height/2)
-    d_x = view_center_x -i_x
+    d_x = view_center_x - i_x
     d_y = view_center_y - i_y
     #move view so state is centered:
-    view._matrix.translate(d_x / view._matrix[0], d_y / view._matrix[3])
-    view.request_update((), view.canvas.get_all_items())
+    view.matrix.translate(d_x / view.matrix[0], d_y / view.matrix[3])
+    for item in view.canvas.get_all_items():
+        view.canvas.request_update(item)
+    view.update()
     cx, cy = view.get_matrix_i2v(state_v).transform_point(state_v.width/2, state_v.height/2)
     return cx, cy
 
 def _assert_centered(view, state_v, tol=2.0):
     cx, cy = view.get_matrix_i2v(state_v).transform_point(
         state_v.width / 2.0, state_v.height / 2.0)
-    center_x = view.get_allocated_width() / 2.0
-    center_y = view.get_allocated_height() / 2.0
+    center_x = view.get_width() / 2.0
+    center_y = view.get_height() / 2.0
     assert abs(cx - center_x) <= tol, f"x off by {cx - center_x:.1f}px"
     assert abs(cy - center_y) <= tol, f"y off by {cy - center_y:.1f}px"
 
@@ -112,174 +111,143 @@ def _get_handle_pos(view, state_v, handle):
     view_pos_handle = i2v.transform_point(*item_pos_handle)
     return view_pos_handle
 
-def _make_event(event_type, x, y, button=1, state=None):
-    from gi.repository import Gdk
-    event = Gdk.Event.new(event_type)
-    event.x = float(x)
-    event.y = float(y)
-    if event_type in (Gdk.EventType.BUTTON_PRESS, Gdk.EventType.BUTTON_RELEASE):
-        event.button = button
-    if state is not None:
-        event.state = state
-    return event
-
 def _zoom_into_view(gui, view, x, y):
-    from gi.repository import Gdk
-    from rafcon.gui.mygaphas.tools import ZoomTool
-    tool = gui(ZoomTool, view)
-    scroll_event = _make_event(Gdk.EventType.SCROLL, x, y)
-    while view._matrix[0] <= 15.0:
-        gui(tool.on_scroll, scroll_event)
+    """Zoom into the view at position (x, y) until the canvas is larger than the viewport
+
+    GTK4/gaphas 5 has no ZoomTool anymore (zooming happens in a scroll event controller),
+    so the view matrix is scaled directly, like the zoom handler does.
+    """
+    def zoom():
+        while view.matrix[0] <= 15.0:
+            zx, zy = view.matrix.inverse().transform_point(x, y)
+            view.matrix.translate(zx, zy)
+            view.matrix.scale(1.25, 1.25)
+            view.matrix.translate(-zx, -zy)
+        for item in view.canvas.get_all_items():
+            view.canvas.request_update(item)
+        view.update()
+    gui(zoom)
+    testing_utils.wait_for_gui()
     _assert_overflow(view)
 
 
 def _assert_overflow(view, axis="h"):
     '''Self-checking precondition: there must be off-screen canvas to scroll into.
     Returns the relevant adjustment so the test can read/set scroll position.'''
-    adj = view.get_hadjustment() if axis == "h" else view.get_vadjustment()
+    adj = view.hadjustment if axis == "h" else view.vadjustment
     assert adj.get_upper() > adj.get_page_size(), (
         "root state is not larger than the viewport; nothing for autoscroll to "
         "scroll into (the _enlarge_root_state setup failed)"
     )
     return adj
 
-def _get_handle_pos(view, state_v, handle):
-        i2v = view.get_matrix_i2v(state_v)
-        item_pos_handle = (handle.pos.x.value, handle.pos.y.value)
-        view_pos_handle = i2v.transform_point(*item_pos_handle)
-        return view_pos_handle
-
 def _item_drag_into_autoscroll_and_stop(gui, view, state_v, monkeypatch, stop_condition = "BUTTON_RELEASE"):
-    from gi.repository import Gdk
-    from rafcon.gui.mygaphas.tools import MoveItemTool
-    
-    tool = gui(MoveItemTool, view)
-    
-    monkeypatch.setattr(tool, "get_item", lambda: state_v)    # deterministic item grab
+    from rafcon.gui.mygaphas.tools import MoveItemMode
+
+    mode = gui(MoveItemMode, view)
+
     monkeypatch.setattr("rafcon.gui.mygaphas.guide.GuidedStateMixin.MARGIN", 0)   # disable snapping
-    
+
     gui(view.unselect_all); gui(view.select_item, state_v)
+    gui(setattr, view, "hovered_item", state_v)    # deterministic item grab
     testing_utils.wait_for_gui()
-    
+
     cx, cy = view.get_matrix_i2v(state_v).transform_point(state_v.width/2, state_v.height/2)
-    select_event = _make_event(Gdk.EventType.BUTTON_PRESS, cx, cy)
-    gui(tool.on_button_press, select_event)
+    assert gui(mode.begin, cx, cy, 0), "mode did not accept the drag"
     testing_utils.wait_for_gui()
-    
-    assert tool._item is not None, "tool did not select the state item"
-    
-    move_event = _make_event(Gdk.EventType.MOTION_NOTIFY, cx, cy)
-    move_event.state = move_event.get_state()[1] | Gdk.EventMask.BUTTON_PRESS_MASK
-    ticks = view.get_allocated_width()/2 - 5   # 608 - 5 = 603 ticks -> should trigger autoscroll at x = 1019
-    
+
+    assert mode._item is not None, "mode did not select the state item"
+
+    ticks = view.get_width()/2 - 5   # 608 - 5 = 603 ticks -> should trigger autoscroll at x = 1019
+    x, y = cx, cy
     for i in range(0, int(ticks), 5):
-        move_event.x = cx + i
-        move_event.y = cy
-        gui(tool.on_motion_notify, move_event)
+        x, y = cx + i, cy
+        gui(mode.update, x, y, 0)
         testing_utils.wait_for_gui()
-        assert tool._is_dragging(), "item drag did not start"
-        if tool._scroll_tick_id > 0:
+        assert mode._is_dragging(), "item drag did not start"
+        if mode._scroll_tick_id > 0:
             break
     if stop_condition == "BUTTON_RELEASE":
-        stop_event = _make_event(Gdk.EventType.BUTTON_RELEASE, move_event.x, move_event.y)
-        gui(tool.on_button_release, stop_event)
+        gui(mode.end, x, y, 0)
         testing_utils.wait_for_gui()
     elif stop_condition == "DRAG_BACK":
-        move_event.x = cx 
-        move_event.y = cy
-        gui(tool.on_motion_notify, move_event)
+        gui(mode.update, cx, cy, 0)
         testing_utils.wait_for_gui()
 
 
 def _handle_drag_into_autoscroll_and_stop(gui, view, state_v, monkeypatch, stop_condition="BUTTON_RELEASE"):
-    from gi.repository import Gdk
-    from rafcon.gui.mygaphas.tools import MoveHandleTool
+    from rafcon.gui.mygaphas.tools import HandleMoveMode
     from gaphas.item import SE
-    
-    tool = gui(MoveHandleTool)
-    tool.view = view
-    
-    monkeypatch.setattr(tool, "grabbed_item", lambda: state_v)    # deterministic item grab
-    monkeypatch.setattr(tool, "grabbed_handle", lambda: state_v.handles()[SE])
+
+    mode = gui(HandleMoveMode, view)
+
     # Deactivate guides (snapping)
     monkeypatch.setattr("rafcon.gui.mygaphas.guide.GuidedStateMixin.MARGIN", 0)
-    
+
     gui(view.unselect_all); gui(view.select_item, state_v)
     testing_utils.wait_for_gui()
 
-    assert tool.grabbed_handle is not None, "tool did not select the handle"
+    # deterministic handle grab (bypasses the HandleFinder in begin())
+    mode.grabbed_item = state_v
+    mode.grabbed_handle = state_v.handles()[SE]
+
     # get curent position of handle
-    cx, cy = _get_handle_pos(view, state_v, tool.grabbed_handle())
-    select_event = _make_event(Gdk.EventType.BUTTON_PRESS, cx, cy)
-    gui(tool.on_button_press, select_event)
-    testing_utils.wait_for_gui()
+    cx, cy = _get_handle_pos(view, state_v, mode.grabbed_handle)
 
-    move_event = _make_event(Gdk.EventType.MOTION_NOTIFY, cx, cy)
-    move_event.state = move_event.get_state()[1] | Gdk.EventMask.BUTTON_PRESS_MASK
-
-    ticks = view.get_allocated_width() - (cx + 5)   # 608 - 5 = 603 ticks -> should trigger autoscroll at x = 1019
-    
+    ticks = view.get_width() - (cx + 5)   # 608 - 5 = 603 ticks -> should trigger autoscroll at x = 1019
+    x, y = cx, cy
     for i in range(0, int(ticks), 5):
-        move_event.x = cx + i
-        move_event.y = cy
-        gui(tool.on_motion_notify, move_event)
+        x, y = cx + i, cy
+        gui(mode.update, x, y, 0)
         testing_utils.wait_for_gui()
-        assert tool._is_dragging(), "item drag did not start"
-        if tool._scroll_tick_id > 0:
+        assert mode._is_dragging(), "handle drag did not start"
+        if mode._scroll_tick_id > 0:
             break
     if stop_condition == "BUTTON_RELEASE":
-        stop_event = _make_event(Gdk.EventType.BUTTON_RELEASE, move_event.x, move_event.y)
-        gui(tool.on_button_release, stop_event)
+        gui(mode.end, x, y, 0)
         testing_utils.wait_for_gui()
     elif stop_condition == "DRAG_BACK":
-        move_event.x = cx 
-        move_event.y = cy
-        gui(tool.on_motion_notify, move_event)
+        gui(mode.update, cx, cy, 0)
         testing_utils.wait_for_gui()
 
 def _connection_drag_into_autoscroll_and_stop(gui, view, state_v, monkeypatch, stop_condition="BUTTON_RELEASE"):
-    from gi.repository import Gdk
-    from gaphas.aspect import HandleFinder
-    from rafcon.gui.mygaphas.tools import ConnectionCreationTool
+    from rafcon.gui.mygaphas.tools import ConnectionCreationMode
 
     def _get_output_port_handle(state_v, port_name=None):
-        from rafcon.gui.mygaphas.items.ports import OutputPortView
-        # state_v.output_ports (or .outputs) holds the OutputPortView objects
+        # state_v.outputs holds the OutputPortView objects
         for port_v in state_v.outputs:
             if port_name is None or port_v.model.data_port.name == port_name:
                 return port_v, port_v.handle   # the port view and its handle
         raise AssertionError(f"output port {port_name!r} not found on state")
 
-    tool = gui(ConnectionCreationTool)
-    tool.view = view
+    mode = gui(ConnectionCreationMode, view)
 
     port_v, handle = _get_output_port_handle(state_v, "output_1")
-    # get curent position of handles
+    # deterministic port grab (bypasses the HandleFinder in begin())
+    mode._start_port_v = port_v
+    mode._is_transition = False
+    mode._parent_state_v = port_v.parent.parent
+
+    # get curent position of the port handle
     cx, cy = _get_handle_pos(view, port_v, handle)
-    select_event = _make_event(Gdk.EventType.BUTTON_PRESS, cx, cy)
-    gui(tool.on_button_press, select_event)
-    testing_utils.wait_for_gui()
 
-    move_event = _make_event(Gdk.EventType.MOTION_NOTIFY, cx, cy)
-    move_event.state = move_event.get_state()[1] | Gdk.EventMask.BUTTON_PRESS_MASK
-
-    ticks = view.get_allocated_width() - (cx + 5)   # 608 - 5 = 603 ticks -> should trigger autoscroll at x = 1019
-    for i in range(0, int(ticks), 5): 
-        move_event.x = cx + i
-        move_event.y = cy
-        gui(tool.on_motion_notify, move_event)
+    ticks = view.get_width() - (cx + 5)   # 608 - 5 = 603 ticks -> should trigger autoscroll at x = 1019
+    x, y = cx, cy
+    for i in range(0, int(ticks), 5):
+        x, y = cx + i, cy
+        gui(mode.update, x, y, 0)
         testing_utils.wait_for_gui()
-        assert tool._is_dragging(), "item drag did not start"
-        if tool._scroll_tick_id > 0:
+        assert mode._is_dragging(), "connection drag did not start"
+        if mode._scroll_tick_id > 0:
             break
     if stop_condition == "BUTTON_RELEASE":
-        stop_event = _make_event(Gdk.EventType.BUTTON_RELEASE, move_event.x, move_event.y)
-        gui(tool.on_button_release, stop_event)
+        # The release position may lie on a port (e.g. the start port after the view was
+        # scrolled), which would attempt a connection creation - that is not under test here
+        mode._current_sink = None
+        gui(mode.end, x, y, 0)
         testing_utils.wait_for_gui()
     elif stop_condition == "DRAG_BACK":
-        move_event.x = cx 
-        move_event.y = cy
-        gui(tool.on_motion_notify, move_event)
+        gui(mode.update, cx, cy, 0)
         testing_utils.wait_for_gui()
     
 @pytest.mark.parametrize("gui", [config_options], indirect=True)

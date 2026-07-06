@@ -50,16 +50,33 @@ def get_recently_opened_state_machines(gui):
     return gui(gui.singletons.global_runtime_config.get_config_value, 'recently_opened_state_machines')
 
 
+def get_recent_menu_labels(menubar_ctrl):
+    """Labels of the recently-opened entries in the Gio.Menu section of the File menu"""
+    from gi.repository import Gio, GLib
+    sub_menu = menubar_ctrl.view.sub_menu_open_recently
+    # section 0 holds the "remove invalid paths" item, section 1 the recently opened state machines
+    recent_section = sub_menu.get_item_link(1, Gio.MENU_LINK_SECTION)
+    if recent_section is None:
+        return []
+    return [recent_section.get_item_attribute_value(i, "label", GLib.VariantType("s")).get_string()
+            for i in range(recent_section.get_n_items())]
+
+
+def activate_recent_menu_entry(menubar_ctrl, entry_index):
+    """Open the recently-opened state machine at entry_index, like activating its menu entry"""
+    from gi.repository import GLib
+    menubar_ctrl._on_open_recent_activate(None, GLib.Variant.new_int32(entry_index))
+
+
 def check_order_and_consistency_of_menu(gui, menubar_ctrl):
     from rafcon.gui.controllers.main_window import MenuBarController
-    from rafcon.gui.helpers.label import get_label_of_menu_item_box
     assert isinstance(menubar_ctrl, MenuBarController)
     recently_opened = get_recently_opened_state_machines(gui)
-    for index, elem in enumerate(menubar_ctrl.view.sub_menu_open_recently):
-        if index in [0, 1]:
-            continue
-        print("check_order_and_consistency_of_menu: ", get_label_of_menu_item_box(elem))
-        assert recently_opened[index - 2] in get_label_of_menu_item_box(elem)
+    labels = gui(get_recent_menu_labels, menubar_ctrl)
+    assert len(labels) == len(recently_opened)
+    for index, label in enumerate(labels):
+        print("check_order_and_consistency_of_menu: ", label)
+        assert recently_opened[index] in label
 
 
 def trigger_gui_signals(gui):
@@ -91,7 +108,6 @@ def trigger_gui_signals(gui):
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     import rafcon.core.config
     from rafcon.core.states.library_state import LibraryState
-    from rafcon.gui.helpers.label import get_label_of_menu_item_box
 
     sm_manager_model = gui.singletons.state_machine_manager_model
     main_window_controller = gui.singletons.main_window_controller
@@ -170,9 +186,9 @@ def trigger_gui_signals(gui):
                       sm_manager_model.state_machines[first_sm_id].state_machine)
     first_sm_path = sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path
     gui(testing_utils.wait_for_gui)
-    assert first_sm_path in get_label_of_menu_item_box(menubar_ctrl.view.sub_menu_open_recently.get_children()[2])
+    assert first_sm_path in gui(get_recent_menu_labels, menubar_ctrl)[0]
     gui(sm_manager_model.state_machine_manager.remove_state_machine, first_sm_id)
-    gui(menubar_ctrl.view.sub_menu_open_recently.get_children()[2].activate)
+    gui(activate_recent_menu_entry, menubar_ctrl, 0)
     gui(testing_utils.wait_for_gui)
     reopen_first_sm_id = sm_manager_model.selected_state_machine_id
     assert sm_manager_model.state_machines[reopen_first_sm_id].state_machine.file_system_path == first_sm_path
@@ -213,18 +229,18 @@ def trigger_gui_signals(gui):
     lib_sm_before_remove = lib_sm_m.state_machine
     gui(sm_manager_model.state_machine_manager.remove_state_machine, lib_sm_m.state_machine.state_machine_id)
     gui(testing_utils.wait_for_gui)
-    gui(menubar_ctrl.view.sub_menu_open_recently.get_children()[2].activate)
+    gui(activate_recent_menu_entry, menubar_ctrl, 0)
     gui.expected_errors += 1
 
     # was not open
     selected_sm_id = sm_manager_model.selected_state_machine_id
     assert not sm_manager_model.state_machines[selected_sm_id].state_machine.file_system_path == lib_sm_path
     # is still in and after clean removed
-    assert lib_sm_path in get_label_of_menu_item_box(menubar_ctrl.view.sub_menu_open_recently.get_children()[2])
+    assert lib_sm_path in gui(get_recent_menu_labels, menubar_ctrl)[0]
     gui(global_runtime_config.clean_recently_opened_state_machines)
-    assert lib_sm_path not in get_label_of_menu_item_box(menubar_ctrl.view.sub_menu_open_recently.get_children()[2])
+    assert lib_sm_path not in gui(get_recent_menu_labels, menubar_ctrl)[0]
     gui(global_runtime_config.update_recently_opened_state_machines_with, lib_sm_before_remove)
-    assert 'NOT_ACCESSIBLE' in get_label_of_menu_item_box(menubar_ctrl.view.sub_menu_open_recently.get_children()[2])
+    assert 'NOT_ACCESSIBLE' in gui(get_recent_menu_labels, menubar_ctrl)[0]
 
     # TODO maybe finally move this into the auto-backup or restore test module
     print("AUTO BACKUP TEST")

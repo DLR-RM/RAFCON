@@ -102,7 +102,7 @@ def install_locally_required_files():
     if not source_share_folder:
         logger.warning("Cannot find repository required for installation of icons and gtksourceview styles")
 
-    for folder in ["gtksourceview-3.0", "icons"]:
+    for folder in ["gtksourceview-5", "icons"]:
         try:
             logger.info("Copying '{}' files...".format(folder))
             copy_tree(join(source_share_folder, folder), join(resources.xdg_user_data_folder, folder), update=1)
@@ -112,7 +112,7 @@ def install_locally_required_files():
     try:
         logger.info("Copying custom design files '{}' files...".format(folder))
         copy_tree(global_design_config.get_config_value("SOURCE_VIEW_FOLDER"),
-                  join(resources.xdg_user_data_folder, "gtksourceview-3.0"), update=1)
+                  join(resources.xdg_user_data_folder, "gtksourceview-5"), update=1)
         copy_tree(global_design_config.get_config_value("ICONS_FOLDER"),
                   join(resources.xdg_user_data_folder, "icons"), update=1)
     except IOError as e:

@@ -1326,12 +1326,10 @@ def substitute_selected_state_and_use_choice_dialog():
     selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and not is_selection_inside_of_library_state(selected_elements=[selected_state_m]):
-        # calculate position for dialog window
+        # GTK4 removed programmatic window positioning; the dialog is placed by the window
+        # manager relative to its transient parent
         root_window = rafcon.gui.singleton.main_window_controller.get_root_window()
-        x, y = root_window.get_position()
-        _width, _height = root_window.get_size()
-        pos = (x + _width/4, y + _height/6)
-        StateSubstituteChooseLibraryDialog(rafcon.gui.singleton.library_manager_model, width=450, height=550, pos=pos,
+        StateSubstituteChooseLibraryDialog(rafcon.gui.singleton.library_manager_model, width=450, height=550,
                                            parent=root_window)
         return True
     else:

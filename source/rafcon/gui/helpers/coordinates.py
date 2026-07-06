@@ -105,27 +105,6 @@ def item2graphical_editor(target_state_m, item_coordinates):
     return ge_coordinates
 
 
-def screen2main_window(screen_coordinates):
-    """
-    Transforms a point in absolute screen coordinates, into a point relative to the main window.
-    :param (float,float) screen_coordinates: A tuple of x and y coordinate in absolute screen coordinates.
-    :return: The same point relative to the main window.
-    :rtype: (float,float)
-    """
-    from rafcon.gui.singleton import main_window_controller
-    main_window = main_window_controller.view.get_parent_widget()
-    main_window_pos = main_window.get_position()
-    return screen_coordinates[0] - main_window_pos[0], screen_coordinates[1] - main_window_pos[1]
-
-
-def main_window2screen(main_window_coordinates):
-    """
-    Transforms a point relative to the main window, into a point in absolute screen coordinates.
-    :param (float, float) main_window_coordinates: A tuple of x and y coordinate relative to the main window.
-    :return: The same point in absolute screen coordinates.
-    :rtype: (float, float)
-    """
-    from rafcon.gui.singleton import main_window_controller
-    main_window = main_window_controller.view.get_parent_widget()
-    main_window_pos = main_window.get_position()
-    return main_window_pos[0] + main_window_coordinates[0], main_window_pos[1] + main_window_coordinates[1]
+# Note: the former helpers screen2main_window/main_window2screen were removed with the GTK4
+# migration: GTK4 provides no Gtk.Window.get_position, windows cannot know their absolute
+# screen position anymore (Wayland design).

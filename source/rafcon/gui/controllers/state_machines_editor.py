@@ -30,15 +30,9 @@ import rafcon.core.singleton
 from rafcon.core.states.hierarchy_state import HierarchyState
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-try:
-    from rafcon.gui.controllers.graphical_editor_gaphas import GraphicalEditorController as \
-        GraphicalEditorGaphasController
-    from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
-except (NotImplementedError, ImportError):
-    # mygaphas not yet ported to gaphas 5 (Stage 4 of the GTK4 migration): boot with a placeholder
-    from rafcon.gui.controllers.graphical_editor_placeholder import \
-        GraphicalEditorController as GraphicalEditorGaphasController, \
-        GraphicalEditorView as GraphicalEditorGaphasView
+from rafcon.gui.controllers.graphical_editor_gaphas import GraphicalEditorController as \
+    GraphicalEditorGaphasController
+from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
 from rafcon.gui.models.state_machine import StateMachineModel, StateMachine
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.utils import constants

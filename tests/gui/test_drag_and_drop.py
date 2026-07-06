@@ -10,21 +10,6 @@ from tests.utils import call_gui_callback
 logger = log.get_logger(__name__)
 
 
-class StructHelper:
-    """Used to imitate a SelectionData Class"""
-
-    def __init__(self, x, y, text):
-        self.x = x
-        self.y = y
-        self.text = text
-
-    def set_text(self, text, length):
-        self.text = text
-
-    def get_text(self):
-        return self.text
-
-
 def create_models(*args, **kargs):
     import rafcon.core.singleton
     import rafcon.gui.singleton
@@ -86,47 +71,47 @@ def test_drag_and_drop_test(gui):
     # generic and unit_test_state_machines in library tree index 1 is unit_test_state_machines
     gui(library_tree_controller.view.get_selection().select_path, (1, 0))
 
-    selection_data = StructHelper(0, 0, None)
     state_machine_m = sm_manager_model.get_selected_state_machine_model()
+
+    # GTK4 drag & drop: the drag source's "prepare" handler registers a payload provider,
+    # the editor's DropTarget "drop" handler (on_drag_data_received) takes it and inserts
+    # the state into the container state selected during the drag motion
 
     # insert state in root_state
     print("insert state in root_state")
-    gui(graphical_editor_controller.on_drag_motion, None, None, 200, 200, None)
+    gui(graphical_editor_controller.on_drag_motion, None, 200, 200)
     # Override selection
     state_m = state_machine_m.root_state
     gui(state_machine_m.selection.set, [state_m])
-    gui(library_tree_controller.on_drag_data_get, library_tree_controller.view, None, selection_data, 0,
-                      None)
-    gui(graphical_editor_controller.on_drag_data_received, None, None, 200, 200, selection_data, None,
-                      None)
+    assert gui(library_tree_controller._on_drag_prepare, None, 0, 0) is not None
+    gui(graphical_editor_controller.on_drag_data_received, None, "rafcon-library-state", 200, 200)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 2
 
     # insert state from IconView
     print("insert state from IconView")
-    gui(graphical_editor_controller.on_drag_motion, None, None, 300, 300, None)
+    gui(graphical_editor_controller.on_drag_motion, None, 300, 300)
     # Override selection
     state_m = state_machine_m.root_state
     gui(state_machine_m.selection.set, [state_m])
-    gui(state_icon_controller.on_mouse_motion, None, StructHelper(30, 15, None))
-    gui(state_icon_controller.on_drag_data_get, None, None, selection_data, None, None)
-    gui(graphical_editor_controller.on_drag_data_received, None, None, 300, 300, selection_data, None,
-                      None)
+    assert gui(state_icon_controller._on_drag_prepare, None, 30, 15) is not None
+    gui(graphical_editor_controller.on_drag_data_received, None, "rafcon-new-state", 300, 300)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 3
 
-    # insert state next to root state
+    # try to insert state next to root state -> the drop is rejected
     print("insert state next to root state")
-    # Position (0, 0) in left above the root state
-    gui(graphical_editor_controller.on_drag_motion, None, None, 0, 0, None)
-    gui(state_icon_controller.on_mouse_motion, None, StructHelper(30, 15, None))
-    gui(state_icon_controller.on_drag_data_get, None, None, selection_data, None, None)
-    gui.expected_warnings += 1
+    # Position (0, 0) is left above the root state, so no container state gets selected
+    gui(state_machine_m.selection.clear)
+    gui(graphical_editor_controller.on_drag_motion, None, 0, 0)
+    assert gui(state_icon_controller._on_drag_prepare, None, 30, 15) is not None
+    assert gui(graphical_editor_controller.on_drag_data_received, None, "rafcon-new-state", 0, 0) is False
+    assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 3
 
     # insert state in state1
     print("insert state in state1")
     state_m = state_machine_m.root_state.states['State1']
     gui(state_machine_m.selection.set, [state_m])
-    gui(library_tree_controller.on_drag_data_get, library_tree_controller.view, None, selection_data, 0, None)
-    gui(graphical_editor_controller.on_drag_data_received, None, None, 20, 20, selection_data, None, None)
+    assert gui(library_tree_controller._on_drag_prepare, None, 0, 0) is not None
+    gui(graphical_editor_controller.on_drag_data_received, None, "rafcon-library-state", 20, 20)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states['State1'].states) == 1
 
 

@@ -14,7 +14,7 @@
 from contextlib import contextmanager
 from weakref import ref
 
-from gi.repository import GObject
+from gi.repository import GObject, GLib
 
 from gaphas.view import GtkView
 from gaphas.view.gtkview import transform_rectangle
@@ -121,18 +121,36 @@ class ExtendedGtkView(GtkView, Observer):
     def canvas(self, canvas):
         self.model = canvas
 
+    _sync_update_pending = False
+
     def update(self):
         """Update view status according to the items updated in the model
 
-        Extends the base method with a synchronous fallback for contexts without a running
-        (GLib-backed asyncio) event loop, e.g. simple test setups.
+        Extends the base method with a fallback for contexts without a running (GLib-backed
+        asyncio) event loop, e.g. simple test setups. The fallback must not update
+        immediately: update() is called via Canvas.request_update while items are still
+        being constructed, so the update is deferred to an idle callback, mirroring the
+        deferral of the asyncio task the base method would have created.
         """
+        import asyncio
         try:
-            return super(ExtendedGtkView, self).update()
-        except RuntimeError:
+            asyncio.get_running_loop()
+        except RuntimeError:  # no running event loop
+            if not self._sync_update_pending:
+                self._sync_update_pending = True
+                GLib.idle_add(self._sync_update)
+            return None
+        return super(ExtendedGtkView, self).update()
+
+    def _sync_update(self):
+        # The pending flag is reset at the very end: solving constraints inside update_now()
+        # triggers request_update() -> update() again, which must not re-schedule this idle
+        # callback (that would starve lower-priority idle callbacks forever). The dirty items
+        # created that way are picked up by the second all_dirty_items() pass below.
+        try:
             model = self._model
             if not model:
-                return None
+                return False
             dirty_items = self.all_dirty_items()
             model.update_now(dirty_items)
             dirty_items |= self.all_dirty_items()
@@ -141,7 +159,9 @@ class ExtendedGtkView(GtkView, Observer):
             if self._qtree.soft_bounds != old_bb:
                 self.update_scrolling()
             self.update_back_buffer()
-            return None
+            return False  # one-shot idle callback
+        finally:
+            self._sync_update_pending = False
 
     def get_items_in_rectangle(self, rect, contain=False, intersect=None, reverse=False):
         """Compatibility wrapper supporting the gaphas 2.x keyword arguments"""

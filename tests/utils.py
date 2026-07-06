@@ -307,7 +307,6 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     gi.require_version("Gdk", "4.0")
 
     from gi.repository import GLib
-    from gi.repository import Gdk
     from rafcon.core.start import reactor_required
     from rafcon.gui.start import start_gtk, install_reactor
     from rafcon.utils.i18n import setup_l10n
@@ -324,7 +323,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 
     initialize_environment_gui(gui_config, runtime_config)
     main_window_view = MainWindowView()
-    main_window_view.get_parent_widget().set_gravity(Gdk.Gravity.STATIC)
+    # GTK4 removed Gtk.Window.set_gravity, windows are positioned by the window manager
     MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
 
     print("run_gui thread: ", current_thread(), current_thread().ident, "gui.singleton thread ident:", \
@@ -534,10 +533,18 @@ def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
 
 def focus_graphical_editor_in_page(page):
     from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-    graphical_controller = page.get_children()[0]
-    if not isinstance(graphical_controller, GaphasEditor):
-        graphical_controller = graphical_controller.get_children()[0]
-    graphical_controller.grab_focus()
+    # GTK4 removed get_children(); search the widget tree breadth-first for the editor
+    queue = [page]
+    while queue:
+        widget = queue.pop(0)
+        if isinstance(widget, GaphasEditor):
+            widget.grab_focus()
+            return
+        child = widget.get_first_child()
+        while child is not None:
+            queue.append(child)
+            child = child.get_next_sibling()
+    assert False, "Could not find graphical editor in page"
 
 
 def check_if_locale_exists(locale):

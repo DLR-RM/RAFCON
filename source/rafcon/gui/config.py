@@ -84,12 +84,16 @@ class GuiConfig(ObservableConfig):
         theme_name = "RAFCON"
         dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
 
-        # GTK_DATA_PREFIX must point to a path that contains share/themes/THEME_NAME
-        gtk_data_prefix = os.path.dirname(os.path.dirname(os.path.dirname(theme_path)))
-        os.environ['GTK_DATA_PREFIX'] = gtk_data_prefix
+        # GTK4 searches for themes in the "themes" folder of each XDG data dir,
+        # so the data dir containing themes/THEME_NAME must be listed there
+        data_dir = os.path.dirname(os.path.dirname(theme_path))
+        # fall back to the XDG default to not lose system data dirs (icons, GSettings schemas)
+        xdg_data_dirs = os.environ.get('XDG_DATA_DIRS') or "/usr/local/share:/usr/share"
+        if data_dir not in xdg_data_dirs.split(os.pathsep):
+            os.environ['XDG_DATA_DIRS'] = data_dir + os.pathsep + xdg_data_dirs
         os.environ['GTK_THEME'] = "{}{}".format(theme_name, ":dark" if dark_theme else "")
 
-        # The env vars GTK_DATA_PREFIX and GTK_THEME must be set before Gtk is imported first to prevent GTK warnings
+        # The env vars XDG_DATA_DIRS and GTK_THEME must be set before Gtk is imported first to prevent GTK warnings
         # from other themes
         try:
             from gi.repository import Gtk
@@ -122,7 +126,7 @@ class GuiConfig(ObservableConfig):
         if is_custom_design_enabled():
             theme_path = self._get_custom_theme_path()
 
-        css_file_path = os.path.join(theme_path, "gtk-3.0", css_filename)
+        css_file_path = os.path.join(theme_path, "gtk-4.0", css_filename)
         if not os.path.isfile(css_file_path):
             raise ValueError("GTK theme does not exist: {}".format(str(css_file_path)))
 

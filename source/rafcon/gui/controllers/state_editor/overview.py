@@ -127,8 +127,10 @@ class StateOverviewController(ExtendedController):
         has_no_start_state_state_types = [BarrierConcurrencyState, PreemptiveConcurrencyState]
         if not self.with_is_start_state_check_box or isinstance(self.model.state, DeciderState) or \
                 self.model.state.is_root_state or type(self.model.parent.state) in has_no_start_state_state_types:
-            view['is_start_state_checkbutton'].destroy()
-            self.view['properties_widget'].child_set_property(combo, "width", 2)
+            # GTK4 removed Gtk.Widget.destroy and grid child properties
+            grid = self.view['properties_widget']
+            grid.remove(view['is_start_state_checkbutton'])
+            grid.get_layout_manager().get_layout_child(combo).set_column_span(2)
         else:
             view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
             view['is_start_state_checkbutton'].connect('toggled', self.on_toggle_is_start_state)

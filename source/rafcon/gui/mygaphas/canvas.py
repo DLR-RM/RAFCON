@@ -161,8 +161,12 @@ class MyCanvas(gaphas.canvas.Canvas):
         from gi.repository import GLib
         ctx = GLib.MainContext.default()
         # Process all pending events; this also drives the asyncio view update
-        # tasks, which are dispatched via the GLib event loop (gi.events)
-        while ctx.pending():
+        # tasks, which are dispatched via the GLib event loop (gi.events).
+        # The number of iterations is bounded: continuous redraws (e.g. the GTK frame clock)
+        # can keep the context "pending" forever.
+        for _ in range(1000):
+            if not ctx.pending():
+                break
             ctx.iteration(False)
         # Make sure all view update tasks have completed. Never block here: during
         # shutdown (event loop not running) the tasks can no longer be dispatched.

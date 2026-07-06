@@ -83,7 +83,8 @@ class StateEditorController(ExtendedController):
                 isinstance(model, LibraryStateModel) and not isinstance(model.state_copy, ContainerStateModel):
             self.add_controller('source_ctrl', SourceEditorController(sv_and_source_script_state_m, view.source_view))
         else:
-            view.source_view.get_parent_widget().destroy()
+            # GTK4 removed Gtk.Widget.destroy; detach the source editor from its viewport instead
+            view['source_viewport'].set_child(None)
         self.add_controller('semantic_data_ctrl', SemanticDataEditorController(model, view.semantic_data_view))
 
     def register_view(self, view):

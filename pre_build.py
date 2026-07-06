@@ -19,8 +19,11 @@ import distutils.log
 
 
 PRE_BUILD_SCRIPT_DIRECTORY = pathlib.Path(__file__).parent.resolve()
-SASS_PATH = str(PRE_BUILD_SCRIPT_DIRECTORY / "source" / "rafcon" / "share" / "themes" / "RAFCON" / "sass")
-CSS_PATH = str(PRE_BUILD_SCRIPT_DIRECTORY / "source" / "rafcon" / "share" / "themes" / "RAFCON" / "gtk-3.0")
+THEME_PATH = PRE_BUILD_SCRIPT_DIRECTORY / "source" / "rafcon" / "share" / "themes" / "RAFCON"
+SASS_PATH = str(THEME_PATH / "sass")
+CSS_PATH = str(THEME_PATH / "gtk-3.0")
+SASS_GTK4_PATH = str(THEME_PATH / "sass-gtk4")
+CSS_GTK4_PATH = str(THEME_PATH / "gtk-4.0")
 
 class BuildMOFiles:
     description = "Create/update mo translation files"
@@ -48,3 +51,4 @@ if __name__ == '__main__':
 
     # generate css from sass files
     sass.compile(dirname=(SASS_PATH, CSS_PATH))
+    sass.compile(dirname=(SASS_GTK4_PATH, CSS_GTK4_PATH))
