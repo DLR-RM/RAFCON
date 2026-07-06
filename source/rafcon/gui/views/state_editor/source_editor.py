@@ -16,6 +16,7 @@ from gi.repository import Gtk
 from gi.repository import GtkSource
 
 from rafcon.gui.utils import constants
+from rafcon.gui.utils.gtk_utils import set_all_margins
 from rafcon.gui.helpers import label
 from rafcon.gui.views.utils.editor import EditorView
 
@@ -36,32 +37,35 @@ class SourceEditorView(EditorView):
         except NameError:
             pass
         hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
-        hbox.get_style_context().add_class("widget-toolbar")
+        hbox.add_css_class("widget-toolbar")
         pylint_check_button = Gtk.CheckButton(label="Validate")
         Gtk.Widget.set_focus_on_click(pylint_check_button, True)
-        pylint_check_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        pylint_check_button.get_style_context().add_class("secondary")
+        set_all_margins(pylint_check_button, constants.BUTTON_BORDER_WIDTH)
+        pylint_check_button.add_css_class("secondary")
 
         open_external_button = Gtk.ToggleButton(label="Open externally")
         Gtk.Widget.set_focus_on_click(open_external_button, True)
-        open_external_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(open_external_button, constants.BUTTON_BORDER_WIDTH)
 
         apply_button = Gtk.Button(label="Apply")
         Gtk.Widget.set_focus_on_click(apply_button, True)
-        apply_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(apply_button, constants.BUTTON_BORDER_WIDTH)
 
         cancel_button = Gtk.Button(label="Reset")
         Gtk.Widget.set_focus_on_click(cancel_button, True)
-        cancel_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(cancel_button, constants.BUTTON_BORDER_WIDTH)
 
-        hbox.pack_start(pylint_check_button, False, False, 0)
-        hbox.pack_end(open_external_button, False, True, 0)
-        hbox.pack_end(cancel_button, False, True, 0)
-        hbox.pack_end(apply_button, False, True, 0)
+        hbox.append(pylint_check_button)
+        button_spacer = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        button_spacer.set_hexpand(True)
+        hbox.append(button_spacer)
+        hbox.append(apply_button)
+        hbox.append(cancel_button)
+        hbox.append(open_external_button)
 
         label.ellipsize_labels_recursively(hbox)
 
-        self['editor_frame'].pack_start(hbox, expand=False, fill=True, padding=0)
+        self['editor_frame'].append(hbox)
         self['pylint_check_button'] = pylint_check_button
         self['apply_button'] = apply_button
         self['open_external_button'] = open_external_button
@@ -77,7 +81,9 @@ class SourceEditorView(EditorView):
         # observe key press events to adapt pane position
         # Note: -> changed is not used because it is creating glib segfaults
         if self.spacer_frame is not None:
-            self.textview.connect("key-press-event", self.on_text_view_event)
+            key_controller = Gtk.EventControllerKey()
+            key_controller.connect("key-pressed", self.on_text_view_event)
+            self.textview.add_controller(key_controller)
 
     def on_draw(self, widget, event):
         if self.run_with_spacer:
@@ -90,8 +96,8 @@ class SourceEditorView(EditorView):
 
     @property
     def button_container_min_width(self):
-        return self['pylint_check_button'].get_allocation().width + self['apply_button'].get_size_request()[0] + \
-               self['open_external_button'].get_allocation().width + self['cancel_button'].get_size_request()[0]
+        return self['pylint_check_button'].get_width() + self['apply_button'].get_size_request()[0] + \
+               self['open_external_button'].get_width() + self['cancel_button'].get_size_request()[0]
 
     def on_text_view_event(self, *args):
         self.pane_position_check()

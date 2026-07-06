@@ -1,0 +1,378 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<interface>
+  <requires lib="gtk" version="4.0" />
+  <object class="GtkBox" id="main_frame_vbox">
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkViewport" id="properties_viewport">
+        <property name="vexpand">0</property>
+        <child>
+          <placeholder />
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox" id="lower_right_sidebar">
+        <property name="can_focus">0</property>
+        <property name="vexpand">1</property>
+        <child>
+          <object class="GtkPaned" id="vpaned">
+            <property name="shrink-end-child">0</property>
+            <property name="shrink-start-child">0</property>
+            <property name="focusable">1</property>
+            <property name="orientation">vertical</property>
+            <property name="wide_handle">1</property>
+            <property name="start-child">
+              <object class="GtkNotebook" id="main_notebook_1">
+                <property name="focusable">1</property>
+                <property name="tab_pos">right</property>
+                <property name="scrollable">1</property>
+                <property name="group_name">right_sidebar</property>
+                <child>
+                  <object class="GtkNotebookPage">
+                    <property name="child">
+                      <object class="GtkViewport" id="source_viewport">
+                        <child>
+                          <placeholder />
+                        </child>
+                      </object>
+                    </property>
+                    <property name="tab">
+                      <object class="GtkLabel" id="source_view_tab">
+                        <property name="label" translatable="1">Source</property>
+                        </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkNotebookPage">
+                    <property name="position">1</property>
+                    <property name="child">
+                      <object class="GtkScrolledWindow">
+                        <property name="focusable">1</property>
+                        <property name="child">
+                          <object class="GtkViewport">
+                            <property name="child">
+                              <object class="GtkPaned" id="logic_vpaned">
+                                <property name="shrink-end-child">0</property>
+                                <property name="shrink-start-child">0</property>
+                                <property name="focusable">1</property>
+                                <property name="orientation">vertical</property>
+                                <property name="position">1</property>
+                                <property name="start-child">
+                                  <object class="GtkViewport" id="outcomes_viewport">
+                                    <child>
+                                      <placeholder />
+                                    </child>
+                                  </object>
+                                </property>
+                                <property name="end-child">
+                                  <object class="GtkViewport" id="transitions_viewport">
+                                    <child>
+                                      <placeholder />
+                                    </child>
+                                  </object>
+                                </property>
+                              </object>
+                            </property>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                    <property name="tab">
+                      <object class="GtkLabel" id="logical_linkage_tab">
+                        <property name="label" translatable="1">Logical Linkage</property>
+                        </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkNotebookPage">
+                    <property name="position">2</property>
+                    <property name="child">
+                      <object class="GtkScrolledWindow">
+                        <property name="focusable">1</property>
+                        <property name="child">
+                          <object class="GtkViewport">
+                            <property name="child">
+                              <object class="GtkPaned" id="data_vpaned">
+                                <property name="shrink-end-child">0</property>
+                                <property name="shrink-start-child">0</property>
+                                <property name="focusable">1</property>
+                                <property name="orientation">vertical</property>
+                                <property name="start-child">
+                                  <object class="GtkBox" id="vbox3">
+                                    <property name="orientation">vertical</property>
+                                    <child>
+                                      <object class="GtkBox" id="data_ports_label_eventbox">
+                                        <property name="can_focus">0</property>
+                                        <child>
+                                          <object class="GtkLabel" id="data_ports_label">
+                                            <property name="halign">start</property>
+                                            <property name="label" translatable="1">DATA PORTS</property>
+                                          </object>
+                                        </child>
+                                        <style>
+                                          <class name="widget-title" />
+                                        </style>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkNotebook" id="ports_notebook">
+                                        <property name="vexpand">1</property>
+                                        <property name="focusable">1</property>
+                                        <property name="show_border">0</property>
+                                        <child>
+                                          <object class="GtkNotebookPage">
+                                            <property name="child">
+                                              <object class="GtkBox" id="input_port_vbox">
+                                                <property name="orientation">vertical</property>
+                                                <child>
+                                                  <object class="GtkScrolledWindow" id="input_ports_scroller">
+                                                    <property name="vexpand">1</property>
+                                                    <property name="focusable">1</property>
+                                                    <child>
+                                                      <placeholder />
+                                                    </child>
+                                                  </object>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkBox" id="input_port_toolbar">
+                                                    <child>
+                                                      <object class="GtkButton" id="remove_input_port_button">
+                                                        <property name="label" translatable="1">Remove</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="focusable">1</property>
+                                                        <property name="focus_on_click">0</property>
+                                                        <property name="receives_default">1</property>
+                                                        </object>
+                                                    </child>
+                                                    <child>
+                                                      <object class="GtkButton" id="add_input_port_button">
+                                                        <property name="label" translatable="1">Add</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="focusable">1</property>
+                                                        <property name="focus_on_click">0</property>
+                                                        <property name="receives_default">1</property>
+                                                        </object>
+                                                    </child>
+                                                    <style>
+                                                      <class name="widget-toolbar" />
+                                                    </style>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                            </property>
+                                            <property name="tab">
+                                              <object class="GtkLabel" id="label4">
+                                                <property name="label" translatable="1">Input Ports</property>
+                                              </object>
+                                            </property>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkNotebookPage">
+                                            <property name="position">1</property>
+                                            <property name="child">
+                                              <object class="GtkBox" id="output_port_vbox">
+                                                <property name="orientation">vertical</property>
+                                                <child>
+                                                  <object class="GtkScrolledWindow" id="output_ports_scroller">
+                                                    <property name="vexpand">1</property>
+                                                    <property name="focusable">1</property>
+                                                    <child>
+                                                      <placeholder />
+                                                    </child>
+                                                  </object>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkBox" id="output_ports_toolbar">
+                                                    <child>
+                                                      <object class="GtkButton" id="remove_output_port_button">
+                                                        <property name="label" translatable="1">Remove</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="focusable">1</property>
+                                                        <property name="focus_on_click">0</property>
+                                                        <property name="receives_default">1</property>
+                                                        </object>
+                                                    </child>
+                                                    <child>
+                                                      <object class="GtkButton" id="add_output_port_button">
+                                                        <property name="label" translatable="1">Add</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="focusable">1</property>
+                                                        <property name="focus_on_click">0</property>
+                                                        <property name="receives_default">1</property>
+                                                        </object>
+                                                    </child>
+                                                    <style>
+                                                      <class name="widget-toolbar" />
+                                                    </style>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                            </property>
+                                            <property name="tab">
+                                              <object class="GtkLabel" id="label5">
+                                                <property name="label" translatable="1">Output Ports</property>
+                                              </object>
+                                            </property>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkNotebookPage">
+                                            <property name="position">2</property>
+                                            <property name="child">
+                                              <object class="GtkBox" id="scoped_variable_vbox">
+                                                <property name="orientation">vertical</property>
+                                                <child>
+                                                  <object class="GtkScrolledWindow" id="scoped_variables_scroller">
+                                                    <property name="vexpand">1</property>
+                                                    <property name="focusable">1</property>
+                                                    <child>
+                                                      <placeholder />
+                                                    </child>
+                                                  </object>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkBox" id="scoped_variables_ports_toolbar">
+                                                    <child>
+                                                      <object class="GtkButton" id="remove_scoped_variable_button">
+                                                        <property name="label" translatable="1">Remove</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="focusable">1</property>
+                                                        <property name="focus_on_click">0</property>
+                                                        <property name="receives_default">1</property>
+                                                        </object>
+                                                    </child>
+                                                    <child>
+                                                      <object class="GtkButton" id="add_scoped_variable_button">
+                                                        <property name="label" translatable="1">Add</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="focusable">1</property>
+                                                        <property name="focus_on_click">0</property>
+                                                        <property name="receives_default">1</property>
+                                                        </object>
+                                                    </child>
+                                                    <style>
+                                                      <class name="widget-toolbar" />
+                                                    </style>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                            </property>
+                                            <property name="tab">
+                                              <object class="GtkLabel" id="label7">
+                                                <property name="label" translatable="1">Scoped Variables</property>
+                                              </object>
+                                            </property>
+                                          </object>
+                                        </child>
+                                        <style>
+                                          <class name="secondary" />
+                                        </style>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </property>
+                                <property name="end-child">
+                                  <object class="GtkViewport" id="data_flows_viewport">
+                                    <child>
+                                      <placeholder />
+                                    </child>
+                                  </object>
+                                </property>
+                              </object>
+                            </property>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                    <property name="tab">
+                      <object class="GtkLabel" id="data_linkage_tab">
+                        <property name="label" translatable="1">Data Linkage</property>
+                        </object>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </property>
+            <property name="end-child">
+              <object class="GtkNotebook" id="main_notebook_2">
+                <property name="focusable">1</property>
+                <property name="tab_pos">right</property>
+                <property name="scrollable">1</property>
+                <property name="group_name">right_sidebar</property>
+                <child>
+                  <object class="GtkNotebookPage">
+                    <property name="child">
+                      <object class="GtkScrolledWindow">
+                        <property name="focusable">1</property>
+                        <property name="child">
+                          <object class="GtkViewport" id="linkage_overview_viewport">
+                            <child>
+                              <placeholder />
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                    <property name="tab">
+                      <object class="GtkLabel" id="variables_overview">
+                        <property name="label" translatable="1">Linkage Overview</property>
+                        </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkNotebookPage">
+                    <property name="position">1</property>
+                    <property name="child">
+                      <object class="GtkScrolledWindow">
+                        <property name="focusable">1</property>
+                        <property name="child">
+                          <object class="GtkViewport" id="description_viewport">
+                            <child>
+                              <placeholder />
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                    <property name="tab">
+                      <object class="GtkLabel" id="description_label">
+                        <property name="label" translatable="1">Description</property>
+                        </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkNotebookPage">
+                    <property name="position">2</property>
+                    <property name="child">
+                      <object class="GtkScrolledWindow">
+                        <property name="focusable">1</property>
+                        <property name="child">
+                          <object class="GtkViewport" id="semantic_data_viewport">
+                            <child>
+                              <placeholder />
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                    <property name="tab">
+                      <object class="GtkLabel" id="semantic_data_label">
+                        <property name="label" translatable="1">Semantic Data</property>
+                        </object>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

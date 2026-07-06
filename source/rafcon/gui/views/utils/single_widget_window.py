@@ -27,12 +27,11 @@ class SingleWidgetWindowView(View):
             w.set_title(str(view_class))
         else:
             w.set_title(title)
-        w.resize(width=width, height=height)
-        if pos is not None:
-            w.set_position(pos)
+        w.set_default_size(width, height)
+        # GTK4 removed programmatic window positioning; 'pos' is ignored
         self.widget_view = view_class()
-        w.add(self.widget_view.get_parent_widget())
-        w.show_all()
+        w.set_child(self.widget_view.get_parent_widget())
+        w.present()
 
         self['main_frame'] = self.widget_view
         self.top = 'main_frame'

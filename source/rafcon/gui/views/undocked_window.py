@@ -22,21 +22,22 @@ from rafcon.gui.helpers import label
 
 class UndockedWindowView(View):
     def __init__(self, title):
-        super().__init__(builder_filename=glade.get_glade_path('undocked_window.glade'), parent='undock_window')
-        toolbar = Gtk.Toolbar()
-        toolbar.props.show_arrow = False
+        super().__init__(builder_filename=glade.get_glade_path('undocked_window.ui'), parent='undock_window')
+        # GTK4 removed Gtk.Toolbar/Gtk.ToolButton: use a styled box with buttons
+        toolbar = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        toolbar.add_css_class("toolbar")
         fullscreen_icon = label.create_button_label(constants.BUTTON_EXP)
-        self['maximize_button'] = Gtk.ToolButton()
-        self['maximize_button'].set_icon_widget(fullscreen_icon)
+        self['maximize_button'] = Gtk.Button()
+        self['maximize_button'].set_child(fullscreen_icon)
         redock_icon = label.create_button_label(constants.BUTTON_UNDOCK)
-        self['redock_button'] = Gtk.ToolButton()
-        self['redock_button'].set_icon_widget(redock_icon)
+        self['redock_button'] = Gtk.Button()
+        self['redock_button'].set_child(redock_icon)
         self['redock_button'].set_tooltip_text("Redock")
-        toolbar.insert(self['maximize_button'], 0)
-        toolbar.insert(self['redock_button'], 1)
-        self['headerbar'].props.title = title
+        toolbar.append(self['maximize_button'])
+        toolbar.append(self['redock_button'])
+        # GTK4 HeaderBar has no title property; it shows the window title
+        self.get_parent_widget().set_title(title)
         self['headerbar'].pack_end(toolbar)
-        self['headerbar'].show_all()
         self.get_parent_widget().set_titlebar(self['headerbar'])
 
     def initialize_title(self, window_title):
@@ -44,7 +45,7 @@ class UndockedWindowView(View):
 
         :param window_title: The title of the window
         """
-        self['headerbar'].props.title = window_title
+        self.get_parent_widget().set_title(window_title)
 
     def reset_title(self, title, notebook_identifier):
         """Triggered whenever a notebook tab is switched in the left bar.
@@ -61,4 +62,4 @@ class UndockedWindowView(View):
             new_title = title + ' / ' + lower_title
         else:
             new_title = upper_title + ' / ' + title
-        self['headerbar'].props.title = new_title
+        self.get_parent_widget().set_title(new_title)

@@ -15,9 +15,10 @@ from rafcon.design_patterns.mvc.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.utils import constants
+from rafcon.gui.utils.gtk_utils import set_all_margins
 
 
 class StateOverviewView(View):
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('state_overview_widget.glade'), parent='properties_widget')
-        self['properties_widget'].set_border_width(constants.PADDING_LEFT)
+        super().__init__(builder_filename=glade.get_glade_path('state_overview_widget.ui'), parent='properties_widget')
+        set_all_margins(self['properties_widget'], constants.PADDING_LEFT)

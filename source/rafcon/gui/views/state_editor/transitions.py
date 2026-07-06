@@ -18,22 +18,23 @@ from rafcon.gui import glade
 from rafcon.gui.views.utils.tree import TreeView
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
+from rafcon.gui.utils.gtk_utils import set_all_margins
 
 
 class StateTransitionsListView(TreeView):
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('transition_list_widget.glade'), parent='tree_view')
+        super().__init__(builder_filename=glade.get_glade_path('transition_list_widget.ui'), parent='tree_view')
         self.tree_view = self['tree_view']
 
 
 class StateTransitionsEditorView(View):
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('state_transitions_widget.glade'), parent='vbox2')
+        super().__init__(builder_filename=glade.get_glade_path('state_transitions_widget.ui'), parent='vbox2')
         self.transitions_listView = StateTransitionsListView()
-        self['transitions_scroller'].add(self.transitions_listView.get_parent_widget())
+        self['transitions_scroller'].set_child(self.transitions_listView.get_parent_widget())
         self.transitions_listView.scrollbar_widget = self['transitions_scroller']
-        self['internal_t_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['connected_to_t_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['add_t_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['remove_t_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['internal_t_checkbutton'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['connected_to_t_checkbutton'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['add_t_button'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['remove_t_button'], constants.BUTTON_BORDER_WIDTH)
         gui_helper_label.ellipsize_labels_recursively(self['transitions_toolbar'])

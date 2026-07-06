@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkTreeView" id="output_ports_tree_view">
+    <property name="focusable">1</property>
+    <property name="headers_clickable">0</property>
+    <property name="enable_grid_lines">horizontal</property>
+    <child internal-child="selection">
+      <object class="GtkTreeSelection"/>
+    </child>
+    <child>
+      <object class="GtkTreeViewColumn" id="name_col">
+        <property name="sizing">autosize</property>
+        <property name="title">Name</property>
+        <property name="expand">1</property>
+        <child>
+          <object class="GtkCellRendererText" id="name_text"/>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkTreeViewColumn" id="data_type_col">
+        <property name="sizing">autosize</property>
+        <property name="title">Data Type</property>
+        <property name="expand">1</property>
+        <child>
+          <object class="GtkCellRendererText" id="data_type_text"/>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkTreeViewColumn" id="default_value_col">
+        <property name="sizing">autosize</property>
+        <property name="title">Default Value</property>
+        <property name="expand">1</property>
+        <child>
+          <object class="GtkCellRendererText" id="default_value_text"/>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

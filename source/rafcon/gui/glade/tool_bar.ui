@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<interface>
+  <requires lib="gtk" version="4.0" />
+  <object class="GtkBox" id="toolbar">
+    <property name="css-classes">toolbar</property>
+    <property name="can_focus">0</property>
+    <child>
+      <object class="GtkButton" id="button_new">
+        <property name="can_focus">0</property>
+        <property name="label" translatable="1">New Statemachine</property>
+        <property name="use_underline">1</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separatortoolitem1">
+        <property name="orientation">vertical</property>
+        <property name="can_focus">0</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="button_open">
+        <property name="can_focus">0</property>
+        <property name="label" translatable="1">Open Statemachine</property>
+        <property name="use_underline">1</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separatortoolitem2">
+        <property name="orientation">vertical</property>
+        <property name="can_focus">0</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="button_save">
+        <property name="can_focus">0</property>
+        <property name="label" translatable="1">Save Statemachine</property>
+        <property name="use_underline">1</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separatortoolitem3">
+        <property name="orientation">vertical</property>
+        <property name="can_focus">0</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="button_refresh">
+        <property name="can_focus">0</property>
+        <property name="label" translatable="1">Refresh</property>
+        <property name="use_underline">1</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separatortoolitem4">
+        <property name="orientation">vertical</property>
+        <property name="can_focus">0</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="button_refresh_selected">
+        <property name="can_focus">0</property>
+        <property name="label" translatable="1">Refresh Selected</property>
+        <property name="use_underline">1</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separatortoolitem5">
+        <property name="orientation">vertical</property>
+        <property name="can_focus">0</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="button_refresh_libs">
+        <property name="can_focus">0</property>
+        <property name="label" translatable="1">Refresh Libraries</property>
+        <property name="use_underline">1</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separatortoolitem6">
+        <property name="orientation">vertical</property>
+        <property name="can_focus">0</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="button_bake_state_machine">
+        <property name="can_focus">0</property>
+        <property name="label" translatable="1">Bake Selected</property>
+        <property name="use_underline">1</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separatortoolitem7">
+        <property name="orientation">vertical</property>
+        <property name="can_focus">0</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="button_layout_state_machine">
+        <property name="can_focus">0</property>
+        <property name="label" translatable="1">Auto Layout</property>
+        <property name="use_underline">1</property>
+        </object>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separatortoolitem8">
+        <property name="orientation">vertical</property>
+        <property name="can_focus">0</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox" id="custom_toolbar_element">
+        <property name="can_focus">0</property>
+        <property name="hexpand">1</property>
+        <child>
+          <object class="GtkBox" id="custom_toolbar_box">
+            <property name="hexpand">1</property>
+            <child>
+              <object class="GtkLabel" id="custom_toolbar_label">
+                <property name="halign">center</property>
+                <property name="width_request">200</property>
+                </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

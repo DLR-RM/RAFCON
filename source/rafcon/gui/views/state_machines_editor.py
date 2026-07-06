@@ -21,6 +21,6 @@ class StateMachinesEditorView(View):
         self.notebook = Gtk.Notebook()
         self.notebook.set_scrollable(True)
         self.notebook.set_name("state_machines_notebook")
-        self.notebook.get_style_context().add_class("secondary")
+        self.notebook.add_css_class("secondary")
         self.notebook.show()
         self['notebook'] = self.notebook

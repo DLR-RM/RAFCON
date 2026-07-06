@@ -19,6 +19,7 @@ from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils import constants
+from rafcon.gui.utils.gtk_utils import set_all_margins
 from rafcon.gui.views.state_editor.data_flows import StateDataFlowsEditorView
 from rafcon.gui.views.state_editor.description_editor import DescriptionEditorView
 from rafcon.gui.views.state_editor.input_port_list import InputPortsListView
@@ -43,7 +44,7 @@ class StateEditorView(View):
     }
 
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('state_editor_ld_widget_tab.glade'), parent='main_frame_vbox')
+        super().__init__(builder_filename=glade.get_glade_path('state_editor_ld_widget_tab.ui'), parent='main_frame_vbox')
 
         self.page_dict = {}
         self.notebook_names = ['main_notebook_1', 'main_notebook_2']
@@ -60,17 +61,17 @@ class StateEditorView(View):
         self.description_view = DescriptionEditorView()
         self.semantic_data_view = SemanticDataEditorView()
 
-        self['properties_viewport'].add(self.properties_view.get_parent_widget())
-        self['input_ports_scroller'].add(self.inputs_view.get_parent_widget())
-        self['output_ports_scroller'].add(self.outputs_view.get_parent_widget())
-        self['scoped_variables_scroller'].add(self.scopes_view.get_parent_widget())
-        self['outcomes_viewport'].add(self.outcomes_view.get_parent_widget())
-        self['source_viewport'].add(self.source_view.get_parent_widget())
-        self['transitions_viewport'].add(self.transitions_view.get_parent_widget())
-        self['data_flows_viewport'].add(self.data_flows_view.get_parent_widget())
-        self['linkage_overview_viewport'].add(self.linkage_overview.get_parent_widget())
-        self['description_viewport'].add(self.description_view.get_parent_widget())
-        self['semantic_data_viewport'].add(self.semantic_data_view.get_parent_widget())
+        self['properties_viewport'].set_child(self.properties_view.get_parent_widget())
+        self['input_ports_scroller'].set_child(self.inputs_view.get_parent_widget())
+        self['output_ports_scroller'].set_child(self.outputs_view.get_parent_widget())
+        self['scoped_variables_scroller'].set_child(self.scopes_view.get_parent_widget())
+        self['outcomes_viewport'].set_child(self.outcomes_view.get_parent_widget())
+        self['source_viewport'].set_child(self.source_view.get_parent_widget())
+        self['transitions_viewport'].set_child(self.transitions_view.get_parent_widget())
+        self['data_flows_viewport'].set_child(self.data_flows_view.get_parent_widget())
+        self['linkage_overview_viewport'].set_child(self.linkage_overview.get_parent_widget())
+        self['description_viewport'].set_child(self.description_view.get_parent_widget())
+        self['semantic_data_viewport'].set_child(self.semantic_data_view.get_parent_widget())
 
         self.inputs_view.scrollbar_widget = self['input_ports_scroller']
         self.outputs_view.scrollbar_widget = self['output_ports_scroller']
@@ -88,12 +89,12 @@ class StateEditorView(View):
         self['main_notebook_1'].set_current_page(self['main_notebook_1'].page_num(self.page_dict["Source"]))
         self['main_notebook_2'].set_current_page(self['main_notebook_2'].page_num(self.page_dict["Description"]))
 
-        self['add_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['remove_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['add_output_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['remove_output_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['add_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['remove_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['add_input_port_button'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['remove_input_port_button'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['add_output_port_button'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['remove_output_port_button'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['add_scoped_variable_button'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['remove_scoped_variable_button'], constants.BUTTON_BORDER_WIDTH)
 
         self._scoped_tab_page_number = None
         self._scoped_var_page = None
@@ -113,8 +114,7 @@ class StateEditorView(View):
                 if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
                     tab_label_text = tab_label.get_text()
                     notebook.set_tab_label(child, gui_helper_label.create_tab_header_label(tab_label_text, self.icons))
-                else:
-                    tab_label.set_angle(270)
+                # GTK4 removed Gtk.Label.set_angle; without icons the tab labels stay horizontal
                 notebook.set_tab_reorderable(child, True)
                 notebook.set_tab_detachable(child, True)
 

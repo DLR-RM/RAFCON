@@ -18,22 +18,23 @@ from rafcon.gui import glade
 from rafcon.gui.views.utils.tree import TreeView
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
+from rafcon.gui.utils.gtk_utils import set_all_margins
 
 
 class StateDataFlowsListView(TreeView):
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('data_flow_list_widget.glade'), parent='tree_view')
+        super().__init__(builder_filename=glade.get_glade_path('data_flow_list_widget.ui'), parent='tree_view')
         self.tree_view = self['tree_view']
 
 
 class StateDataFlowsEditorView(View):
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('state_data_flows_widget.glade'), parent='data_flows_container')
+        super().__init__(builder_filename=glade.get_glade_path('state_data_flows_widget.ui'), parent='data_flows_container')
         self.data_flows_listView = StateDataFlowsListView()
-        self['data_flows_scroller'].add(self.data_flows_listView.get_parent_widget())
+        self['data_flows_scroller'].set_child(self.data_flows_listView.get_parent_widget())
         self.data_flows_listView.scrollbar_widget = self['data_flows_scroller']
-        self['internal_d_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['connected_to_d_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['add_d_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['remove_d_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['internal_d_checkbutton'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['connected_to_d_checkbutton'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['add_d_button'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['remove_d_button'], constants.BUTTON_BORDER_WIDTH)
         gui_helper_label.ellipsize_labels_recursively(self['data_flows_toolbar'])

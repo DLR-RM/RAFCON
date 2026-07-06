@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<interface>
+  <requires lib="gtk" version="4.0" />
+  <object class="GtkWindow" id="undock_window">
+    <property name="title" translatable="1">RAFCON</property>
+    <property name="destroy_with_parent">1</property>
+    <property name="deletable">0</property>
+    <property name="child">
+      <object class="GtkBox" id="top_level_event_box">
+        <property name="can_focus">0</property>
+        <child>
+          <object class="GtkBox" id="top_level_vbox">
+            <property name="orientation">vertical</property>
+            <property name="spacing">4</property>
+            <child>
+              <object class="GtkBox" id="central_eventbox">
+                <property name="vexpand">1</property>
+                <property name="can_focus">0</property>
+                <child>
+                  <placeholder />
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </property>
+    <child type="titlebar">
+      <object class="GtkHeaderBar" id="headerbar">
+        <child>
+          <placeholder />
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

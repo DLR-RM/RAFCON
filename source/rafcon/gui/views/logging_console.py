@@ -40,10 +40,11 @@ class LoggingConsoleView(View):
 
         self.text_view.set_buffer(self.filtered_buffer)
 
-        self.text_view.set_border_window_size(Gtk.TextWindowType.LEFT, 10)
-        self.text_view.set_border_window_size(Gtk.TextWindowType.RIGHT, 10)
-        self.text_view.set_border_window_size(Gtk.TextWindowType.TOP, 10)
-        self.text_view.set_border_window_size(Gtk.TextWindowType.BOTTOM, 10)
+        # GTK4 removed the text view border windows; plain margins serve the same purpose here
+        self.text_view.set_left_margin(10)
+        self.text_view.set_right_margin(10)
+        self.text_view.set_top_margin(10)
+        self.text_view.set_bottom_margin(10)
 
         self._enables = {}
         self._auto_scroll_handler_id = None
@@ -51,7 +52,7 @@ class LoggingConsoleView(View):
         scrollable = Gtk.ScrolledWindow()
         scrollable.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         scrollable.set_name('console_scroller')
-        scrollable.add(self.text_view)
+        scrollable.set_child(self.text_view)
         self.text_view.show()
 
         self['scrollable'] = scrollable
@@ -96,7 +97,7 @@ class LoggingConsoleView(View):
             buffer_lines = filtered_buffer.get_line_count()
             if buffer_lines > self.max_logging_buffer_lines:
                 filtered_buffer.delete(filtered_buffer.get_start_iter(),
-                                       filtered_buffer.get_iter_at_line(buffer_lines - self.max_logging_buffer_lines))
+                                       filtered_buffer.get_iter_at_line(buffer_lines - self.max_logging_buffer_lines)[1])
 
     def print_message(self, message, log_level):
         """
@@ -174,12 +175,14 @@ class LoggingConsoleView(View):
 
     def update_auto_scroll_mode(self):
         """ Register or un-register signals for follow mode """
+        # GTK4 removed the size-allocate signal; growing content is tracked via the vadjustment instead
+        vadjustment = self['scrollable'].get_vadjustment()
         if self._enables['CONSOLE_FOLLOW_LOGGING']:
             if self._auto_scroll_handler_id is None:
-                self._auto_scroll_handler_id = self.text_view.connect("size-allocate", self._auto_scroll)
+                self._auto_scroll_handler_id = vadjustment.connect("changed", self._auto_scroll)
         else:
             if self._auto_scroll_handler_id is not None:
-                self.text_view.disconnect(self._auto_scroll_handler_id)
+                vadjustment.disconnect(self._auto_scroll_handler_id)
                 self._auto_scroll_handler_id = None
 
     def _auto_scroll(self, *args):
@@ -196,9 +199,10 @@ class LoggingConsoleView(View):
 
     def set_cursor_position(self, line_number, line_offset):
         text_buffer = self.text_view.get_buffer()
-        new_p_iter = text_buffer.get_iter_at_line(line_number)
+        # GTK4: get_iter_at_line/get_iter_at_line_offset return (success, iter)
+        new_p_iter = text_buffer.get_iter_at_line(line_number)[1]
         if new_p_iter.get_chars_in_line() >= line_offset:
-            new_p_iter = text_buffer.get_iter_at_line_offset(line_number, line_offset)
+            new_p_iter = text_buffer.get_iter_at_line_offset(line_number, line_offset)[1]
         else:
             logger.debug("Line has not enough chars {0} {1}".format((line_number, line_offset), new_p_iter.get_chars_in_line()))
         if new_p_iter.is_cursor_position():
@@ -224,18 +228,18 @@ class LoggingConsoleView(View):
         with self._filtered_buffer_lock.writer_lock as filtered_buffer:
             if isinstance(line_number_or_iter, Gtk.TextIter):
                 line_iter = line_number_or_iter
-                line_end_iter = filtered_buffer.get_iter_at_line(line_iter.get_line())
+                line_end_iter = filtered_buffer.get_iter_at_line(line_iter.get_line())[1]
             else:
                 line_number = line_number_or_iter
-                line_iter = filtered_buffer.get_iter_at_line(line_number)
-                line_end_iter = filtered_buffer.get_iter_at_line(line_number)
+                line_iter = filtered_buffer.get_iter_at_line(line_number)[1]
+                line_end_iter = filtered_buffer.get_iter_at_line(line_number)[1]
             line_end_iter.forward_to_line_end()
             text = filtered_buffer.get_text(line_iter, line_end_iter, True)
         return text
 
     def set_cursor_on_line_with_string(self, s, line_offset=0):
         text_buffer = self.text_view.get_buffer()
-        line_iter = text_buffer.get_iter_at_line(0)
+        line_iter = text_buffer.get_iter_at_line(0)[1]
         current_text_line = self.get_text_of_line(line_iter)
         while not s == current_text_line:
             if not line_iter.forward_line():
@@ -248,7 +252,7 @@ class LoggingConsoleView(View):
         """ Find the closest occurrence of a string with respect to the cursor position in the text view """
         line_number, _ = self.get_cursor_position()
         text_buffer = self.text_view.get_buffer()
-        line_iter = text_buffer.get_iter_at_line(line_number)
+        line_iter = text_buffer.get_iter_at_line(line_number)[1]
 
         # find closest before line with string within
         before_line_number = None

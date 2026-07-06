@@ -33,12 +33,12 @@ class NotificationBarView(View):
 
         self.info_bar = Gtk.InfoBar()
         self.info_bar.set_show_close_button(True)
-        self.notification_bar.add(self.info_bar)
+        self.notification_bar.set_child(self.info_bar)
 
         self._message_label = Gtk.Label(label="test")
-        content_area = self.info_bar.get_content_area()
-        content_area.add(self._message_label)
-        label.ellipsize_labels_recursively(content_area)
+        # GTK4 InfoBar has no content area getter anymore
+        self.info_bar.add_child(self._message_label)
+        label.ellipsize_labels_recursively(self._message_label)
 
     def show_bar(self):
         if not self.notification_bar.get_reveal_child():

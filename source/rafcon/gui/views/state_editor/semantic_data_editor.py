@@ -15,6 +15,7 @@ from rafcon.design_patterns.mvc.view import View
 import rafcon.gui.helpers.label as gui_helper_label
 
 from rafcon.gui.utils import constants
+from rafcon.gui.utils.gtk_utils import set_all_margins
 
 
 class SemanticDataEditorView(View):
@@ -30,11 +31,11 @@ class SemanticDataEditorView(View):
     VALUE_COLUMN_ID = 1
 
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('semantic_data_editor.glade'), parent='semantic_data_vbox')
+        super().__init__(builder_filename=glade.get_glade_path('semantic_data_editor.ui'), parent='semantic_data_vbox')
         self.scrollbar_widget = self['semantic_data_scroller']
-        self['delete_entry'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['new_dict_entry'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['new_entry'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['delete_entry'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['new_dict_entry'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['new_entry'], constants.BUTTON_BORDER_WIDTH)
         tree_view = self["semantic_data_tree_view"]
 
         # prepare tree view columns

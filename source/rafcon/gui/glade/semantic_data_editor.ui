@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<interface>
+  <requires lib="gtk" version="4.0" />
+  <object class="GtkBox" id="semantic_data_vbox">
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkViewport" id="semantic_data_title_wrapper">
+        <property name="child">
+          <object class="GtkBox" id="semantic_data_label_wrapper">
+            <property name="can_focus">0</property>
+            <child>
+              <object class="GtkLabel" id="semantic_data_label">
+                <property name="label" translatable="1">SEMANTIC DATA</property>
+                <property name="halign">start</property>
+              </object>
+            </child>
+            <style>
+              <class name="widget-title" />
+            </style>
+          </object>
+        </property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkScrolledWindow" id="semantic_data_scroller">
+        <property name="vexpand">1</property>
+        <property name="focusable">1</property>
+        <property name="child">
+          <object class="GtkTreeView" id="semantic_data_tree_view">
+            <property name="focusable">1</property>
+            <property name="headers_clickable">0</property>
+            <property name="enable_grid_lines">horizontal</property>
+            <child internal-child="selection">
+              <object class="GtkTreeSelection" />
+            </child>
+          </object>
+        </property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox" id="semantic_data_toolbar">
+        <child>
+          <object class="GtkButton" id="delete_entry">
+            <property name="label" translatable="1">Remove</property>
+            <property name="focusable">1</property>
+            </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="new_dict_entry">
+            <property name="label" translatable="1">Add Dict</property>
+            <property name="focusable">1</property>
+            </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="new_entry">
+            <property name="label" translatable="1">Add</property>
+            <property name="focusable">1</property>
+            </object>
+        </child>
+        <child>
+          <object class="GtkToggleButton" id="open_externally">
+            <property name="label" translatable="1">Open externally</property>
+            <property name="focusable">1</property>
+            </object>
+        </child>
+        <style>
+          <class name="widget-toolbar" />
+        </style>
+      </object>
+    </child>
+  </object>
+</interface>

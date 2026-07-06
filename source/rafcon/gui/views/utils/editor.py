@@ -42,7 +42,6 @@ class EditorView(View):
 
         # create title view port widget
         source_title = gui_helper_label.create_widget_title(name)
-        source_title.show_all()
 
         # prepare frame for the text editor
         editor_frame = Gtk.Frame()
@@ -73,24 +72,27 @@ class EditorView(View):
         # wrap text view with scroller window
         scrollable = Gtk.ScrolledWindow()
         scrollable.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        scrollable.add(self.textview)
+        scrollable.set_child(self.textview)
         self.scrollable = scrollable
 
         # wrap scroller window with Gtk.Frame for proper viewing
-        editor_frame.add(scrollable)
+        editor_frame.set_child(scrollable)
 
         # fill top widget vbox with title view port, source view and text view within
-        vbox.pack_start(source_title, False, True, 0)
+        vbox.append(source_title)
         self.spacer_frame = None
         if self.run_with_spacer:
             # with spacer a Gtk.Frame object is used as spacer and its is with the source view in one hbox
             hbox_frame = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
             self.spacer_frame = Gtk.Frame()
-            hbox_frame.pack_end(self.spacer_frame, expand=False, fill=False, padding=0)
-            hbox_frame.pack_start(editor_frame, expand=True, fill=True, padding=0)
-            vbox.pack_start(hbox_frame, expand=True, fill=True, padding=0)
+            editor_frame.set_hexpand(True)
+            hbox_frame.append(editor_frame)
+            hbox_frame.append(self.spacer_frame)
+            hbox_frame.set_vexpand(True)
+            vbox.append(hbox_frame)
         else:
-            vbox.pack_start(editor_frame, expand=True, fill=True, padding=0)
+            editor_frame.set_vexpand(True)
+            vbox.append(editor_frame)
 
         self['editor_frame'] = vbox
 
@@ -183,9 +185,10 @@ class EditorView(View):
 
     def set_cursor_position(self, line_number, line_offset):
         text_buffer = self.get_buffer()
-        new_p_iter = text_buffer.get_iter_at_line(line_number)
+        # GTK4: get_iter_at_line/get_iter_at_line_offset return (success, iter)
+        new_p_iter = text_buffer.get_iter_at_line(line_number)[1]
         if new_p_iter.get_chars_in_line() >= line_offset:
-            new_p_iter = text_buffer.get_iter_at_line_offset(line_number, line_offset)
+            new_p_iter = text_buffer.get_iter_at_line_offset(line_number, line_offset)[1]
         else:
             logger.debug("Line has not enough chars {0} {1}".format((line_number, line_offset), new_p_iter.get_chars_in_line()))
         if new_p_iter.is_cursor_position():

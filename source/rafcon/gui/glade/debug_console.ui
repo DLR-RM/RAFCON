@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkBox" id="console_container">
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkBox" id="console">
+        <property name="vexpand">1</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkBox" id="debug_label_hbox">
+            <child>
+              <object class="GtkLabel" id="debug_console_label">
+                <property name="hexpand">1</property>
+                <property name="halign">start</property>
+                <property name="label" translatable="1">DEBUG CONSOLE</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox" id="debug_console_button_hbox">
+                <property name="hexpand">1</property>
+                <child>
+                  <object class="GtkCheckButton" id="button_follow_logging">
+                    <property name="halign">center</property>
+                    <property name="label" translatable="1">FOLLOW</property>
+                    <property name="focusable">1</property>
+                    <property name="focus_on_click">0</property>
+                    <property name="active">1</property>
+                    <style>
+                      <class name="secondary"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="button_show_verbose">
+                    <property name="halign">center</property>
+                    <property name="label" translatable="1">VERBOSE</property>
+                    <property name="focusable">1</property>
+                    <property name="focus_on_click">0</property>
+                    <property name="active">1</property>
+                    <style>
+                      <class name="secondary"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="button_show_debug">
+                    <property name="halign">center</property>
+                    <property name="label" translatable="1">DEBUG</property>
+                    <property name="focusable">1</property>
+                    <property name="focus_on_click">0</property>
+                    <property name="active">1</property>
+                    <style>
+                      <class name="secondary"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="button_show_info">
+                    <property name="halign">center</property>
+                    <property name="label" translatable="1">INFO</property>
+                    <property name="focusable">1</property>
+                    <property name="focus_on_click">0</property>
+                    <property name="active">1</property>
+                    <style>
+                      <class name="secondary"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="button_show_warning">
+                    <property name="halign">center</property>
+                    <property name="label" translatable="1">WARNING</property>
+                    <property name="focusable">1</property>
+                    <property name="focus_on_click">0</property>
+                    <property name="active">1</property>
+                    <style>
+                      <class name="secondary"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="button_show_error">
+                    <property name="halign">center</property>
+                    <property name="label" translatable="1">ERROR</property>
+                    <property name="focusable">1</property>
+                    <property name="focus_on_click">0</property>
+                    <property name="active">1</property>
+                    <style>
+                      <class name="secondary"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="undock_console_button">
+                <property name="focusable">1</property>
+                <property name="receives_default">1</property>
+                <style>
+                  <class name="flat"/>
+                </style>
+              </object>
+            </child>
+            <style>
+              <class name="widget-title"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="console_hide_button">
+        <property name="focusable">1</property>
+        <property name="focus_on_click">0</property>
+        <property name="receives_default">1</property>
+        <style>
+          <class name="sidebar-toggle"/>
+        </style>
+      </object>
+    </child>
+  </object>
+</interface>

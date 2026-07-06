@@ -14,15 +14,16 @@ from rafcon.design_patterns.mvc.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.utils import constants
+from rafcon.gui.utils.gtk_utils import set_all_margins
 from rafcon.gui.helpers import label
 
 
 class GlobalVariableEditorView(View):
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('global_variable_editor_widget.glade'), parent='global_variable_vbox')
-        self['new_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['delete_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['lock_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['unlock_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        super().__init__(builder_filename=glade.get_glade_path('global_variable_editor_widget.ui'), parent='global_variable_vbox')
+        set_all_margins(self['new_global_variable_button'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['delete_global_variable_button'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['lock_global_variable_button'], constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(self['unlock_global_variable_button'], constants.BUTTON_BORDER_WIDTH)
         self.scrollbar_widget = self['scroller']
         label.ellipsize_labels_recursively(self['global_variables_toolbar'])

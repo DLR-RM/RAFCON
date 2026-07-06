@@ -7,26 +7,26 @@ class ExecutionLogTreeView(View):
         super().__init__(parent='execution_log_paned')
 
         # Setting up the self.grid in which the elements are to be positioned
-        self.paned = Gtk.HPaned()
+        self.paned = Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
 
         # setting up the layout, putting the tree_view in a scrollwindow, and the buttons in a row
         self.scrollable_treelist = Gtk.ScrolledWindow()
-        self.paned.add1(self.scrollable_treelist)
+        self.paned.set_start_child(self.scrollable_treelist)
 
         # setting up text view
         self.scrollable_textview = Gtk.ScrolledWindow()
-        self.paned.add2(self.scrollable_textview)
+        self.paned.set_end_child(self.scrollable_textview)
 
         self.paned.set_position(300)
 
         # create text_buffer explicitly to avoid creating default buffer implicitly (this caused warnings)
         self.text_buffer = Gtk.TextBuffer()
         self.text_view = Gtk.TextView(buffer=self.text_buffer)
-        self.scrollable_textview.add(self.text_view)
+        self.scrollable_textview.set_child(self.text_view)
 
         self.tree_view = Gtk.TreeView()
         self.selection = self.tree_view.get_selection()
-        self.scrollable_treelist.add(self.tree_view)
+        self.scrollable_treelist.set_child(self.tree_view)
 
         # create the TreeViewColumn to display the data
         self.tvcolumn = Gtk.TreeViewColumn('Execution History')
@@ -52,9 +52,6 @@ class ExecutionLogTreeView(View):
 
         # Allow drag and drop reordering of rows
         self.tree_view.set_reorderable(True)
-
-        self.tree_view.show_all()
-        self.paned.show_all()
 
         self['execution_log_paned'] = self.paned
         self['execution_log_tree_view'] = self.tree_view

@@ -13,6 +13,7 @@
 from gi.repository import Gtk
 from rafcon.design_patterns.mvc.view import View
 from rafcon.gui.utils import constants
+from rafcon.gui.utils.gtk_utils import set_all_margins
 from rafcon.gui.helpers import label
 
 
@@ -53,37 +54,38 @@ class ModificationHistoryView(View, Gtk.ScrolledWindow):
         history_tree.set_name('history_tree')
 
         undo_button = Gtk.Button.new_with_label("Undo")
-        undo_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(undo_button, constants.BUTTON_BORDER_WIDTH)
         redo_button = Gtk.Button.new_with_label("Redo")
-        redo_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(redo_button, constants.BUTTON_BORDER_WIDTH)
         reset_button = Gtk.Button.new_with_label("Reset")
-        reset_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        set_all_margins(reset_button, constants.BUTTON_BORDER_WIDTH)
         branch_checkbox = Gtk.CheckButton.new_with_label("Branches")
         branch_checkbox.set_tooltip_text('Show branches')
-        branch_checkbox.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        branch_checkbox.get_style_context().add_class("secondary")
+        set_all_margins(branch_checkbox, constants.BUTTON_BORDER_WIDTH)
+        branch_checkbox.add_css_class("secondary")
         folded_checkbox = Gtk.CheckButton.new_with_label("Fold")
         folded_checkbox.set_tooltip_text('Fold branches')
-        folded_checkbox.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        folded_checkbox.get_style_context().add_class("secondary")
+        set_all_margins(folded_checkbox, constants.BUTTON_BORDER_WIDTH)
+        folded_checkbox.add_css_class("secondary")
 
         button_hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
-        button_hbox.get_style_context().add_class("widget-toolbar")
-        button_hbox.pack_end(folded_checkbox, False, True, 0)
-        button_hbox.pack_end(branch_checkbox, False, True, 0)
-        button_hbox.pack_end(reset_button, False, True, 0)
-        button_hbox.pack_end(redo_button, False, True, 0)
-        button_hbox.pack_end(undo_button, False, True, 0)
+        button_hbox.add_css_class("widget-toolbar")
+        button_hbox.set_halign(Gtk.Align.END)
+        button_hbox.append(undo_button)
+        button_hbox.append(redo_button)
+        button_hbox.append(reset_button)
+        button_hbox.append(branch_checkbox)
+        button_hbox.append(folded_checkbox)
 
         label.ellipsize_labels_recursively(button_hbox)
 
         history_vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
-        history_vbox.pack_start(self, True, True, 0)
-        history_vbox.pack_start(button_hbox, False, True, 0)
+        self.set_vexpand(True)
+        history_vbox.append(self)
+        history_vbox.append(button_hbox)
 
-        self.add(history_tree)
+        self.set_child(history_tree)
         self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        self.show_all()
 
         self['history_vbox'] = history_vbox
         self['history_view'] = self

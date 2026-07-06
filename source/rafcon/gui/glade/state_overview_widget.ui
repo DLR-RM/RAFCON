@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<interface>
+  <requires lib="gtk" version="4.0" />
+  <object class="GtkGrid" id="properties_widget">
+    <property name="hexpand">1</property>
+    <property name="vexpand">1</property>
+    <property name="row_spacing">10</property>
+    <property name="column_spacing">10</property>
+    <child>
+      <object class="GtkLabel" id="type_label">
+        <property name="halign">start</property>
+        <property name="label" translatable="1">Type</property>
+        <style>
+          <class name="secondary" />
+        </style>
+        <layout>
+          <property name="column">0</property>
+          <property name="row">3</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkCheckButton" id="is_start_state_checkbutton">
+        <property name="label" translatable="1">is start state</property>
+        <property name="focusable">1</property>
+        <property name="focus_on_click">0</property>
+        <layout>
+          <property name="column">2</property>
+          <property name="row">3</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel" id="label_library_path">
+        <property name="halign">start</property>
+        <property name="label" translatable="1">Library Path/Name</property>
+        <style>
+          <class name="secondary" />
+        </style>
+        <layout>
+          <property name="column">0</property>
+          <property name="row">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkEntry" id="library_path">
+        <property name="sensitive">0</property>
+        <property name="focusable">1</property>
+        <property name="hexpand">1</property>
+        <property name="vexpand">1</property>
+        <property name="invisible_char">•</property>
+        <layout>
+          <property name="column">1</property>
+          <property name="row">1</property>
+          <property name="column-span">2</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkCheckButton" id="show_content_checkbutton">
+        <property name="label" translatable="1">show</property>
+        <property name="focusable">1</property>
+        <property name="focus_on_click">0</property>
+        <property name="hexpand">0</property>
+        <property name="vexpand">0</property>
+        <layout>
+          <property name="column">1</property>
+          <property name="row">2</property>
+          <property name="column-span">2</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel" id="label_show_content">
+        <property name="halign">start</property>
+        <property name="label" translatable="1">Library content</property>
+        <style>
+          <class name="secondary" />
+        </style>
+        <layout>
+          <property name="column">0</property>
+          <property name="row">2</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel" id="label_state_name">
+        <property name="halign">start</property>
+        <property name="label" translatable="1">State Name</property>
+        <style>
+          <class name="secondary" />
+        </style>
+        <layout>
+          <property name="column">0</property>
+          <property name="row">0</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <property name="spacing">10</property>
+        <child>
+          <object class="GtkEntry" id="entry_name">
+            <property name="focusable">1</property>
+            <property name="hexpand">1</property>
+            <property name="vexpand">1</property>
+            <property name="invisible_char">•</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="id_label">
+            <property name="hexpand">0</property>
+            <property name="vexpand">0</property>
+            <property name="label" translatable="1">ID</property>
+            <style>
+              <class name="secondary" />
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label_id_value">
+            <property name="hexpand">0</property>
+            <property name="vexpand">0</property>
+            <property name="label" translatable="1">xyz</property>
+            <property name="selectable">1</property>
+          </object>
+        </child>
+        <layout>
+          <property name="column">1</property>
+          <property name="row">0</property>
+          <property name="column-span">2</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <placeholder />
+    </child>
+  </object>
+</interface>

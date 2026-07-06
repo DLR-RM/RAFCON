@@ -14,123 +14,82 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gi.repository import Gtk
+from gi.repository import Gio, Gtk
 from rafcon.design_patterns.mvc.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.helpers.label import set_icon_and_text_box_of_menu_item
-from rafcon.gui.utils import constants
 
 
 class MenuBarView(View):
-    buttons = {
-        # -----------------------------------------------
-        # File
-        # -----------------------------------------------
-        'new':                  constants.BUTTON_NEW,
-        'open':                 constants.BUTTON_OPEN,
-        'open_recent':          constants.BUTTON_OPEN,
-        'save':                 constants.BUTTON_SAVE,
-        'save_as':              constants.BUTTON_SAVE,
-        'save_as_copy':         constants.BUTTON_SAVE,
-        'save_state_as':        constants.BUTTON_SAVE,
-        'menu_preferences':     constants.BUTTON_PROP,
-        'refresh_all':          constants.BUTTON_REFR,
-        'refresh_libraries':    constants.BUTTON_REFR,
-        'bake_state_machine':   constants.BUTTON_BAKE,
-        'layout_state_machine': constants.BUTTON_LAYOUT,
-        'quit':                 constants.BUTTON_QUIT,
-        # -----------------------------------------------
-        # Edit
-        # -----------------------------------------------
-        'cut':                  constants.BUTTON_CUT,
-        'copy':                 constants.BUTTON_COPY,
-        'paste':                constants.BUTTON_PASTE,
-        'is_start_state':       constants.BUTTON_SQUARE,
-        'add':                  constants.BUTTON_ADD,
-        'group':                constants.BUTTON_GROUP,
-        'ungroup':              constants.BUTTON_UNGR,
-        'substitute_state':     constants.BUTTON_REFR,
-        'delete':               constants.BUTTON_DEL,
-        'undo':                 constants.BUTTON_UNDO,
-        'redo':                 constants.BUTTON_REDO,
-        # -----------------------------------------------
-        # View
-        # -----------------------------------------------
-        'data_flow_mode':       None,
-        'show_data_flows':      None,
-        'show_transitions':     None,
-        'show_data_values':     None,
-        'show_aborted_preempted': None,
-        'expert_view':          constants.BUTTON_VIEW,
-        'full_screen':          None,
-        # -----------------------------------------------
-        # Execution
-        # -----------------------------------------------
-        'start':                constants.BUTTON_START,
-        'start_from_selected':  constants.BUTTON_START_FROM_SELECTED_STATE,
-        'run_selected':         constants.BUTTON_RUN_SELECTED_STATE,
-        'only_run_selected':    constants.BUTTON_ONLY_RUN_SELECTED_STATE,
-        'pause':                constants.BUTTON_PAUSE,
-        'stop':                 constants.BUTTON_STOP,
-        'step_mode':            constants.BUTTON_STEPM,
-        'step_into':            constants.BUTTON_STEP_INTO,
-        'step_over':            constants.BUTTON_STEP_OVER,
-        'step_out':             constants.BUTTON_STEP_OUT,
-        'backward_step':        constants.BUTTON_BACKW,
-        'run_to_selected':      constants.BUTTON_RUN_TO_SELECTED_STATE,
-        # -----------------------------------------------
-        # Help
-        # -----------------------------------------------
-        'about':                constants.BUTTON_ABOUT
-    }
+    """Menu bar of the main window.
 
-    sub_menus = ['submenu_file', 'submenu_edit', 'submenu_view', 'submenu_execution', 'submenu_help']
+    GTK4 removed GtkMenuBar/GtkMenu/GtkMenuItem widgets. The menu bar is now a GMenu model
+    (see menu_bar.ui) rendered by a GtkPopoverMenuBar. Menu entries are no longer widgets:
+    each entry triggers the application action "app.<name>", where <name> is the former
+    GTK3 menu item widget id. Activation handlers, sensitivity (Gio.SimpleAction.set_enabled)
+    and check states (stateful actions) are wired on the Gtk.Application by the controller.
+    """
+
+    # former GtkCheckMenuItems: their actions must be created stateful (boolean)
+    toggle_actions = ['grid', 'data_flow_mode', 'show_data_flows', 'show_transitions',
+                      'show_data_values', 'show_aborted_preempted', 'full_screen']
+
+    actions = [
+        # File
+        'new', 'open', 'save', 'save_as', 'save_as_copy', 'save_state_as', 'menu_preferences',
+        'refresh_all', 'refresh_libraries', 'bake_state_machine', 'layout_state_machine', 'quit',
+        # Edit
+        'cut', 'copy', 'paste', 'is_start_state', 'add', 'group', 'ungroup', 'substitute_state',
+        'delete', 'undo', 'redo', 'search',
+        # View
+        'expert_view',
+        # Execution
+        'start', 'start_from_selected', 'run_to_selected', 'run_selected', 'only_run_selected',
+        'pause', 'stop', 'step_mode', 'step_into', 'step_over', 'step_out', 'backward_step',
+        # Help
+        'about',
+    ] + toggle_actions
 
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('menu_bar.glade'), parent='menubar')
+        super().__init__(builder_filename=glade.get_glade_path('menu_bar.ui'), parent='menubar')
 
-        self.insert_accelerators = {'new': Gtk.accelerator_parse('<control>N'),
-                                    'open': Gtk.accelerator_parse('<control>O'),
-                                    'save': Gtk.accelerator_parse('<control>S'),
-                                    'quit': Gtk.accelerator_parse('<control>Q'),
-                                    'cut': Gtk.accelerator_parse('<control>X'),
-                                    'copy': Gtk.accelerator_parse('<control>C'),
-                                    'paste': Gtk.accelerator_parse('<control>V'),
-                                    }
-        self.sub_menu_open_recently = Gtk.Menu()
-        self['open_recent'].set_submenu(self.sub_menu_open_recently)
+        # menu section the controller fills with the recently opened state machines
+        self.sub_menu_open_recently = self['open_recent_section']
 
-        for menu_item_name in self.buttons:
-            # set icon
-            self.set_menu_item_icon(menu_item_name, self.buttons[menu_item_name])
-            # set accelerator if in shortcuts dictionary with menu_item_name == key
-            if menu_item_name in global_gui_config.get_config_value('SHORTCUTS'):
-                shortcuts = global_gui_config.get_config_value('SHORTCUTS')[menu_item_name]
-                if shortcuts:
-                    main_shortcut = shortcuts[0] if isinstance(shortcuts, list) else shortcuts
-                    self.set_menu_item_accelerator(menu_item_name, main_shortcut)
-        for sub_menu_name in self.sub_menus:
-            sub_menu = self[sub_menu_name]
-            sub_menu.set_reserve_toggle_size(False)
+        # accelerator per action, applied by the controller via Gtk.Application.set_accels_for_action
+        self.accelerators = {'new': '<control>N',
+                             'open': '<control>O',
+                             'save': '<control>S',
+                             'quit': '<control>Q',
+                             'cut': '<control>X',
+                             'copy': '<control>C',
+                             'paste': '<control>V',
+                             }
+        shortcuts = global_gui_config.get_config_value('SHORTCUTS')
+        for action_name in self.actions:
+            if action_name in shortcuts and shortcuts[action_name]:
+                action_shortcuts = shortcuts[action_name]
+                main_shortcut = action_shortcuts[0] if isinstance(action_shortcuts, list) else action_shortcuts
+                self.set_menu_item_accelerator(action_name, main_shortcut)
 
     def set_menu_item_icon(self, menu_item_name, uni_code=None):
-        menu_item = self[menu_item_name]
-        # do not touch e.g. CheckMenuItems, only Gtk.MenuItem
-        if type(menu_item) == Gtk.MenuItem:
-            set_icon_and_text_box_of_menu_item(menu_item, uni_code)
+        """No-op: GMenu entries are not widgets, so the FontAwesome icon boxes of GTK3 are gone"""
+        pass
 
     def set_menu_item_sensitive(self, menu_item_name, sensitive):
-        self[menu_item_name].set_sensitive(sensitive)
+        """Enable/disable the application action backing the menu entry"""
+        app = Gio.Application.get_default()
+        action = app.lookup_action(menu_item_name) if app else None
+        if action is not None:
+            action.set_enabled(sensitive)
 
     def set_menu_item_accelerator(self, menu_item_name, accel_code, remove_old=False):
-        menu_item = self[menu_item_name]
-        # the accelerator group is not defined any more in the glade file
-        if remove_old:
-            if menu_item_name in self.insert_accelerators:
-                key, mod = self.insert_accelerators[menu_item_name]
-                menu_item.remove_accelerator(self['accelgroup1'], key, mod)
-        key, mod = Gtk.accelerator_parse(accel_code)
-        menu_item.add_accelerator("activate", self['accelgroup1'], key, mod, Gtk.AccelFlags.VISIBLE)
-        self.insert_accelerators[menu_item_name] = (key, mod)
+        """Record the accelerator for an action; the controller registers it on the application"""
+        key, mod = Gtk.accelerator_parse(accel_code)[1:]
+        if not key:
+            return
+        self.accelerators[menu_item_name] = accel_code
+        app = Gio.Application.get_default()
+        if isinstance(app, Gtk.Application) and app.lookup_action(menu_item_name):
+            app.set_accels_for_action("app.{}".format(menu_item_name), [accel_code])

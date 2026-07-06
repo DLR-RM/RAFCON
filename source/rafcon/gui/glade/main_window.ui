@@ -1,0 +1,600 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<interface>
+  <requires lib="gtk" version="4.0" />
+  <object class="GtkWindow" id="main_window">
+    <property name="title" translatable="1">RAFCON</property>
+    <property name="default_width">1800</property>
+    <property name="default_height">900</property>
+    <child type="titlebar">
+      <object class="GtkHeaderBar" id="headerbar">
+        <child>
+          <placeholder />
+        </child>
+      </object>
+    </child>
+    <property name="child">
+      <object class="GtkBox" id="top_level_vbox">
+        <property name="receives_default">1</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="tool_bar_placeholder">
+            <property name="label">Placeholder for the tool bar</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkPaned" id="top_level_h_pane">
+            <property name="vexpand">1</property>
+            <property name="shrink-end-child">0</property>
+            <property name="shrink-start-child">0</property>
+            <property name="focusable">1</property>
+            <property name="wide_handle">1</property>
+            <property name="start-child">
+              <object class="GtkBox" id="left_bar_container">
+                <child>
+                  <object class="GtkButton" id="left_bar_hide_button">
+                    <property name="halign">center</property>
+                    <property name="focusable">1</property>
+                    <style>
+                      <class name="sidebar-toggle" />
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkViewport" id="left_bar">
+                    <property name="hexpand">1</property>
+                    <property name="child">
+                      <object class="GtkPaned" id="left_bar_paned">
+                        <property name="shrink-end-child">0</property>
+                        <property name="shrink-start-child">0</property>
+                        <property name="focusable">1</property>
+                        <property name="receives_default">1</property>
+                        <property name="orientation">vertical</property>
+                        <property name="wide_handle">1</property>
+                        <property name="start-child">
+                          <object class="GtkBox" id="upper_left_sidebar">
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkBox" id="state_editor_label_hbox1">
+                                <child>
+                                  <object class="GtkButton" id="undock_left_bar_button">
+                                    <property name="focusable">1</property>
+                                    <property name="receives_default">1</property>
+                                    <style>
+                                      <class name="flat" />
+                                    </style>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="collapse_tree_button">
+                                    <property name="focusable">1</property>
+                                    <property name="receives_default">1</property>
+                                    <style>
+                                      <class name="flat" />
+                                    </style>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkToggleButton" id="show_search_bar">
+                                    <property name="focusable">1</property>
+                                    <property name="receives_default">1</property>
+                                    <style>
+                                      <class name="flat" />
+                                    </style>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="upper_notebook_title">
+                                    <property name="halign">center</property>
+                                    <property name="label">upper_notebook_title</property>
+                                  </object>
+                                </child>
+                                <style>
+                                  <class name="widget-title" />
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkNotebook" id="upper_notebook">
+                                <property name="vexpand">1</property>
+                                <property name="focusable">1</property>
+                                <property name="tab_pos">left</property>
+                                <property name="show_border">0</property>
+                                <property name="scrollable">1</property>
+                                <property name="group_name">left_sidebar</property>
+                                <child>
+                                  <object class="GtkNotebookPage">
+                                    <property name="child">
+                                      <object class="GtkBox">
+                                        <property name="orientation">vertical</property>
+                                        <child>
+                                          <object class="GtkSearchEntry" id="state_machine_search">
+                                            <property name="visible">0</property>
+                                            <property name="focusable">1</property>
+                                            <style>
+                                              <class name="flat" />
+                                            </style>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkScrolledWindow" id="libraries_scrolledwindow">
+                                            <property name="vexpand">1</property>
+                                            <property name="focusable">1</property>
+                                            <child>
+                                              <placeholder />
+                                            </child>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </property>
+                                    <property name="tab">
+                                      <object class="GtkLabel" id="library_tree_tab">
+                                        <property name="label">Libraries</property>
+                                        </object>
+                                    </property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkNotebookPage">
+                                    <property name="position">1</property>
+                                    <property name="child">
+                                      <object class="GtkScrolledWindow" id="states_tree_scrolledwindow">
+                                        <property name="focusable">1</property>
+                                        <child>
+                                          <placeholder />
+                                        </child>
+                                      </object>
+                                    </property>
+                                    <property name="tab">
+                                      <object class="GtkLabel" id="state_machine_tree_tab">
+                                        <property name="label">States Tree</property>
+                                        </object>
+                                    </property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkNotebookPage">
+                                    <property name="position">2</property>
+                                    <property name="child">
+                                      <object class="GtkScrolledWindow">
+                                        <property name="focusable">1</property>
+                                        <property name="child">
+                                          <object class="GtkViewport" id="global_variables_eventbox">
+                                            <child>
+                                              <placeholder />
+                                            </child>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </property>
+                                    <property name="tab">
+                                      <object class="GtkLabel" id="global_variables_tab">
+                                        <property name="label">Global Variables</property>
+                                        </object>
+                                    </property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkNotebookPage">
+                                    <property name="position">3</property>
+                                    <property name="child">
+                                      <object class="GtkScrolledWindow" id="library_usages_scrolledwindow">
+                                        <property name="focusable">1</property>
+                                        <child>
+                                          <placeholder />
+                                        </child>
+                                      </object>
+                                    </property>
+                                    <property name="tab">
+                                      <object class="GtkLabel" id="library_usages_tree_tab">
+                                        <property name="label">Library Usages</property>
+                                        </object>
+                                    </property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                        <property name="end-child">
+                          <object class="GtkBox" id="lower_left_sidebar">
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkBox" id="lower_notebook_title_eventbox">
+                                <property name="can_focus">0</property>
+                                <child>
+                                  <object class="GtkLabel" id="lower_notebook_title">
+                                    <property name="halign">start</property>
+                                    <property name="label">lower_notebook_title</property>
+                                  </object>
+                                </child>
+                                <style>
+                                  <class name="widget-title" />
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkNotebook" id="lower_notebook">
+                                <property name="vexpand">1</property>
+                                <property name="focusable">1</property>
+                                <property name="tab_pos">left</property>
+                                <property name="show_border">0</property>
+                                <property name="scrollable">1</property>
+                                <property name="group_name">left_sidebar</property>
+                                <child>
+                                  <object class="GtkNotebookPage">
+                                    <property name="child">
+                                      <object class="GtkScrolledWindow">
+                                        <property name="focusable">1</property>
+                                        <property name="child">
+                                          <object class="GtkViewport" id="history_alignment">
+                                            <child>
+                                              <placeholder />
+                                            </child>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </property>
+                                    <property name="tab">
+                                      <object class="GtkLabel" id="history_tab">
+                                        <property name="label">Modification History</property>
+                                        </object>
+                                    </property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkNotebookPage">
+                                    <property name="position">1</property>
+                                    <property name="child">
+                                      <object class="GtkScrolledWindow">
+                                        <property name="focusable">1</property>
+                                        <property name="child">
+                                          <object class="GtkViewport" id="execution_history_alignment">
+                                            <child>
+                                              <placeholder />
+                                            </child>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </property>
+                                    <property name="tab">
+                                      <object class="GtkLabel" id="execution_history_tab">
+                                        <property name="label">Execution History</property>
+                                        </object>
+                                    </property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkNotebookPage">
+                                    <property name="position">2</property>
+                                    <property name="child">
+                                      <object class="GtkScrolledWindow">
+                                        <property name="focusable">1</property>
+                                        <property name="child">
+                                          <object class="GtkViewport" id="breakpoints_alignment">
+                                            <child>
+                                              <placeholder />
+                                            </child>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </property>
+                                    <property name="tab">
+                                      <object class="GtkLabel" id="breakpoints_tab">
+                                        <property name="label">Breakpoints</property>
+                                        </object>
+                                    </property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </property>
+            <property name="end-child">
+              <object class="GtkPaned" id="right_h_pane">
+                <property name="shrink-end-child">0</property>
+                <property name="resize-end-child">0</property>
+                <property name="shrink-start-child">0</property>
+                <property name="focusable">1</property>
+                <property name="wide_handle">1</property>
+                <property name="start-child">
+                  <object class="GtkBox" id="hbox1">
+                    <child>
+                      <object class="GtkButton" id="left_bar_return_button">
+                        <property name="visible">0</property>
+                        <property name="focusable">1</property>
+                        <property name="receives_default">1</property>
+                        <style>
+                          <class name="sidebar-toggle" />
+                        </style>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkPaned" id="central_v_pane">
+                        <property name="hexpand">1</property>
+                        <property name="shrink-end-child">0</property>
+                        <property name="resize-end-child">0</property>
+                        <property name="shrink-start-child">0</property>
+                        <property name="focusable">1</property>
+                        <property name="orientation">vertical</property>
+                        <property name="wide_handle">1</property>
+                        <property name="start-child">
+                          <object class="GtkBox" id="central_vbox">
+                            <property name="height_request">400</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkBox" id="graphical_editor_label_event_box">
+                                <property name="can_focus">0</property>
+                                <child>
+                                  <object class="GtkLabel" id="graphical_editor_label">
+                                    <property name="halign">start</property>
+                                    <property name="label" translatable="1">GRAPHICAL EDITOR</property>
+                                  </object>
+                                </child>
+                                <style>
+                                  <class name="widget-title" />
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <placeholder />
+                            </child>
+                            <child>
+                              <placeholder />
+                            </child>
+                            <child>
+                              <object class="GtkBox" id="graphical_editor_toolbar">
+                                <child>
+                                  <object class="GtkBox" id="execution_buttons">
+                                    <property name="css-classes">toolbar</property>
+                                    <property name="can_focus">0</property>
+                                    <child>
+                                      <object class="GtkToggleButton" id="button_start_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">start</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="button_stop_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">stop</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkToggleButton" id="button_pause_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">pause</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkSeparator" id="toolbutton15">
+                                        <property name="orientation">vertical</property>
+                                        <property name="can_focus">0</property>
+                                        </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkToggleButton" id="button_step_mode_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">step_mode</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <style>
+                                      <class name="linked" />
+                                    </style>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkBox" id="rum_from_to_buttons">
+                                    <property name="css-classes">toolbar</property>
+                                    <property name="can_focus">0</property>
+                                    <child>
+                                      <object class="GtkButton" id="button_run_this_state_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">run_this_state</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="button_run_only_this_state_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">run_this_state</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="button_start_from_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">start_from</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="button_run_to_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">run_to</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <style>
+                                      <class name="linked" />
+                                    </style>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkBox" id="step_buttons">
+                                    <property name="css-classes">toolbar</property>
+                                    <property name="can_focus">0</property>
+                                    <child>
+                                      <object class="GtkButton" id="button_step_in_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">s</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="button_step_over_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">s</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="button_step_out_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">s</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="button_step_backward_shortcut">
+                                        <property name="can_focus">0</property>
+                                        <property name="label" translatable="1">b</property>
+                                        <property name="use_underline">1</property>
+                                      </object>
+                                    </child>
+                                    <style>
+                                      <class name="linked" />
+                                    </style>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkBox" id="eventbox5">
+                                    <property name="can_focus">0</property>
+                                    <child>
+                                      <object class="GtkLabel" id="execution_status_label">
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="1">STOPPED</property>
+                                        <style>
+                                          <class name="secondary" />
+                                        </style>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="execution_ticker_text">
+                                    <property name="hexpand">1</property>
+                                    <property name="visible">0</property>
+                                    <property name="halign">start</property>
+                                    <property name="label">None</property>
+                                    <style>
+                                      <class name="secondary" />
+                                    </style>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkBox" id="state_icons_box">
+                                    <property name="hexpand">1</property>
+                                    <property name="halign">end</property>
+                                    <property name="homogeneous">1</property>
+                                    <child>
+                                      <placeholder />
+                                    </child>
+                                  </object>
+                                </child>
+                                <style>
+                                  <class name="widget-toolbar" />
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="console_return_button">
+                                <property name="visible">0</property>
+                                <property name="focusable">1</property>
+                                <property name="receives_default">1</property>
+                                <style>
+                                  <class name="sidebar-toggle" />
+                                </style>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                        <property name="end-child">
+                          <object class="GtkViewport" id="debug_console_viewport">
+                            <child>
+                              <placeholder />
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="right_bar_return_button">
+                        <property name="visible">0</property>
+                        <property name="focusable">1</property>
+                        <property name="receives_default">1</property>
+                        <style>
+                          <class name="sidebar-toggle" />
+                        </style>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+                <property name="end-child">
+                  <object class="GtkBox" id="right_bar_container">
+                    <child>
+                      <object class="GtkBox" id="right_bar">
+                        <property name="hexpand">1</property>
+                        <property name="vexpand">1</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkBox" id="state_editor_top_bar">
+                            <child>
+                              <object class="GtkLabel" id="state_editor_label">
+                                <property name="label" translatable="1">STATE EDITOR</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="undock_right_bar_button">
+                                <property name="focusable">1</property>
+                                <property name="receives_default">1</property>
+                                <style>
+                                  <class name="flat" />
+                                </style>
+                              </object>
+                            </child>
+                            <style>
+                              <class name="widget-title" />
+                            </style>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkBox" id="state_editor_eventbox">
+                            <property name="vexpand">1</property>
+                            <property name="can_focus">0</property>
+                            <child>
+                              <placeholder />
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="right_bar_hide_button">
+                        <property name="halign">center</property>
+                        <property name="focusable">1</property>
+                        <property name="receives_default">1</property>
+                        <style>
+                          <class name="sidebar-toggle" />
+                        </style>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+              </object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </property>
+  </object>
+</interface>

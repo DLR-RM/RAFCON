@@ -42,10 +42,10 @@ from rafcon.gui.views.undocked_window import UndockedWindowView
 
 class MainWindowView(View):
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('main_window.glade'), parent='main_window')
+        super().__init__(builder_filename=glade.get_glade_path('main_window.ui'), parent='main_window')
 
         if os.getenv("RAFCON_START_MINIMIZED", False):
-            self.get_parent_widget().iconify()
+            self.get_parent_widget().minimize()
 
         # Add gui components by removing their corresponding placeholders defined in the glade file first and then
         # adding the widgets.
@@ -54,13 +54,13 @@ class MainWindowView(View):
         ################################################
         # Undock Buttons
         ################################################
-        self['undock_left_bar_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_left_bar_button'].set_child(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
         self['undock_left_bar_button'].set_tooltip_text("Undock left side bar widget")
-        self['undock_right_bar_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_right_bar_button'].set_child(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
         self['undock_right_bar_button'].set_tooltip_text("Undock right side bar widget")
-        self['collapse_tree_button'].set_image(gui_helper_label.create_button_label(constants.ICON_TREE_FOLD))
+        self['collapse_tree_button'].set_child(gui_helper_label.create_button_label(constants.ICON_TREE_FOLD))
         self['collapse_tree_button'].set_tooltip_text("Collapse tree of widget")
-        self['show_search_bar'].set_image(gui_helper_label.create_button_label(constants.BUTTON_SHOW_SEARCH_BAR))
+        self['show_search_bar'].set_child(gui_helper_label.create_button_label(constants.BUTTON_SHOW_SEARCH_BAR))
         self['show_search_bar'].set_tooltip_text("Show state machine search bar")
 
         ######################################################
@@ -68,56 +68,57 @@ class MainWindowView(View):
         ######################################################
         self.library_tree = LibraryTreeView()
         self.library_tree.show()
-        self['libraries_scrolledwindow'].add(self.library_tree)
+        self['libraries_scrolledwindow'].set_child(self.library_tree)
 
         ######################################################
         # Library Usages Tree
         ######################################################
         self.library_usages_tree = LibraryTreeView()
         self.library_usages_tree.show()
-        self['library_usages_scrolledwindow'].add(self.library_usages_tree)
+        self['library_usages_scrolledwindow'].set_child(self.library_usages_tree)
 
         ######################################################
         # State Icons
         ######################################################
         self.state_icons = StateIconView()
         self.state_icons.show()
-        self["state_icons_box"].pack_start(self.state_icons.get_parent_widget(), True, True, 0)
+        self.state_icons.get_parent_widget().set_hexpand(True)
+        self["state_icons_box"].append(self.state_icons.get_parent_widget())
 
         ######################################################
         # State Machine Tree
         ######################################################
         self.state_machine_tree = StateMachineTreeView()
         self.state_machine_tree.show()
-        self['states_tree_scrolledwindow'].add(self.state_machine_tree)
+        self['states_tree_scrolledwindow'].set_child(self.state_machine_tree)
 
         ######################################################
         # Global Variable Manager
         ######################################################
         self.global_var_editor = GlobalVariableEditorView()
         self.global_var_editor.show()
-        self['global_variables_eventbox'].add(self.global_var_editor.get_parent_widget())
+        self['global_variables_eventbox'].set_child(self.global_var_editor.get_parent_widget())
 
         ######################################################
         # State Machine History
         ######################################################
         self.state_machine_history = ModificationHistoryView()
         self.state_machine_history.show()
-        self['history_alignment'].add(self.state_machine_history.get_parent_widget())
+        self['history_alignment'].set_child(self.state_machine_history.get_parent_widget())
 
         ######################################################
         # State Machine Execution History
         ######################################################
         self.execution_history = ExecutionHistoryView()
         self.execution_history.show()
-        self['execution_history_alignment'].add(self.execution_history.get_parent_widget())
+        self['execution_history_alignment'].set_child(self.execution_history.get_parent_widget())
 
         ######################################################
         # Breakpoints
         ######################################################
         self.breakpoints = BreakpointsView()
         self.breakpoints.show()
-        self['breakpoints_alignment'].add(self.breakpoints.get_parent_widget())
+        self['breakpoints_alignment'].set_child(self.breakpoints.get_parent_widget())
 
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable
@@ -132,29 +133,30 @@ class MainWindowView(View):
         ######################################################
         self.state_machines_editor = StateMachinesEditorView()
         self.state_machines_editor.show()
-        self['central_vbox'].pack_start(self.state_machines_editor.get_parent_widget(), True, True, 0)
-        self['central_vbox'].reorder_child(self.state_machines_editor.get_parent_widget(), 1)
+        self.state_machines_editor.get_parent_widget().set_vexpand(True)
+        self['central_vbox'].insert_child_after(self.state_machines_editor.get_parent_widget(),
+                                                self['graphical_editor_label_event_box'])
 
         ######################################################
         # Notification Bar
         ######################################################
         self.notification_bar = NotificationBarView()
         self.notification_bar.show()
-        self['central_vbox'].pack_start(self.notification_bar.get_parent_widget(), False, True, 0)
-        self['central_vbox'].reorder_child(self.notification_bar.get_parent_widget(), 2)
+        self['central_vbox'].insert_child_after(self.notification_bar.get_parent_widget(),
+                                                self.state_machines_editor.get_parent_widget())
 
         ######################################################
         # States-editor
         ######################################################
         self.states_editor = StatesEditorView()
-        self['state_editor_eventbox'].add(self.states_editor.get_parent_widget())
+        self['state_editor_eventbox'].append(self.states_editor.get_parent_widget())
         self.states_editor.show()
 
         ######################################################
         # Debug Console
         ######################################################
         self.debug_console_view = DebugConsoleView()
-        self['debug_console_viewport'].add(self.debug_console_view.get_parent_widget())
+        self['debug_console_viewport'].set_child(self.debug_console_view.get_parent_widget())
         self.debug_console_view.get_parent_widget().show()
         # map hide and undock buttons within and debug widget to be usable from main window view with generic naming
         self['undock_console_button'] = self.debug_console_view['undock_console_button']
@@ -175,21 +177,20 @@ class MainWindowView(View):
         self.tool_bar = ToolBarView()
         self.tool_bar.show()
         self['top_level_vbox'].remove(self['tool_bar_placeholder'])
-        self['top_level_vbox'].pack_start(self.tool_bar.get_parent_widget(), expand=False, fill=True, padding=0)
-        self['top_level_vbox'].reorder_child(self.tool_bar.get_parent_widget(), 0)
+        self['top_level_vbox'].prepend(self.tool_bar.get_parent_widget())
 
         ################################################
         # Hide Buttons
         ################################################
-        self['left_bar_hide_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_LEFTA))
-        self['right_bar_hide_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_RIGHTA))
+        self['left_bar_hide_button'].set_child(gui_helper_label.create_button_label(constants.BUTTON_LEFTA))
+        self['right_bar_hide_button'].set_child(gui_helper_label.create_button_label(constants.BUTTON_RIGHTA))
 
         ################################################
         # Return Buttons
         ################################################
-        self['left_bar_return_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_RIGHTA))
-        self['right_bar_return_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_LEFTA))
-        self['console_return_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UPA))
+        self['left_bar_return_button'].set_child(gui_helper_label.create_button_label(constants.BUTTON_RIGHTA))
+        self['right_bar_return_button'].set_child(gui_helper_label.create_button_label(constants.BUTTON_LEFTA))
+        self['console_return_button'].set_child(gui_helper_label.create_button_label(constants.BUTTON_UPA))
 
         # --------------------------------------------------------------------------
         # Edit graphical_editor_shortcuts
@@ -220,18 +221,18 @@ class MainWindowView(View):
         button_step_backward_shortcut = self['button_step_backward_shortcut']
         button_step_backward_shortcut.set_tooltip_text('Step Backward')
 
-        button_start_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_START))
-        button_stop_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STOP))
-        button_pause_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_PAUSE))
-        button_run_this_state_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_RUN_SELECTED_STATE))
-        button_run_only_this_state_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_ONLY_RUN_SELECTED_STATE))
-        button_start_from_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_START_FROM_SELECTED_STATE))
-        button_run_to_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_RUN_TO_SELECTED_STATE))
-        button_step_mode_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STEPM))
-        button_step_in_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STEP_INTO))
-        button_step_over_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STEP_OVER))
-        button_step_out_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STEP_OUT))
-        button_step_backward_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_BACKW))
+        button_start_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_START))
+        button_stop_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_STOP))
+        button_pause_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_PAUSE))
+        button_run_this_state_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_RUN_SELECTED_STATE))
+        button_run_only_this_state_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_ONLY_RUN_SELECTED_STATE))
+        button_start_from_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_START_FROM_SELECTED_STATE))
+        button_run_to_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_RUN_TO_SELECTED_STATE))
+        button_step_mode_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_STEPM))
+        button_step_in_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_STEP_INTO))
+        button_step_over_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_STEP_OVER))
+        button_step_out_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_STEP_OUT))
+        button_step_backward_shortcut.set_child(gui_helper_label.create_button_label(constants.BUTTON_BACKW))
 
         self.left_bar_window = UndockedWindowView('left_bar_window')
         self.right_bar_window = UndockedWindowView('right_bar_window')

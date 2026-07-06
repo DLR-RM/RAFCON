@@ -21,12 +21,12 @@ import weakref
 
 class LinkageOverviewDataView(TreeView):
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('linkage_overview_data.glade'), parent='tree_view')
+        super().__init__(builder_filename=glade.get_glade_path('linkage_overview_data.ui'), parent='tree_view')
 
 
 class LinkageOverviewLogicView(TreeView):
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('linkage_overview_logic.glade'), parent='tree_view')
+        super().__init__(builder_filename=glade.get_glade_path('linkage_overview_logic.ui'), parent='tree_view')
         self._treeView = weakref.ref(self)
 
     @property
@@ -36,15 +36,15 @@ class LinkageOverviewLogicView(TreeView):
 
 class LinkageOverviewView(View):
     def __init__(self):
-        super().__init__(builder_filename=glade.get_glade_path('linkage_overview_one.glade'), parent='linkage_container')
+        super().__init__(builder_filename=glade.get_glade_path('linkage_overview_one.ui'), parent='linkage_container')
         self.inputs_view = LinkageOverviewDataView()
         self.outputs_view = LinkageOverviewDataView()
         self.scope_view = LinkageOverviewDataView()
         self.outcomes_view = LinkageOverviewLogicView()
-        self['inputs_scroller'].add(self.inputs_view.get_parent_widget())
-        self['outputs_scroller'].add(self.outputs_view.get_parent_widget())
-        self['scoped_scroller'].add(self.scope_view.get_parent_widget())
-        self['outcomes_scroller'].add(self.outcomes_view.get_parent_widget())
+        self['inputs_scroller'].set_child(self.inputs_view.get_parent_widget())
+        self['outputs_scroller'].set_child(self.outputs_view.get_parent_widget())
+        self['scoped_scroller'].set_child(self.scope_view.get_parent_widget())
+        self['outcomes_scroller'].set_child(self.outcomes_view.get_parent_widget())
         self.inputs_view.scrollbar_widget = self['inputs_scroller']
         self.outputs_view.scrollbar_widget = self['outputs_scroller']
         self.scope_view.scrollbar_widget = self['scoped_scroller']

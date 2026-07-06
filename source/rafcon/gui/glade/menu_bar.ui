@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <!-- GTK4 removed GtkMenuBar/GtkMenu/GtkMenuItem: the menu bar is now a GMenu model rendered by a
+       GtkPopoverMenuBar. Every item triggers an application action ("app.<former widget id>");
+       the actions themselves (incl. stateful ones for the former GtkCheckMenuItems), sensitivity
+       and accelerators are wired on the Gtk.Application by the menu bar controller. -->
+  <menu id="menubar_model">
+    <submenu>
+      <attribute name="label" translatable="yes">_File</attribute>
+      <section>
+        <item>
+          <attribute name="label">New</attribute>
+          <attribute name="action">app.new</attribute>
+        </item>
+        <item>
+          <attribute name="label">Open</attribute>
+          <attribute name="action">app.open</attribute>
+        </item>
+        <submenu id="open_recent">
+          <attribute name="label">Open Recent</attribute>
+          <section id="open_recent_section"/>
+        </submenu>
+        <item>
+          <attribute name="label">Save</attribute>
+          <attribute name="action">app.save</attribute>
+        </item>
+        <item>
+          <attribute name="label">Save As</attribute>
+          <attribute name="action">app.save_as</attribute>
+        </item>
+        <item>
+          <attribute name="label">Save As Copy</attribute>
+          <attribute name="action">app.save_as_copy</attribute>
+        </item>
+        <item>
+          <attribute name="label">Preferences</attribute>
+          <attribute name="action">app.menu_preferences</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label">Refresh All</attribute>
+          <attribute name="action">app.refresh_all</attribute>
+        </item>
+        <item>
+          <attribute name="label">Refresh Libraries</attribute>
+          <attribute name="action">app.refresh_libraries</attribute>
+        </item>
+        <item>
+          <attribute name="label">Bake Selected</attribute>
+          <attribute name="action">app.bake_state_machine</attribute>
+        </item>
+        <item>
+          <attribute name="label">Auto Layout</attribute>
+          <attribute name="action">app.layout_state_machine</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label">Quit</attribute>
+          <attribute name="action">app.quit</attribute>
+        </item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label" translatable="yes">_Edit</attribute>
+      <section>
+        <item>
+          <attribute name="label">Cut</attribute>
+          <attribute name="action">app.cut</attribute>
+        </item>
+        <item>
+          <attribute name="label">Copy</attribute>
+          <attribute name="action">app.copy</attribute>
+        </item>
+        <item>
+          <attribute name="label">Paste</attribute>
+          <attribute name="action">app.paste</attribute>
+        </item>
+        <item>
+          <attribute name="label">Delete</attribute>
+          <attribute name="action">app.delete</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label">State is Start State</attribute>
+          <attribute name="action">app.is_start_state</attribute>
+        </item>
+        <item>
+          <attribute name="label">Add State</attribute>
+          <attribute name="action">app.add</attribute>
+        </item>
+        <item>
+          <attribute name="label">Group States</attribute>
+          <attribute name="action">app.group</attribute>
+        </item>
+        <item>
+          <attribute name="label">Ungroup State</attribute>
+          <attribute name="action">app.ungroup</attribute>
+        </item>
+        <item>
+          <attribute name="label">Substitute State</attribute>
+          <attribute name="action">app.substitute_state</attribute>
+        </item>
+        <item>
+          <attribute name="label">Save State as State Machine</attribute>
+          <attribute name="action">app.save_state_as</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label">Undo</attribute>
+          <attribute name="action">app.undo</attribute>
+        </item>
+        <item>
+          <attribute name="label">Redo</attribute>
+          <attribute name="action">app.redo</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Grid</attribute>
+          <attribute name="action">app.grid</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Search</attribute>
+          <attribute name="action">app.search</attribute>
+        </item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label" translatable="yes">_View</attribute>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Data Flow Mode</attribute>
+          <attribute name="action">app.data_flow_mode</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Show All Data Flows</attribute>
+          <attribute name="action">app.show_data_flows</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Show All Transitions</attribute>
+          <attribute name="action">app.show_transitions</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Show Data Flow Values</attribute>
+          <attribute name="action">app.show_data_values</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Show Aborted/Preempted</attribute>
+          <attribute name="action">app.show_aborted_preempted</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label">Expert view</attribute>
+          <attribute name="action">app.expert_view</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Full Screen Mode</attribute>
+          <attribute name="action">app.full_screen</attribute>
+        </item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label" translatable="yes">E_xecution</attribute>
+      <section>
+        <item>
+          <attribute name="label">Start</attribute>
+          <attribute name="action">app.start</attribute>
+        </item>
+        <item>
+          <attribute name="label">Start from selected state</attribute>
+          <attribute name="action">app.start_from_selected</attribute>
+        </item>
+        <item>
+          <attribute name="label">Run to selected state</attribute>
+          <attribute name="action">app.run_to_selected</attribute>
+        </item>
+        <item>
+          <attribute name="label">Run selected state</attribute>
+          <attribute name="action">app.run_selected</attribute>
+        </item>
+        <item>
+          <attribute name="label">Only run selected state</attribute>
+          <attribute name="action">app.only_run_selected</attribute>
+        </item>
+        <item>
+          <attribute name="label">Pause</attribute>
+          <attribute name="action">app.pause</attribute>
+        </item>
+        <item>
+          <attribute name="label">Stop</attribute>
+          <attribute name="action">app.stop</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label">Step mode</attribute>
+          <attribute name="action">app.step_mode</attribute>
+        </item>
+        <item>
+          <attribute name="label">Step into</attribute>
+          <attribute name="action">app.step_into</attribute>
+        </item>
+        <item>
+          <attribute name="label">Step over</attribute>
+          <attribute name="action">app.step_over</attribute>
+        </item>
+        <item>
+          <attribute name="label">Step out</attribute>
+          <attribute name="action">app.step_out</attribute>
+        </item>
+        <item>
+          <attribute name="label">Backward step</attribute>
+          <attribute name="action">app.backward_step</attribute>
+        </item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label">_Help</attribute>
+      <section>
+        <item>
+          <attribute name="label">About</attribute>
+          <attribute name="action">app.about</attribute>
+        </item>
+      </section>
+    </submenu>
+  </menu>
+  <object class="GtkPopoverMenuBar" id="menubar">
+    <property name="menu-model">menubar_model</property>
+  </object>
+</interface>
