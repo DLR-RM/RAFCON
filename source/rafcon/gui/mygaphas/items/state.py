@@ -19,15 +19,14 @@ from gi.repository import PangoCairo
 from copy import copy
 import cairo
 
-from gaphas.item import Element, NW, NE, SW, SE
-from gaphas.connector import Position
-from gaphas.matrix import Matrix
+from gaphas.item import NW, NE, SW, SE
+from gaphas.position import Position
 from gaphas.solver import Variable
-from gaphas.painter import CairoBoundingBoxContext
 
 from rafcon.core.states.state import StateExecutionStatus
 
 from rafcon.gui.mygaphas.canvas import ItemProjection
+from rafcon.gui.mygaphas.items.element import ElementItem
 from rafcon.gui.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint, BorderWidthConstraint
 from rafcon.gui.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
@@ -52,7 +51,7 @@ logger = log.get_logger(__name__)
 BASE_WIDTH = 100.
 
 
-class StateView(Element):
+class StateView(ElementItem):
     """ A State has 4 handles (for a start):
      NW +---+ NE
      SW +---+ SE
@@ -60,8 +59,8 @@ class StateView(Element):
 
     _map_handles_port_v = {}
 
-    def __init__(self, state_m, size, background_color, hierarchy_level):
-        super(StateView, self).__init__(size[0], size[1])
+    def __init__(self, canvas, state_m, size, background_color, hierarchy_level):
+        super(StateView, self).__init__(canvas, size[0], size[1])
         assert isinstance(state_m, AbstractStateModel)
         # Reapply size, as Gaphas sets default minimum size to 1, which is too large for highly nested states
         self.min_width = self.min_height = 0
@@ -69,9 +68,6 @@ class StateView(Element):
         self.height = size[1]
         self.background_color = background_color
         self.background_changed = False
-
-        self._c_min_w = self._constraints[0]
-        self._c_min_h = self._constraints[1]
 
         self.is_root_state_of_library = state_m.state.is_root_state_of_library
 
@@ -98,7 +94,7 @@ class StateView(Element):
         self._border_width = Variable(min(self.width, self.height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
         border_width_constraint = BorderWidthConstraint(self._handles[NW].pos, self._handles[SE].pos,
                                                         self._border_width, constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
-        self._constraints.append(border_width_constraint)
+        self.add_constraint(border_width_constraint)
 
         # Initialize NameView
         name_meta = state_m.get_meta_data_editor()['name']
@@ -108,7 +104,7 @@ class StateView(Element):
             name_meta = state_m.set_meta_data_editor('name.size', (name_width, name_height))['name']
         name_size = name_meta['size']
 
-        self._name_view = NameView(state_m.state.name, name_size)
+        self._name_view = NameView(canvas, state_m.state.name, name_size)
 
         if not contains_geometric_info(name_meta['rel_pos']):
             name_meta['rel_pos'] = (self.border_width, self.border_width)
@@ -201,9 +197,7 @@ class StateView(Element):
             self.remove_scoped_variable(scoped_variable_port_v)
 
         self.remove_keep_rect_within_constraint_from_parent()
-        for constraint in self._constraints[:]:
-            self.canvas.solver.remove_constraint(constraint)
-            self._constraints.remove(constraint)
+        self.remove_all_constraints()
         self.canvas.remove(self)
 
     @staticmethod
@@ -242,7 +236,7 @@ class StateView(Element):
 
     @position.setter
     def position(self, pos):
-        self.matrix = Matrix(x0=pos[0], y0=pos[1])
+        self.matrix.set(x0=pos[0], y0=pos[1])
 
     @property
     def show_data_port_label(self):
@@ -339,10 +333,10 @@ class StateView(Element):
 
         state_nw_pos_x = state.handles()[NW].pos.x + border_width
         state_nw_pos_y = state.handles()[NW].pos.y + border_width
-        state_nw_pos = Position((state_nw_pos_x, state_nw_pos_y))
+        state_nw_pos = Position(state_nw_pos_x, state_nw_pos_y)
         state_se_pos_x = state.handles()[SE].pos.x - border_width
         state_se_pos_y = state.handles()[SE].pos.y - border_width
-        state_se_pos = Position((state_se_pos_x, state_se_pos_y))
+        state_se_pos = Position(state_se_pos_x, state_se_pos_y)
 
         return state_nw_pos, state_se_pos
 
@@ -500,8 +494,6 @@ class StateView(Element):
     def _draw_symbol(self, context, symbol, color, transparency=0.):
         c = context.cairo
         cairo_context = c
-        if isinstance(c, CairoBoundingBoxContext):
-            cairo_context = c._cairo
         width = self.width
         height = self.height
 
@@ -614,7 +606,7 @@ class StateView(Element):
         self._connect_to_port(port_v.port, connection_v, handle)
 
     def _connect_to_port(self, port, connection_v, handle):
-        c = port.constraint(self.canvas, connection_v, handle, self)
+        c = port.constraint(connection_v, handle, self)
         self.canvas.connect_item(connection_v, handle, self, port, c)
 
     def outcome_port(self, outcome_id):
@@ -911,10 +903,10 @@ class StateView(Element):
         resize_state_v(self, old_size, new_size, paste)
 
 
-class NameView(Element):
+class NameView(ElementItem):
 
-    def __init__(self, name, size):
-        super(NameView, self).__init__(size[0], size[1])
+    def __init__(self, canvas, name, size):
+        super(NameView, self).__init__(canvas, size[0], size[1])
         # Reapply size, as Gaphas sets default minimum size to 1, which is too large for highly nested states
         self.min_width = self.min_height = 0
         self.width = size[0]
@@ -963,7 +955,7 @@ class NameView(Element):
 
     @position.setter
     def position(self, pos):
-        self.matrix = Matrix(x0=pos[0], y0=pos[1])
+        self.matrix.set(x0=pos[0], y0=pos[1])
 
     @property
     def view(self):
@@ -1047,8 +1039,6 @@ class NameView(Element):
                 return
 
             cairo_context = c
-            if isinstance(c, CairoBoundingBoxContext):
-                cairo_context = c._cairo
 
             layout = PangoCairo.create_layout(cairo_context)
             layout.set_wrap(WrapMode.WORD)

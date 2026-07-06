@@ -17,9 +17,7 @@ from weakref import ref
 from gi.repository.Pango import SCALE, FontDescription
 from gi.repository import PangoCairo
 
-from gaphas.state import observed
 from gaphas.connector import Handle
-from gaphas.painter import CairoBoundingBoxContext
 import cairo
 
 from rafcon.gui.utils import constants
@@ -93,7 +91,6 @@ class PortView(object):
         return self._side
 
     @side.setter
-    @observed
     def side(self, side):
         self._side = side
         self.direction = None
@@ -242,9 +239,9 @@ class PortView(object):
         center = (position.x.value, position.y.value)
         view_center = matrix_i2v.transform_point(*center)
         if view_center[0] + view_length / 2. < 0 or \
-                view_center[0] - view_length / 2. > view.get_allocation().width or \
+                view_center[0] - view_length / 2. > view.get_width() or \
                 view_center[1] + view_length / 2. < 0 or \
-                view_center[1] - view_length / 2. > view.get_allocation().height:
+                view_center[1] - view_length / 2. > view.get_height():
             if not context.draw_all:
                 return
 
@@ -353,12 +350,14 @@ class PortView(object):
                 upper_left_corner = (position[0] + relative_pos[0], position[1] + relative_pos[1])
                 self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
             else:
-                from gaphas.geometry import Rectangle
-                view = self.parent.canvas.get_first_view()
-                abs_pos = view.get_matrix_i2v(self.parent).transform_point(*label_pos)
-                abs_pos1 = view.get_matrix_i2v(self.parent).transform_point(extents[2], extents[3])
-                bounds = Rectangle(abs_pos[0], abs_pos[1], x1=abs_pos1[0], y1=abs_pos1[1])
-                context.cairo._update_bounds(bounds)
+                # Bounding box calculation (draw_all): gaphas 5 derives bounding boxes from the
+                # ink extents of a recording surface, so paint the label area invisibly to
+                # extend the extents accordingly
+                c.save()
+                c.rectangle(extents[0], extents[1], extents[2] - extents[0], extents[3] - extents[1])
+                c.set_source_rgba(0, 0, 0, 0.001)
+                c.fill()
+                c.restore()
 
     def _draw_simple_state_port(self, context, direction, color, transparency):
         """Draw the port of a simple state (ExecutionState, LibraryState)
@@ -387,7 +386,8 @@ class PortView(object):
         if self.connected:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
+            unconnected = gui_config.gtk_colors['PORT_UNCONNECTED']
+            c.set_source_rgb(unconnected.red, unconnected.green, unconnected.blue)
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -419,7 +419,8 @@ class PortView(object):
         if self.connected_incoming:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
+            unconnected = gui_config.gtk_colors['PORT_UNCONNECTED']
+            c.set_source_rgb(unconnected.red, unconnected.green, unconnected.blue)
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -434,7 +435,8 @@ class PortView(object):
         if self.connected_outgoing:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
+            unconnected = gui_config.gtk_colors['PORT_UNCONNECTED']
+            c.set_source_rgb(unconnected.red, unconnected.green, unconnected.blue)
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -759,8 +761,6 @@ class ScopedVariablePortView(PortView):
         """
         c = context
         cairo_context = c
-        if isinstance(c, CairoBoundingBoxContext):
-            cairo_context = c._cairo
 
         side_length = self.port_side_size
 

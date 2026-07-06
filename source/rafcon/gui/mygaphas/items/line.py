@@ -13,7 +13,8 @@
 from math import atan2, pi, floor
 
 from gaphas.item import Line, NW, SE
-from gaphas.painter import CairoBoundingBoxContext
+from gaphas.handle import Handle
+from gaphas.port import LinePort
 from cairo import LINE_CAP_ROUND, LINE_CAP_BUTT
 from gi.repository.Pango import SCALE
 from gi.repository import PangoCairo
@@ -30,12 +31,11 @@ from rafcon.gui.mygaphas.utils.cache.image_cache import ImageCache
 
 
 class PerpLine(Line):
-    def __init__(self, hierarchy_level):
-        from rafcon.gui.mygaphas.segment import Segment
-        super(PerpLine, self).__init__()
+    def __init__(self, canvas, hierarchy_level):
+        super(PerpLine, self).__init__(canvas.connections)
+        self._canvas = canvas
         self._from_handle = self.handles()[0]
         self._to_handle = self.handles()[1]
-        self._segment = Segment(self, view=self.canvas)
         self.hierarchy_level = hierarchy_level
         self._from_port = None
         self._from_waypoint = None
@@ -51,6 +51,18 @@ class PerpLine(Line):
         self._view = None
         self._label_image_cache = ImageCache()
         self._last_label_size = 0, 0
+
+    @property
+    def canvas(self):
+        return self._canvas
+
+    @staticmethod
+    def _create_handle(pos):
+        return Handle(pos)
+
+    @staticmethod
+    def _create_port(p1, p2):
+        return LinePort(p1, p2)
 
     @property
     def name(self):
@@ -192,16 +204,22 @@ class PerpLine(Line):
         cr.set_line_cap(LINE_CAP_ROUND)
         cr.set_line_width(self.line_width)
 
+        # gaphas 2.x stored the end segment angles on the item during draw; compute them here
+        h0, h1 = self._handles[0].pos, self._handles[1].pos
+        head_angle = atan2(h1.y - h0.y, h1.x - h0.x)
+        h1, h0 = self._handles[-2].pos, self._handles[-1].pos
+        tail_angle = atan2(h1.y - h0.y, h1.x - h0.x)
+
         # Draw connection tail (line perpendicular to from_port)
         start_segment_index = 0
         if self.from_port:
-            draw_line_end(self._handles[0].pos, self._head_angle, self.from_port, self.draw_tail)
+            draw_line_end(self._handles[0].pos, head_angle, self.from_port, self.draw_tail)
             start_segment_index = 1
 
         # Draw connection head (line perpendicular to to_port)
         end_segment_index = len(self._handles)
         if self.to_port:
-            draw_line_end(self._handles[-1].pos, self._tail_angle, self.to_port, self.draw_head)
+            draw_line_end(self._handles[-1].pos, tail_angle, self.to_port, self.draw_head)
             end_segment_index -= 1
 
         # Draw connection line from waypoint to waypoint
@@ -258,8 +276,6 @@ class PerpLine(Line):
         else:
             # First retrieve pango layout to determine and store size of label
             cairo_context = c
-            if isinstance(c, CairoBoundingBoxContext):
-                cairo_context = c._cairo
             layout = get_text_layout(cairo_context, self.name, FONT_SIZE)
 
             ink_extents, logical_extents = layout.get_extents()
@@ -354,48 +370,11 @@ class PerpLine(Line):
     def is_out_port(port):
         return isinstance(port, (OutcomeView, OutputPortView))
 
-    def point(self, pos):
-        try:
-            distance = super(PerpLine, self).point(pos)
-            return distance - self.line_width / 1.5
-        except TypeError:
-            # Gaphas compatibility - calculate distance manually
-            hpos = [h.pos for h in self._handles]
-            if len(hpos) < 2:
-                return float('inf')
-            
-            min_distance = float('inf')
-            for i in range(len(hpos) - 1):
-                p1 = hpos[i]
-                p2 = hpos[i + 1]
-                x1, y1 = p1.x, p1.y
-                x2, y2 = p2.x, p2.y
-                px, py = pos
-                
-                dx = x2 - x1
-                dy = y2 - y1
-                dpx = px - x1
-                dpy = py - y1
-                dot = dpx * dx + dpy * dy
-                len_sq = dx * dx + dy * dy
-                
-                if len_sq == 0:
-                    dist = ((px - x1) ** 2 + (py - y1) ** 2) ** 0.5
-                else:
-                    param = dot / len_sq
-                    
-                    if param < 0:
-                        dist = ((px - x1) ** 2 + (py - y1) ** 2) ** 0.5
-                    elif param > 1:
-                        dist = ((px - x2) ** 2 + (py - y2) ** 2) ** 0.5
-                    else:
-                        nearest_x = x1 + param * dx
-                        nearest_y = y1 + param * dy
-                        dist = ((px - nearest_x) ** 2 + (py - nearest_y) ** 2) ** 0.5
-                
-                min_distance = min(min_distance, dist)
-            
-            return max(0, min_distance - self.line_width / 1.5)
+    def point(self, x, y):
+        if len(self._handles) < 2:
+            return float('inf')
+        distance = super(PerpLine, self).point(x, y)
+        return distance - self.line_width / 1.5
 
     def _keep_handle_in_parent_state(self, handle):
         canvas = self.canvas

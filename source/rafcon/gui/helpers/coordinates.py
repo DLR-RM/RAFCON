@@ -8,9 +8,21 @@
 # Contributors:
 # Christoph Suerig <christoph.suerig@dlr.de>
 
+from gi.repository import Graphene
+
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
+
+
+def _translate_coordinates(from_widget, to_widget, coordinates):
+    """GTK4 replacement for Gtk.Widget.translate_coordinates()"""
+    point = Graphene.Point()
+    point.init(coordinates[0], coordinates[1])
+    ok, translated = from_widget.compute_point(to_widget, point)
+    if not ok:
+        return None
+    return translated.x, translated.y
 
 
 def main_window2graphical_editor(main_window_coordinates):
@@ -26,7 +38,7 @@ def main_window2graphical_editor(main_window_coordinates):
     main_window = main_window_controller.view.get_parent_widget()
     sm_controllers = main_window_controller.state_machines_editor_ctrl
     sm_notebook_page = next(iter(sm_controllers.tabs.items()))[1]['page']
-    return main_window.translate_coordinates(sm_notebook_page, main_window_coordinates[0], main_window_coordinates[1])
+    return _translate_coordinates(main_window, sm_notebook_page, main_window_coordinates)
 
 
 def graphical_editor2main_window(ge_coordinates):
@@ -42,7 +54,7 @@ def graphical_editor2main_window(ge_coordinates):
     main_window = main_window_controller.view.get_parent_widget()
     sm_controllers = main_window_controller.state_machines_editor_ctrl
     sm_notebook_page = next(iter(sm_controllers.tabs.items()))[1]['page']
-    return sm_notebook_page.translate_coordinates(main_window, ge_coordinates[0], ge_coordinates[1])
+    return _translate_coordinates(sm_notebook_page, main_window, ge_coordinates)
 
 
 def graphical_editor2item(target_state_m, ge_coordinates):

@@ -72,9 +72,6 @@ class LibraryTreeController(ExtendedController):
         view.set_model(self.filter)
         view.set_tooltip_column(3)
 
-        # GTK4 TODO (Stage 4): re-enable drag & drop of library states onto the graphical editor
-        # via Gtk.DragSource/Gtk.DropTarget once the gaphas canvas is ported
-
         self.library_row_iter_dict_by_library_path = {}
         self.__expansion_state = None
 
@@ -87,6 +84,32 @@ class LibraryTreeController(ExtendedController):
         click_gesture.set_button(0)
         click_gesture.connect('pressed', self._on_button_pressed)
         self.view.add_controller(click_gesture)
+
+        # Drag & drop of library states onto the graphical editor: the editor's drop target
+        # performs the insertion; the state to insert is handed over via the payload registry
+        drag_source = Gtk.DragSource.new()
+        drag_source.set_actions(Gdk.DragAction.COPY)
+        drag_source.connect('prepare', self._on_drag_prepare)
+        drag_source.connect('drag-end', self._on_drag_end)
+        drag_source.connect('drag-cancel', self._on_drag_cancel)
+        self.view.add_controller(drag_source)
+
+    def _on_drag_prepare(self, drag_source, x, y):
+        from rafcon.gui.utils import dnd
+        library_os_path, library_path, library_name, _ = self.extract_library_properties_from_selected_row()
+        if library_path is None:  # no library row selected (e.g. a sub-tree)
+            return None
+        dnd.set_drag_payload_provider(self._get_selected_library_state)
+        return Gdk.ContentProvider.new_for_value("rafcon-library-state")
+
+    def _on_drag_end(self, drag_source, drag, delete_data):
+        from rafcon.gui.utils import dnd
+        dnd.clear_drag_payload_provider()
+
+    def _on_drag_cancel(self, drag_source, drag, reason):
+        from rafcon.gui.utils import dnd
+        dnd.clear_drag_payload_provider()
+        return False
 
     def _on_button_pressed(self, gesture, n_press, x, y):
         event_type = DOUBLE_BUTTON_PRESS if n_press == 2 else Gdk.EventType.BUTTON_PRESS

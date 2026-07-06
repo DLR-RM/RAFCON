@@ -16,12 +16,14 @@ from gi.repository import GObject
 
 from rafcon.design_patterns.mvc.view import View
 
-from gaphas import painter
+from gaphas.painter import PainterChain
+from gaphas.tool.rubberband import RubberbandPainter
 
 from rafcon.gui.mygaphas.view import ExtendedGtkView
-from rafcon.gui.mygaphas.tools import HoverItemTool, ConnectionCreationTool, ConnectionModificationTool, \
-    MoveItemTool, MultiSelectionTool, RightClickTool, MoveHandleTool, ZoomTool, PanTool, ToolChain
-from rafcon.gui.mygaphas.painter import HoveredItemPainter
+from rafcon.gui.mygaphas.tools import add_tools_to_view
+from rafcon.gui.mygaphas.painter import RAFCONItemPainter, BoundingBoxItemPainter, HoveredItemPainter, GuidePainter
+# noinspection PyUnresolvedReferences
+from rafcon.gui.mygaphas import guide  # registers the guided handle-in-motion aspects
 
 from rafcon.utils import log
 
@@ -33,8 +35,8 @@ class GraphicalEditorView(View, GObject.GObject):
     def __init__(self, selection_m):
         """View holding the graphical editor
 
-        The purpose of the view is only to hold the graphical editor. The class ob the actual editor with the OpenGL
-        functionality is GraphicalEditor
+        The purpose of the view is only to hold the graphical editor. The class of the actual editor is the
+        gaphas-based ExtendedGtkView.
         """
         GObject.GObject.__init__(self)
         View.__init__(self, parent='main_frame')
@@ -42,24 +44,22 @@ class GraphicalEditorView(View, GObject.GObject):
         self.v_box = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.scroller = Gtk.ScrolledWindow()
         self.scroller.set_name('graphical_editor_scroller')
+        self.scroller.set_hexpand(True)
+        self.scroller.set_vexpand(True)
         self.editor = ExtendedGtkView(self, selection_m)
-        self.editor.tool = ToolChain(self.editor). \
-            append(HoverItemTool()). \
-            append(MoveHandleTool()). \
-            append(ConnectionCreationTool()). \
-            append(ConnectionModificationTool()). \
-            append(PanTool()). \
-            append(ZoomTool()). \
-            append(MoveItemTool()). \
-            append(MultiSelectionTool()). \
-            append(RightClickTool())
-        self.editor.painter = painter.PainterChain(). \
-            append(painter.ItemPainter()). \
-            append(HoveredItemPainter()). \
-            append(painter.FocusedItemPainter()). \
-            append(painter.ToolPainter())
-        self.scroller.add(self.editor)
-        self.v_box.pack_end(self.scroller, True, True, 0)
+
+        # Attach all interaction tools (creates editor.rubberband_state as well)
+        add_tools_to_view(self.editor)
+
+        self.editor.painter = PainterChain(). \
+            append(RAFCONItemPainter(self.editor)). \
+            append(HoveredItemPainter(self.editor)). \
+            append(GuidePainter(self.editor)). \
+            append(RubberbandPainter(self.editor.rubberband_state))
+        self.editor.bounding_box_painter = BoundingBoxItemPainter(self.editor)
+
+        self.scroller.set_child(self.editor)
+        self.v_box.append(self.scroller)
 
         self['main_frame'] = self.v_box
 

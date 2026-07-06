@@ -17,8 +17,6 @@ import cairo
 from gi.repository.Pango import SCALE, FontDescription
 from gi.repository import PangoCairo
 
-from gaphas.painter import CairoBoundingBoxContext
-
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.utils import constants
 from rafcon.gui.mygaphas.utils.enums import SnappedSide
@@ -47,20 +45,16 @@ def limit_value_string_length(value):
 
 
 def get_col_rgba(color, transparency=None, opacity=None):
-    """This class converts a Gdk.Color into its r, g, b parts and adds an alpha according to needs
+    """This function converts a Gdk.RGBA into its r, g, b parts and adds an alpha according to needs
 
     If both transparency and opacity is None, alpha is set to 1 => opaque
 
-    :param Gdk.Color color: Color to extract r, g and b from
+    :param Gdk.RGBA color: Color to extract r, g and b from (channels are floats between 0 and 1)
     :param float | None  transparency: Value between 0 (opaque) and 1 (transparent) or None if opacity is to be used
     :param float | None opacity: Value between 0 (transparent) and 1 (opaque) or None if transparency is to be used
     :return: Red, Green, Blue and Alpha value (all between 0.0 - 1.0)
     """
     r, g, b = color.red, color.green, color.blue
-    # Convert from 0-6535 to 0-1
-    r /= 65535.
-    g /= 65535.
-    b /= 65535.
 
     if transparency is not None or opacity is None:
         transparency = 0 if transparency is None else transparency  # default value
@@ -106,8 +100,6 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
     """
     c = context
     cairo_context = c
-    if isinstance(c, CairoBoundingBoxContext):
-        cairo_context = c._cairo
 
     if hasattr(port, 'parent') and hasattr(port.parent, 'view'):
         zoom = port.parent.view.get_zoom_factor()
@@ -236,7 +228,8 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
             # Draw filled outline
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['DATA_VALUE_BACKGROUND']))
             c.fill_preserve()
-            c.set_source_rgb(*gui_config.gtk_colors['BLACK'].to_floats())
+            black = gui_config.gtk_colors['BLACK']
+            c.set_source_rgb(black.red, black.green, black.blue)
             c.stroke()
 
             # Move to the upper left corner of the desired text position

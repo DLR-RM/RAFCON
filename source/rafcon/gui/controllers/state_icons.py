@@ -38,9 +38,6 @@ class StateIconController(ExtendedController):
 
         self.shortcut_manager = shortcut_manager
 
-        # GTK4 TODO (Stage 4): re-enable dragging state icons onto the graphical editor via
-        # Gtk.DragSource/Gtk.DropTarget once the gaphas canvas is ported
-
     def register_view(self, view):
         super(StateIconController, self).register_view(view)
         # GTK4: pointer events come from event controllers/gestures
@@ -50,6 +47,34 @@ class StateIconController(ExtendedController):
         motion_controller = Gtk.EventControllerMotion()
         motion_controller.connect("motion", self.on_mouse_motion)
         self.view.add_controller(motion_controller)
+
+        # Drag & drop of new states onto the graphical editor: the editor's drop target
+        # performs the insertion; the state to insert is handed over via the payload registry
+        drag_source = Gtk.DragSource.new()
+        drag_source.set_actions(Gdk.DragAction.COPY)
+        drag_source.connect("prepare", self._on_drag_prepare)
+        drag_source.connect("drag-end", self._on_drag_end)
+        drag_source.connect("drag-cancel", self._on_drag_cancel)
+        self.view.add_controller(drag_source)
+
+    def _on_drag_prepare(self, drag_source, x, y):
+        from rafcon.gui.utils import dnd
+        path = self.view.get_path_at_pos(int(x), int(y))
+        if path is None:
+            return None
+        self.view.select_path(path)
+        dnd.set_drag_payload_provider(self._get_state)
+        return Gdk.ContentProvider.new_for_value("rafcon-new-state")
+
+    def _on_drag_end(self, drag_source, drag, delete_data):
+        from rafcon.gui.utils import dnd
+        dnd.clear_drag_payload_provider()
+        self.view.unselect_all()
+
+    def _on_drag_cancel(self, drag_source, drag, reason):
+        from rafcon.gui.utils import dnd
+        dnd.clear_drag_payload_provider()
+        return False
 
     def on_mouse_click(self, gesture, n_press, x, y):
         """state insertion on mouse click

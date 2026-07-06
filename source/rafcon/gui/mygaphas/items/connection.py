@@ -60,22 +60,22 @@ class ConnectionPlaceholderView(ConnectionView):
 
 
 class TransitionPlaceholderView(ConnectionPlaceholderView):
-    def __init__(self, hierarchy_level):
-        super(TransitionPlaceholderView, self).__init__(hierarchy_level)
+    def __init__(self, canvas, hierarchy_level):
+        super(TransitionPlaceholderView, self).__init__(canvas, hierarchy_level)
         self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE'])
         self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'])
 
 
 class DataFlowPlaceholderView(ConnectionPlaceholderView):
-    def __init__(self, hierarchy_level):
-        super(DataFlowPlaceholderView, self).__init__(hierarchy_level)
+    def __init__(self, canvas, hierarchy_level):
+        super(DataFlowPlaceholderView, self).__init__(canvas, hierarchy_level)
         self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
         self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_PORT'])
 
 
 class TransitionView(ConnectionView):
-    def __init__(self, transition_m, hierarchy_level):
-        super(TransitionView, self).__init__(hierarchy_level)
+    def __init__(self, canvas, transition_m, hierarchy_level):
+        super(TransitionView, self).__init__(canvas, hierarchy_level)
         self._transition_m = None
         self.model = transition_m
         self._line_color = None
@@ -124,8 +124,8 @@ class TransitionView(ConnectionView):
 
 
 class DataFlowView(ConnectionView):
-    def __init__(self, data_flow_m, hierarchy_level):
-        super(DataFlowView, self).__init__(hierarchy_level)
+    def __init__(self, canvas, data_flow_m, hierarchy_level):
+        super(DataFlowView, self).__init__(canvas, hierarchy_level)
         self._data_flow_m = None
         self.model = data_flow_m
         self._line_color = None
@@ -157,45 +157,19 @@ class DataFlowView(ConnectionView):
             super(DataFlowView, self).draw(context)
 
     def _bring_to_front(self):
-        """
-        Reorder this item to the top of its siblings (highest z-order).
-            
-        NOTE: canvas.reparent() cannot be used here because it only works if the parent
-        changes (gaphas 2.1 limitation).
-        Instead, we add the data flow at the end of the list to be painted on top.
+        """Reorder this item to the top of its siblings (highest z-order)
+
+        gaphas 5 supports reordering with an unchanged parent via canvas.reparent().
         """
         siblings = self.canvas._tree.get_siblings(self)
         if siblings and siblings[-1] is not self:
-            # Add item at the end of siblings list and save index
             self._prev_siblings_index = siblings.index(self)
-            siblings.remove(self)
-            siblings.append(self)
-
-            # Also fix the _nodes order and save index
-            nodes = self.canvas._tree._nodes
-            self._prev_node_index = nodes.index(self)
-            nodes.remove(self)
-            nodes.append(self)
-
-            self.canvas._dirty_index = True
+            self.canvas.reparent(self, self.canvas.get_parent(self), index=len(siblings) - 1)
             self.canvas.request_update(self)
 
     def _bring_to_back(self):
-        """
-        Reorder this item to its previous index if it changed before (lowest z-order).
-        """
-        siblings = self.canvas._tree.get_siblings(self)
-        if siblings and self._prev_siblings_index and self._prev_node_index:
-            # Re-ordering happened before, now bring back to original index
-            siblings.remove(self)
-            siblings.insert(self._prev_siblings_index, self)
+        """Reorder this item to its previous index if it changed before (lowest z-order)"""
+        if self._prev_siblings_index is not None:
+            self.canvas.reparent(self, self.canvas.get_parent(self), index=self._prev_siblings_index)
             self._prev_siblings_index = None
-
-            # Also fix the _nodes order
-            nodes = self.canvas._tree._nodes
-            nodes.remove(self)
-            nodes.insert(self._prev_node_index, self)
-            self._prev_node_index = None
-
-            self.canvas._dirty_index = True
             self.canvas.request_update(self)

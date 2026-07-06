@@ -23,9 +23,9 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GLib
+from gi.repository import GObject
 import time
 from functools import partial
-from gaphas.aspect import InMotion, ItemFinder
 from gaphas.item import Item
 import math
 
@@ -46,6 +46,7 @@ from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.mygaphas.canvas import MyCanvas
 # noinspection PyUnresolvedReferences
 from rafcon.gui.mygaphas import guide
+from rafcon.gui.mygaphas.guide import InMotion
 from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
 from rafcon.gui.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVariablePortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
@@ -87,8 +88,9 @@ class GraphicalEditorController(ExtendedController):
 
         view.setup_canvas(self.canvas, self.zoom)
 
-        view.editor.drag_dest_set(Gtk.DestDefaults.ALL, None, Gdk.DragAction.COPY)
-        view.editor.drag_dest_add_text_targets()
+        # GTK4 drag & drop: states dragged from the library tree or the state icons are received here
+        self._drop_target = Gtk.DropTarget.new(GObject.TYPE_STRING, Gdk.DragAction.COPY)
+        view.editor.add_controller(self._drop_target)
         logger.verbose("Time spent in init {0} seconds for state machine {1}"
                        "".format(time.time() - start_time, self.model.state_machine_id))
 
@@ -104,8 +106,8 @@ class GraphicalEditorController(ExtendedController):
 
         self.view.connect('meta_data_changed', self._meta_data_changed)
         self.focus_changed_handler_id = self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
-        self.view.editor.connect("drag-data-received", self.on_drag_data_received)
-        self.drag_motion_handler_id = self.view.editor.connect("drag-motion", self.on_drag_motion)
+        self._drop_target.connect("drop", self.on_drag_data_received)
+        self.drag_motion_handler_id = self._drop_target.connect("motion", self.on_drag_motion)
 
         state_machine_execution_engine.breakpoint_manager.add_listener(self._on_breakpoint_changed)
 
@@ -164,23 +166,36 @@ class GraphicalEditorController(ExtendedController):
             self.update_view()
 
     @lock_state_machine
-    def on_drag_data_received(self, widget, context, x, y, data, info, time):
-        """Receives state_id from LibraryTree and moves the state to the position of the mouse
+    def on_drag_data_received(self, drop_target, value, x, y):
+        """Receives the dragged state and inserts it at the position of the mouse
 
-        :param widget:
-        :param context:
-        :param x: Integer: x-position of mouse
-        :param y: Integer: y-position of mouse
-        :param data: SelectionData: contains state_id
-        :param info:
-        :param time:
+        The container state the new state is inserted into was selected during the drag motion
+        (see ``on_drag_motion``). The state to insert is provided by the drag source (library
+        tree or state icons) via the drag payload registry.
+
+        :param Gtk.DropTarget drop_target:
+        :param str value: Drop marker string (unused, the payload registry is authoritative)
+        :param x: x-position of mouse
+        :param y: y-position of mouse
         """
-
-        state_id_insert = data.get_text()
+        from rafcon.gui.utils import dnd
+        payload_provider = dnd.take_drag_payload_provider()
+        if payload_provider is None:
+            return False
         parent_m = self.model.selection.get_selected_state()
         if not isinstance(parent_m, ContainerStateModel):
-            return
-        state_v = self.canvas.get_view_for_model(parent_m.states[state_id_insert])
+            return False
+        state = payload_provider()
+        if state is None:
+            return False
+
+        self.perform_drag_and_drop = True
+        inserted = gui_helper_state_machine.insert_state_into_selected_state(state, False)
+        self.perform_drag_and_drop = False
+        if not inserted:
+            return False
+
+        state_v = self.canvas.get_view_for_model(parent_m.states[state.state_id])
         pos_start = state_v.model.get_meta_data_editor()['rel_pos']
         motion = InMotion(state_v, self.view.editor)
         motion.start_move(self.view.editor.get_matrix_i2v(state_v).transform_point(pos_start[0], pos_start[1]))
@@ -189,25 +204,25 @@ class GraphicalEditorController(ExtendedController):
         state_v.model.set_meta_data_editor('rel_pos', motion.item.position)
         self.canvas.wait_for_update(trigger_update=True)
         self._meta_data_changed(None, state_v.model, 'append_to_last_change', True)
+        return True
 
     @lock_state_machine
-    def on_drag_motion(self, widget, context, x, y, time):
+    def on_drag_motion(self, drop_target, x, y):
         """Changes the selection on mouse over during drag motion
 
-        :param widget:
-        :param context:
-        :param x: Integer: x-position of mouse
-        :param y: Integer: y-position of mouse
-        :param time:
+        :param Gtk.DropTarget drop_target:
+        :param x: x-position of mouse
+        :param y: y-position of mouse
         """
-        hovered_item = ItemFinder(self.view.editor).get_item_at_point((x, y))
+        items = self.view.editor.get_items_at_point((x, y))
+        hovered_item = items[0] if items else None
         if isinstance(hovered_item, NameView):
             hovered_item = hovered_item.parent
         if hovered_item is None:
             self.view.editor.unselect_all()
         elif isinstance(hovered_item.model, ContainerStateModel):
             if len(self.view.editor.selected_items) == 1 and hovered_item in self.view.editor.selected_items:
-                return
+                return Gdk.DragAction.COPY
             if len(self.view.editor.selected_items) > 0:
                 self.view.editor.unselect_all()
 
@@ -216,6 +231,7 @@ class GraphicalEditorController(ExtendedController):
             self.view.editor.focused_item = hovered_item
             if not rafcon.gui.singleton.global_gui_config.get_config_value('DRAG_N_DROP_WITH_FOCUS'):
                 self.view.editor.handler_unblock(self.focus_changed_handler_id)
+        return Gdk.DragAction.COPY
 
     def _on_breakpoint_changed(self):
         self.canvas.update_root_items()
@@ -277,9 +293,9 @@ class GraphicalEditorController(ExtendedController):
         :param view:
         :param StateView | ConnectionView | PortView focused_item: The focused item
         """
-        self.view.editor.handler_block(self.drag_motion_handler_id)
+        self._drop_target.handler_block(self.drag_motion_handler_id)
         self.move_item_into_viewport(focused_item)
-        self.view.editor.handler_unblock(self.drag_motion_handler_id)
+        self._drop_target.handler_unblock(self.drag_motion_handler_id)
 
     def move_item_into_viewport(self, item):
         """Causes the `item` to be moved into the viewport
@@ -300,7 +316,9 @@ class GraphicalEditorController(ExtendedController):
             state_v = self.canvas.get_parent(item)
         else:
             state_v = item
-        viewport_size = self.view.editor.get_allocation().width, self.view.editor.get_allocation().height
+        viewport_size = self.view.editor.get_width(), self.view.editor.get_height()
+        if viewport_size[0] <= 0 or viewport_size[1] <= 0:
+            return  # view not yet allocated
         state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
         min_relative_size = min(viewport_size[i] / state_size[i] for i in [HORIZONTAL, VERTICAL])
 
@@ -318,7 +336,7 @@ class GraphicalEditorController(ExtendedController):
 
         state_pos = self.view.editor.get_matrix_i2v(state_v).transform_point(0, 0)
         state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
-        viewport_size = self.view.editor.get_allocation().width, self.view.editor.get_allocation().height
+        viewport_size = self.view.editor.get_width(), self.view.editor.get_height()
 
         # Calculate offset around state so that the state is centered in the viewport
         padding_offset_horizontal = (viewport_size[HORIZONTAL] - state_size[HORIZONTAL]) / 2.
@@ -736,7 +754,9 @@ class GraphicalEditorController(ExtendedController):
         # check_relative size in view and call it again if the state is still very small
         state_v = self.canvas.get_view_for_model(state_machine_m.root_state)
         state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
-        viewport_size = self.view.editor.get_allocation().width, self.view.editor.get_allocation().height
+        viewport_size = self.view.editor.get_width(), self.view.editor.get_height()
+        if viewport_size[0] <= 0 or viewport_size[1] <= 0:
+            return  # view not yet allocated
         if state_size[0] < ratio_requested*viewport_size[0] and state_size[1] < ratio_requested*viewport_size[1]:
             self.set_focus_to_state_model(state_m, ratio_requested)
 
@@ -802,7 +822,7 @@ class GraphicalEditorController(ExtendedController):
             if not state_m.meta_data_was_scaled:
                 gui_helper_meta_data.scale_library_ports_meta_data(state_m, gaphas_editor=True)
 
-        state_v = StateView(state_m, size, background_color, hierarchy_level)
+        state_v = StateView(self.canvas, state_m, size, background_color, hierarchy_level)
 
         # Draw state above data flows and NameView but beneath transitions
         num_data_flows = len(state_m.state.parent.data_flows) if isinstance(state_m.parent, ContainerStateModel) else 0
@@ -863,7 +883,7 @@ class GraphicalEditorController(ExtendedController):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
 
         hierarchy_level = parent_state_v.hierarchy_level
-        transition_v = TransitionView(transition_m, hierarchy_level)
+        transition_v = TransitionView(self.canvas, transition_m, hierarchy_level)
 
         # Draw transition above all other state elements
         self.canvas.add(transition_v, parent_state_v, index=None)
@@ -884,7 +904,7 @@ class GraphicalEditorController(ExtendedController):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
 
         hierarchy_level = parent_state_v.hierarchy_level
-        data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
+        data_flow_v = DataFlowView(self.canvas, data_flow_m, hierarchy_level)
 
         # Draw data flow above NameView but beneath all other state elements
         self.canvas.add(data_flow_v, parent_state_v, index=1)

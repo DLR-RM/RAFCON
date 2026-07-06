@@ -14,12 +14,12 @@ from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
-from gaphas.constraint import Constraint
+# gaphas 5: the concrete constraint base class is BaseConstraint (gaphas.constraint.Constraint is now a Protocol)
+from gaphas.solver import BaseConstraint as Constraint
+from gaphas.position import Position
 
 from rafcon.gui.mygaphas.items.ports import PortView
 from rafcon.gui.mygaphas.utils.enums import SnappedSide
-
-from copy import deepcopy
 
 EPSILON = 1e-6
 
@@ -209,7 +209,8 @@ class PortRectConstraint(Constraint):
 
         self._rect = rect
         self._point = point
-        self._initial_pos = deepcopy(point)
+        # Plain value copy; a deepcopy of the Position would drag along all attached solver handlers
+        self._initial_pos = Position(point[0].value, point[1].value)
         self._port = port
 
         self._distance_to_border = self._port.port_side_size / 2.
@@ -292,8 +293,8 @@ class PortRectConstraint(Constraint):
             self.set_nearest_border()
 
         # Update initial position for next reference
-        _update(self._initial_pos.x, deepcopy(px.value))
-        _update(self._initial_pos.y, deepcopy(py.value))
+        _update(self._initial_pos.x, px.value)
+        _update(self._initial_pos.y, py.value)
 
     def update_distance_to_border(self):
         self._distance_to_border = self._port.port_side_size / 2.

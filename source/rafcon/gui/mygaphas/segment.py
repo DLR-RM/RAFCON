@@ -11,46 +11,25 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from weakref import ref
-
 from gaphas.geometry import distance_point_point
 from gaphas.segment import LineSegment, Segment
 
-from rafcon.gui.mygaphas.items.connection import ConnectionView, DataFlowView
+from rafcon.gui.mygaphas.items.connection import ConnectionView
 
 
-@Segment.when_type(ConnectionView)
+@Segment.register(ConnectionView)
 class TransitionSegment(LineSegment):
     """
     This class is used to redefine the behavior of transitions and how new waypoints may be added.
     It checks if the waypoint that should be created is not between the perpendicular connectors to the ports.
+
+    gaphas 5 constructs segments with (item, model); `pos` passed to split() is in canvas coordinates.
     """
-
-    _view = None
-    _item = None
-
-    def __init__(self, item, view):
-        if item:
-            self._item = ref(item)
-        if view:
-            self._view = ref(view)
-
-    @property
-    def item(self):
-        if self._item:
-            return self._item()
-        return None
-
-    @property
-    def view(self):
-        if self._view:
-            return self._view()
-        return None
 
     def split(self, pos):
         item = self.item
         handles = item.handles()
-        x, y = self.view.get_matrix_v2i(item).transform_point(*pos)
+        x, y = item.matrix_i2c.inverse().transform_point(*pos)
         max_dist = item.parent.border_width / 4.
         for h1, h2 in zip(handles, handles[1:]):
             if (h1 in item.end_handles() or h2 in item.end_handles()) and len(handles) > 2:
@@ -64,5 +43,3 @@ class TransitionSegment(LineSegment):
 
     def split_segment(self, segment, count=2):
         return super(TransitionSegment, self).split_segment(segment, 2)
-
-

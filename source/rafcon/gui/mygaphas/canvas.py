@@ -13,7 +13,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import gaphas.canvas
-from gaphas.item import Item
+from gaphas.canvas import ancestors, all_children
+from gaphas.item import matrix_i2i
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -51,16 +52,19 @@ class MyCanvas(gaphas.canvas.Canvas):
         if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
             self._add_view_maps(item)
         super(MyCanvas, self).add(item, parent, index)
+        # gaphas 5 removed the setup_canvas() hook, RAFCON items still rely on it
+        setup_canvas = getattr(item, 'setup_canvas', None)
+        if setup_canvas:
+            setup_canvas()
 
     def remove(self, item):
         from rafcon.gui.mygaphas.items.state import StateView
-        from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, DataFlowView
+        from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView
         if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
             self._remove_view_maps(item)
-        # Gtk TODO: fix destruct of gaphas
         try:
             super(MyCanvas, self).remove(item)
-        except KeyError as e:
+        except KeyError:
             logger.info("The destruct of gaphas items has to be fixed!")
 
     def add_port(self, port_v):
@@ -83,11 +87,44 @@ class MyCanvas(gaphas.canvas.Canvas):
     def update_root_items(self):
         for root_item in self.get_root_items():
             self.request_update(root_item)
-            
+
     def get_parent(self, item):
+        from gaphas.item import Item
         if not isinstance(item, Item):
+            # e.g. PortViews, which are no real gaphas items but have a parent state
             return item.parent
         return super(MyCanvas, self).get_parent(item)
+
+    # ------------------------------------------------------------------
+    # Compatibility layer for the gaphas 2.x Canvas API used within RAFCON
+    # ------------------------------------------------------------------
+
+    def request_update(self, item, matrix=True):
+        """gaphas 5 dropped the `matrix` flag; accepted and ignored here"""
+        super(MyCanvas, self).request_update(item)
+
+    def update_now(self, dirty_items=None):
+        if dirty_items is None:
+            dirty_items = list(self.get_all_items())
+        super(MyCanvas, self).update_now(dirty_items)
+
+    def update(self):
+        self.update_now()
+
+    def get_all_children(self, item):
+        return list(all_children(self, item))
+
+    def get_ancestors(self, item):
+        return list(ancestors(self, item))
+
+    def get_matrix_i2i(self, from_item, to_item):
+        return matrix_i2i(from_item, to_item)
+
+    def connect_item(self, item, handle, connected, port, constraint=None, callback=None):
+        self.connections.connect_item(item, handle, connected, port, constraint, callback)
+
+    def disconnect_item(self, item, handle=None):
+        self.connections.disconnect_item(item, handle)
 
     def get_first_view(self):
         """Return first registered view object
@@ -99,7 +136,7 @@ class MyCanvas(gaphas.canvas.Canvas):
     def get_view_for_model(self, model):
         """Searches and return the View for the given model
 
-        :param gtkmvc3.ModelMT model: The model of the searched view
+        :param model: The model of the searched view
         :return: The view for the given model or None if not found
         """
         return self._model_view_map.get(model)
@@ -108,7 +145,7 @@ class MyCanvas(gaphas.canvas.Canvas):
         """Searches and returns the View for the given core element
 
         :param core_element: The core element of the searched view
-        :param gaphas.item.Item parent_item: Restrict the search to this parent item
+        :param parent_item: Restrict the search to this parent item
         :return: The view for the given core element or None if not found
         """
         return self._core_view_map.get(core_element)
@@ -121,21 +158,20 @@ class MyCanvas(gaphas.canvas.Canvas):
         if trigger_update:
             self.update_now()
 
-        from gi.repository import Gtk
         from gi.repository import GLib
-        from threading import Event
-        event = Event()
-
-        # Handle all events from gaphas, but not from rafcon.design_patterns.observer
-        # Make use of the priority, which is higher for gaphas then for gtkmvc3
-        def priority_handled(event):
-            event.set()
-        priority = (GLib.PRIORITY_HIGH_IDLE + GLib.PRIORITY_DEFAULT_IDLE) / 2
-        # idle_add is necessary here, as we do not want to block the user from interacting with the GUI
-        # while gaphas is redrawing
-        GLib.idle_add(priority_handled, event, priority=priority)
-        while not event.is_set():
-            Gtk.main_iteration()
+        ctx = GLib.MainContext.default()
+        # Process all pending events; this also drives the asyncio view update
+        # tasks, which are dispatched via the GLib event loop (gi.events)
+        while ctx.pending():
+            ctx.iteration(False)
+        # Make sure all view update tasks have completed. Never block here: during
+        # shutdown (event loop not running) the tasks can no longer be dispatched.
+        for view in list(self._registered_views):
+            for _ in range(1000):  # upper bound to prevent infinite loops
+                task = getattr(view, '_update_task', None)
+                if task is None or task.done() or not ctx.pending():
+                    break
+                ctx.iteration(False)
 
     def resolve_constraint(self, constraints):
         constraints = constraints if hasattr(constraints, "__iter__") else [constraints]
@@ -151,50 +187,70 @@ class MyCanvas(gaphas.canvas.Canvas):
             self.solver.solve()
 
 
+class ProjectedVariable(object):
+    """Variable-like object projecting one coordinate of a point between items
+
+    Provides the small protocol subset (value, strength, add_handler,
+    remove_handler) required by gaphas' BaseConstraint, so ItemProjection
+    entries can be passed to constraints like real solver Variables.
+    """
+
+    def __init__(self, projection, index):
+        self._projection = projection
+        self._index = index
+
+    @property
+    def strength(self):
+        return self._projection.point[self._index].strength
+
+    def add_handler(self, handler):
+        self._projection.point[self._index].add_handler(handler)
+
+    def remove_handler(self, handler):
+        self._projection.point[self._index].remove_handler(handler)
+
+    @property
+    def value(self):
+        return self._projection.get_projected()[self._index]
+
+    @value.setter
+    def value(self, new_value):
+        self._projection.set_projected(self._index, new_value)
+
+    def __float__(self):
+        return float(self.value)
+
+
 class ItemProjection(object):
     """Project a point of item A into the coordinate system of item B.
 
-    The class is based on the implementation of gaphas.canvas.CanvasProjection.
+    Replacement for the gaphas 2.x CanvasProjection-based implementation;
+    projection happens on access using the items' item-to-canvas matrices.
     """
 
     def __init__(self, point, item_point, item_target):
-        self._point = point
+        self.point = point
         self._item_point = item_point
         self._item_target = item_target
 
-    def _on_change_x(self, value):
+    def get_projected(self):
+        matrix = matrix_i2i(self._item_point, self._item_target)
+        return matrix.transform_point(self.point.x.value, self.point.y.value)
+
+    def set_projected(self, index, value):
+        projected = list(self.get_projected())
+        projected[index] = value
+        matrix = matrix_i2i(self._item_target, self._item_point)
+        self.point.x.value, self.point.y.value = matrix.transform_point(*projected)
         canvas = self._item_point.canvas
-        self._px = value
-        self._point.x.value, self._point.y.value = canvas.get_matrix_i2i(self._item_target,
-                                                                         self._item_point).transform_point(value,
-                                                                                                           self._py)
-        canvas.request_update(self._item_point, matrix=False)
+        if canvas:
+            canvas.request_update(self._item_point, matrix=False)
 
-    def _on_change_y(self, value):
-        canvas = self._item_point.canvas
-        self._py = value
-        self._point.x.value, self._point.y.value = canvas.get_matrix_i2i(self._item_target,
-                                                                         self._item_point).transform_point(self._px,
-                                                                                                           value)
-        canvas.request_update(self._item_point, matrix=False)
-
-    def _get_value(self):
-        """
-        Return two delegating variables. Each variable should contain
-        a value attribute with the real value.
-        """
-        x, y = self._point.x, self._point.y
-        self._px, self._py = self._item_point.canvas.get_matrix_i2i(self._item_point,
-                                                                    self._item_target).transform_point(x, y)
-        return self._px, self._py
-
-    pos = property(lambda self: list(map(gaphas.projections.VariableProjection,
-                                    self._point, self._get_value(),
-                                    (self._on_change_x, self._on_change_y))))
+    @property
+    def pos(self):
+        return ProjectedVariable(self, 0), ProjectedVariable(self, 1)
 
     def __getitem__(self, key):
-        # Note: we can not use bound methods as callbacks, since that will
-        #       cause pickle to fail.
         return self.pos[key]
 
     def __iter__(self):

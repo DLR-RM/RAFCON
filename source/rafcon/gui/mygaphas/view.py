@@ -13,39 +13,152 @@
 
 from contextlib import contextmanager
 from weakref import ref
-from rafcon.design_patterns.observer.observer import Observer
+
+from gi.repository import GObject
 
 from gaphas.view import GtkView
-from gaphas.item import Element
+from gaphas.view.gtkview import transform_rectangle
+from gaphas.selection import Selection
+
+from rafcon.design_patterns.observer.observer import Observer
 
 from rafcon.gui.mygaphas.items.state import StateView
 from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
 
 
+class RAFCONSelection(Selection):
+    """Selection adapter bridging gaphas' selection protocol to RAFCON's selection model
+
+    gaphas (view internals and painters) reads/writes selection state through this object;
+    all calls are mapped onto the RAFCON state machine selection via the ExtendedGtkView.
+    Only the hovered item is kept locally, as RAFCON has no notion of hovering.
+    """
+
+    def __init__(self, view):
+        super(RAFCONSelection, self).__init__()
+        self._view = ref(view)
+
+    @property
+    def selected_items(self):
+        view = self._view()
+        return view._get_selected_items() if view else set()
+
+    def select_items(self, *items):
+        view = self._view()
+        if view:
+            view.select_item(items)
+
+    def unselect_item(self, item):
+        view = self._view()
+        if view:
+            try:
+                view.unselect_item(item)
+            except (AttributeError, KeyError):
+                pass  # model behind the item may already be gone during destruction
+
+    def unselect_all(self):
+        view = self._view()
+        if view:
+            view.unselect_all()
+
+    @property
+    def focused_item(self):
+        view = self._view()
+        return view._get_focused_item() if view else None
+
+    @focused_item.setter
+    def focused_item(self, item):
+        view = self._view()
+        if view:
+            view._set_focused_item(item)
+
+    def clear(self):
+        # Called by gaphas when the model is unset (destruction); only reset local state,
+        # the RAFCON selection model must not be altered here
+        self._hovered_item = None
+        self._focused_item = None
+
+
 class ExtendedGtkView(GtkView, Observer):
 
-    hovered_handle = None
-    _selection = None
-    _widget_pos = None
+    __gsignals__ = {
+        'selection-changed': (GObject.SignalFlags.RUN_FIRST, None, (GObject.TYPE_PYOBJECT,)),
+        'focus-changed': (GObject.SignalFlags.RUN_FIRST, None, (GObject.TYPE_PYOBJECT,)),
+    }
 
-    def __init__(self, graphical_editor_v, state_machine_m, *args):
-        GtkView.__init__(self, *args)
+    hovered_handle = None
+    _selection_m = None
+
+    def __init__(self, graphical_editor_v, state_machine_m):
+        GtkView.__init__(self)
         Observer.__init__(self)
-        self._selection = state_machine_m.selection
+        self._selection_m = state_machine_m.selection
         self.value_cache = ValueCache()
-        self.observe_model(self._selection)
+        self.observe_model(self._selection_m)
         self.observe_model(state_machine_m.root_state)
         self._graphical_editor = ref(graphical_editor_v)
+        # Replace the default gaphas selection with the adapter around RAFCON's selection model
+        self._selection = RAFCONSelection(self)
+        self._selection.add_handler(self.on_selection_update)
 
     def prepare_destruction(self):
         """Get rid of circular references"""
-        self.relieve_model(self._selection)
-        self._selection = None
+        self.relieve_model(self._selection_m)
+        self._selection_m = None
         self.observable_to_methods.clear()
+        self.model = None
 
     @property
     def graphical_editor(self):
         return self._graphical_editor()
+
+    @property
+    def canvas(self):
+        """The canvas is the gaphas 5 model of this view"""
+        return self._model
+
+    @canvas.setter
+    def canvas(self, canvas):
+        self.model = canvas
+
+    def update(self):
+        """Update view status according to the items updated in the model
+
+        Extends the base method with a synchronous fallback for contexts without a running
+        (GLib-backed asyncio) event loop, e.g. simple test setups.
+        """
+        try:
+            return super(ExtendedGtkView, self).update()
+        except RuntimeError:
+            model = self._model
+            if not model:
+                return None
+            dirty_items = self.all_dirty_items()
+            model.update_now(dirty_items)
+            dirty_items |= self.all_dirty_items()
+            old_bb = self._qtree.soft_bounds
+            self.update_bounding_box(dirty_items)
+            if self._qtree.soft_bounds != old_bb:
+                self.update_scrolling()
+            self.update_back_buffer()
+            return None
+
+    def get_items_in_rectangle(self, rect, contain=False, intersect=None, reverse=False):
+        """Compatibility wrapper supporting the gaphas 2.x keyword arguments"""
+        if intersect is not None:
+            contain = not intersect
+        items = list(super(ExtendedGtkView, self).get_items_in_rectangle(rect, contain=contain))
+        if reverse:
+            items.reverse()
+        return items
+
+    def queue_draw_item(self, *items):
+        """Trigger a redraw; gaphas 5 always repaints the visible area"""
+        self.update_back_buffer()
+
+    def queue_draw_area(self, *args):
+        """Trigger a redraw; gaphas 5 has no partial damage regions anymore"""
+        self.update_back_buffer()
 
     def get_port_at_point(self, vpos, distance=10, exclude=None, exclude_port_fun=None):
         """
@@ -68,8 +181,6 @@ class ExtendedGtkView(GtkView, Observer):
          exclude
             Set of items to ignore.
         """
-        # Method had to be inherited, as the base method has a bug:
-        # It misses the statement max_dist = d
         v2i = self.get_matrix_v2i
         vx, vy = vpos
 
@@ -98,8 +209,7 @@ class ExtendedGtkView(GtkView, Observer):
                 item = i
                 port = p
 
-                # transform coordinates from connectable item space to view
-                # space
+                # transform coordinates from connectable item space to view space
                 i2v = self.get_matrix_i2v(i).transform_point
                 glue_pos = i2v(*pg)
 
@@ -123,38 +233,28 @@ class ExtendedGtkView(GtkView, Observer):
         """
         return self._matrix[0]
 
-    def queue_draw_item(self, *items):
-        """Extends the base class method to allow Ports to be passed as item
-
-        :param items: Items that are to be redrawn
-        """
-        gaphas_items = []
-        for item in items:
-            if isinstance(item, Element):
-                gaphas_items.append(item)
-            else:
-                try:
-                    gaphas_items.append(item.parent)
-                except AttributeError:
-                    pass
-        super(ExtendedGtkView, self).queue_draw_item(*gaphas_items)
-
     def get_items_at_point(self, pos, selected=True, distance=0):
         """ Return the items located at ``pos`` (x, y).
 
          :param bool selected: if False returns first non-selected item
          :param float distance: Maximum distance to be considered as "at point" (in viewport pixel)
         """
-        items = self._qtree.find_intersect((pos[0] - distance, pos[1] - distance, 2 * distance, 2 * distance))
+        if not self._model:
+            return []
+        vx, vy = pos
+        rect = (vx - distance, vy - distance, 2 * distance, 2 * distance)
+        # quadtree bounds are in canvas coordinates in gaphas 5
+        crect = transform_rectangle(self._matrix.inverse(), rect)
+        items = self._qtree.find_intersect(crect)
         filtered_items = []
-        for item in self._canvas.sort(items, reverse=True):
+        for item in reversed(list(self._model.sort(items))):
             if not selected and item in self.selected_items:
                 continue  # skip selected items
 
             v2i = self.get_matrix_v2i(item)
             i2v = self.get_matrix_i2v(item)
             ix, iy = v2i.transform_point(*pos)
-            distance_i = item.point((ix, iy))
+            distance_i = item.point(ix, iy)
             distance_v = i2v.transform_distance(distance_i, 0)[0]
             if distance_v <= distance:
                 filtered_items.append(item)
@@ -175,11 +275,11 @@ class ExtendedGtkView(GtkView, Observer):
 
     @contextmanager
     def _suppress_selection_events(self):
-        self.relieve_model(self._selection)
+        self.relieve_model(self._selection_m)
         try:
             yield
         finally:
-            self.observe_model(self._selection)
+            self.observe_model(self._selection_m)
 
     def select_item(self, items):
         """ Select an items. This adds `items` to the set of selected items. """
@@ -191,8 +291,8 @@ class ExtendedGtkView(GtkView, Observer):
         with self._suppress_selection_events():
             for item in items:
                 self.queue_draw_item(item)
-                if item is not None and item.model not in self._selection:
-                    self._selection.add(item.model)
+                if item is not None and item.model not in self._selection_m:
+                    self._selection_m.add(item.model)
                     selection_changed = True
         if selection_changed:
             self.emit('selection-changed', self._get_selected_items())
@@ -200,22 +300,24 @@ class ExtendedGtkView(GtkView, Observer):
     def unselect_item(self, item):
         """ Unselect an item. """
         self.queue_draw_item(item)
-        if item.model in self._selection:
+        if item.model in self._selection_m:
             with self._suppress_selection_events():
-                self._selection.remove(item.model)
+                self._selection_m.remove(item.model)
             self.emit('selection-changed', self._get_selected_items())
 
     def unselect_all(self):
         """ Clearing the selected_item also clears the focused_item. """
         items = self._get_selected_items()
         with self._suppress_selection_events():
-            self._selection.clear()
+            self._selection_m.clear()
         self.queue_draw_item(*items)
         self.emit('selection-changed', self._get_selected_items())
 
     def _get_selected_items(self):
         """ Return an Item (e.g. StateView) for each model (e.g. StateModel) in the current selection """
-        return set(self.canvas.get_view_for_model(model) for model in self._selection)
+        if self._selection_m is None or not self._model:
+            return set()
+        return set(self.canvas.get_view_for_model(model) for model in self._selection_m)
 
     def handle_new_selection(self, items):
         """ Determines the selection
@@ -229,9 +331,17 @@ class ExtendedGtkView(GtkView, Observer):
         elif not hasattr(items, "__iter__"):
             items = (items,)
         models = set(item.model for item in items)
-        self._selection.handle_new_selection(models)
+        self._selection_m.handle_new_selection(models)
 
     selected_items = property(_get_selected_items, select_item, unselect_all, "Items selected by the view")
+
+    @property
+    def hovered_item(self):
+        return self._selection.hovered_item
+
+    @hovered_item.setter
+    def hovered_item(self, item):
+        self._selection.hovered_item = item
 
     @Observer.observe("focus_signal", signal=True)
     def _on_focus_changed_externally(self, selection_m, signal_name, signal_msg):
@@ -242,7 +352,9 @@ class ExtendedGtkView(GtkView, Observer):
 
     def _get_focused_item(self):
         """ Returns the currently focused item """
-        focused_model = self._selection.focus
+        if self._selection_m is None:
+            return None
+        focused_model = self._selection_m.focus
         if not focused_model:
             return None
         return self.canvas.get_view_for_model(focused_model)
@@ -252,30 +364,14 @@ class ExtendedGtkView(GtkView, Observer):
         if not item:
             return self._del_focused_item()
 
-        if item.model is not self._selection.focus:
-            self.queue_draw_item(self._focused_item, item)
-            self._selection.focus = item.model
+        if item.model is not self._selection_m.focus:
+            self.queue_draw_item(self._get_focused_item(), item)
+            self._selection_m.focus = item.model
             self.emit('focus-changed', item)
 
     def _del_focused_item(self):
         """ Clears the focus """
-        del self._selection.focus
+        del self._selection_m.focus
 
     focused_item = property(_get_focused_item, _set_focused_item, _del_focused_item,
                             "The item with focus (receives key events a.o.)")
-
-    def do_configure_event(self, event):
-        if hasattr(self, "_back_buffer"):
-            GtkView.do_configure_event(self, event)
-
-        # Keep position of state machine fixed within the window, also when size of left sidebar changes
-        window = self.get_toplevel()
-        if window:
-            new_widget_pos = self.translate_coordinates(window, 0, 0)
-            if self._widget_pos:
-                delta_pos = new_widget_pos[0] - self._widget_pos[0], new_widget_pos[1] - self._widget_pos[1]
-
-                self._matrix.translate(-delta_pos[0] / self._matrix[0], -delta_pos[1] / self._matrix[3])
-                # Make sure everything's updated
-                self.request_update((), self._canvas.get_all_items())
-            self._widget_pos = new_widget_pos
