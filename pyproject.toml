@@ -40,12 +40,17 @@ dependencies = [
     "yaml_configuration (>=0.2.5,<0.4.0)",
     "PyGObject (>=3.42.0,<3.51.0)",
     "packaging (>=21)",
-
     # Add setuptools for distutils if python>=3.12
-    "setuptools<81; python_version >= '3.12'",
+    "setuptools; python_version >= '3.12'",
+    "setuptools>=82.0.1",
 ]
 license = {text = "EPL"}
 requires-python = ">=3.9"
+
+[project.optional-dependencies]
+network = [
+    "websockets (>=10.0)",
+]
 
 [project.urls]
 Homepage = "https://github.com/DLR-RM/RAFCON"

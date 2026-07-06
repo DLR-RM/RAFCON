@@ -20,3 +20,7 @@ EXECUTION_LOG_PATH: "%RAFCON_TEMP_PATH_BASE/execution_logs"
 EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL: False
 
 SCRIPT_RECOMPILATION_ON_STATE_EXECUTION: True
+
+# Start a network server so that remote GUIs can attach to this core (same as 'rafcon_core --server')
+NETWORK_SERVER_ENABLED: False
+NETWORK_SERVER_PORT: 9999

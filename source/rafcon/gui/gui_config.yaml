@@ -1,5 +1,8 @@
 TYPE: GUI_CONFIG
 
+# Websocket url of a remote core to attach to on startup (same as 'rafcon --connect <url>'), e.g. ws://localhost:9999
+REMOTE_CORE_URL: None
+
 SOURCE_EDITOR_STYLE: rafcon-dark
 
 GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE: True

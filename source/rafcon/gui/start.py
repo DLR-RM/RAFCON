@@ -213,6 +213,10 @@ def setup_argument_parser():
                         help=_("path within a state machine to the state that should be launched which consists of "
                                "state ids e.g. QPOXGD/YVWJKZ where QPOXGD is the root state and YVWJKZ its child states"
                                " to start from"))
+    parser.add_argument('-ct', '--connect', action='store', metavar='url', dest='connect_url', default=None,
+                        help=_("attach this GUI to a remote core started with 'rafcon_core --server', "
+                               "e.g. --connect ws://localhost:9999. The GUI then monitors and controls the "
+                               "execution on the remote core; editing is not synchronized"))
     parser.add_argument('-q', '--quit', dest='quit_flag', action='store_true',
                         help=_("a flag to specify if the gui should quit after launching a state machine"))
     parser.add_argument('-mp', '--memory-profiling', dest='memory_profiling', action='store_true',
@@ -442,6 +446,12 @@ def main():
 
     post_setup_plugins(user_input)
 
+    remote_client = None
+    connect_url = user_input.connect_url or global_gui_config.get_config_value("REMOTE_CORE_URL", None)
+    if connect_url:
+        from rafcon.network.gui_integration import connect_to_remote_core
+        remote_client = connect_to_remote_core(connect_url)
+
     state_machine = None
     if user_input.state_machine_paths:
         state_machine = open_state_machines(user_input.state_machine_paths)
@@ -450,7 +460,7 @@ def main():
         create_new_state_machine()
 
     # initiate stored session # TODO think about a controller for this
-    if not user_input.new and not user_input.state_machine_paths \
+    if not user_input.new and not user_input.state_machine_paths and not connect_url \
             and global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
         # do in background in order not to block GUI
         GLib.idle_add(backup_session.restore_session_from_runtime_config, priority=GLib.PRIORITY_LOW)
@@ -465,6 +475,8 @@ def main():
         logger.info(_("Main window was closed"))
 
     finally:
+        if remote_client:
+            remote_client.stop()
         post_gui_destruction()
 
     if core_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:

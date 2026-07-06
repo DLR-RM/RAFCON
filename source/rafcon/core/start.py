@@ -138,6 +138,18 @@ def setup_argument_parser():
             default_config_path))
     parser.add_argument('-r', '--remote', action='store_true', help="remote control mode")
     parser.add_argument(
+        '-sv',
+        '--server',
+        nargs='?',
+        type=int,
+        dest='server_port',
+        metavar='port',
+        default=None,
+        const=9999,
+        help="start a network server so that remote GUIs can attach to this core "
+        "(rafcon --connect ws://<host>:<port>). Optionally takes the port to listen on, default: 9999. "
+        "In server mode state machines are not started automatically but from an attached GUI.")
+    parser.add_argument(
         '-s',
         '--start_state_path',
         metavar='path',
@@ -294,7 +306,7 @@ def main(optional_args=None):
         user_input = parser.parse_args(optional_args)
     else:
         user_input = parser.parse_args()
-    if not user_input.state_machine_path:
+    if not user_input.state_machine_path and user_input.server_port is None:
         logger.error("You have to specify a valid state machine path")
         exit(-1)
 
@@ -314,12 +326,21 @@ def main(optional_args=None):
     post_setup_plugins(user_input)
 
     first_sm = None
-    for sm_path in user_input.state_machine_path:
+    for sm_path in user_input.state_machine_path or []:
         sm = open_state_machine(sm_path)
         if first_sm is None:
             first_sm = sm
 
-    if not user_input.remote:
+    server = None
+    server_port = user_input.server_port
+    if server_port is None and global_config.get_config_value("NETWORK_SERVER_ENABLED", False):
+        server_port = global_config.get_config_value("NETWORK_SERVER_PORT", 9999)
+    if server_port is not None:
+        from rafcon.network.server import RemoteServer
+        server = RemoteServer(port=server_port)
+        server.start()
+
+    if not user_input.remote and not server:
         start_state_machine(first_sm, user_input.start_state_path)
 
     if reactor_required():
@@ -328,11 +349,14 @@ def main(optional_args=None):
         # Blocking call, return when state machine execution finishes
         reactor.run()
 
-    if not user_input.remote:
-        wait_for_state_machine_finished(first_sm)
-    else:
+    if user_input.remote or server:
         while not _user_abort:
             time.sleep(1)
+    else:
+        wait_for_state_machine_finished(first_sm)
+
+    if server:
+        server.stop()
 
     logger.info("State machine execution finished!")
 
