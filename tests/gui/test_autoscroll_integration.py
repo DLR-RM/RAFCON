@@ -1,4 +1,8 @@
 import os
+os.environ["GDK_SCALE"] = "1"
+os.environ["GDK_DPI_SCALE"] = "1"
+os.environ.setdefault("GDK_BACKEND", "x11")   # avoid Wayland fractional scaling
+
 import time
 import pytest
 
@@ -7,10 +11,20 @@ gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
 
 from tests import utils as testing_utils
+from rafcon.utils import log
+
+logger = log.get_logger(__name__)
 
 '''
-NOTICE:
-WRITE UNI-TESTS AND INTEGRATION TESTS IN SEPARATE FILES. 
+NOTICE 1:
+THE GLOBAL `auto-maximize` SETTING OF THE WM MUST BE SET TO `FALSE`, otherwise the runtime_config of rafcon is overwritten
+by the WM global settings. The upcoming gui is the forced to full-window size by the WM, which leads the GUI widget into a
+undefined state, depending on the screen resolution settings.
+For GNOME WM the auto-maximize setting can be checked with: `gsettings get org.gnome.mutter auto-maximize`
+It can be set to false with: `gsettings set org.gnome.mutter auto-maximize false`
+---------------------------------------------------------------------------------------------------------------------------
+NOTICE 2:
+WRITE UNIT-TESTS AND INTEGRATION TESTS IN SEPARATE FILES.
 GUI singleton models are imported in both tests (e.g. in unit tests by rafcon.mygaphas.tools -> 
 rafcon.gui.controllers.right_click_menu.state -> rafcon.gui.singleton and integration tests directly rafcon.gui.singleton),
 leading to THREADING ISSUES when running both tests sequentially in the same file.
@@ -31,20 +45,23 @@ hierarchy_state_1 = "GLNOWX/FQNEQG"
 execution_state_1 = "GLNOWX/FQNEQG/MNNCKT"
 execution_state_2 = "GLNOWX/PHVUSJ"
 
+_MAIN_WINDOW_SIZE = (1500, 800)
+
 config_options = {
 "gui_config":  {
     'HISTORY_ENABLED': True,
-    'GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE': False
+    'GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE': False,
+    'GRAPHAS_EDITOR_AUTOSCROLL_SPEED': 100
 },
 # the GUI widget needs to stay in a defined, reproducable size for the autoscroll tests.
 # the editor view size here is (400, 600) 
 "runtime_config": {
     'MAIN_WINDOW_MAXIMIZED': False,
-    'MAIN_WINDOW_SIZE': (1500, 800),
+    'MAIN_WINDOW_SIZE': _MAIN_WINDOW_SIZE,
     'MAIN_WINDOW_POS': (0, 0),
     'LEFT_BAR_DOCKED_POS': 400,
-    'RIGHT_BAR_DOCKED_POS': 800,
-    'CONSOLE_DOCKED_POS': 600,
+    'RIGHT_BAR_DOCKED_POS': _MAIN_WINDOW_SIZE[0]-200,
+    'CONSOLE_DOCKED_POS': _MAIN_WINDOW_SIZE[1]-100,
     'LEFT_BAR_WINDOW_UNDOCKED': False,
     'RIGHT_BAR_WINDOW_UNDOCKED': False,
     'CONSOLE_WINDOW_UNDOCKED': False,
