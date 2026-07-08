@@ -134,9 +134,9 @@ class AutoscrollMixin:
             self._stop_autoscroll()
             return False
 
-        '''GdkFrameClock returns the timestamp of current frame in microseconds. We use it to calculate
-        the time difference between the previous frame and the current frame to encounter different rendering times 
-        and ensure constant scrolling behavior with different resolutions of the screens.'''
+        # GdkFrameClock returns the timestamp of current frame in microseconds. It is used to calculate
+        # the time difference between the previous frame and the current frame to encounter different rendering times
+        # and ensure constant scrolling behavior with different resolutions of the screens.
         now = frame_clock.get_frame_time()
         if self._last_frame_time:
             dt = (now - self._last_frame_time) / 1_000_000.0
@@ -174,9 +174,9 @@ class AutoscrollMixin:
                             self._stop_autoscroll()
                             return False
 
-                    '''*2 factor multiplication to compensate for the shifted view coordinates.
-                    The view already shifted here, to keep the item also aligned with the cursor
-                    while shifting, we need to add the delta a 2nd time'''
+                    # *2 factor multiplication to compensate for the shifted view coordinates.
+                    # The view already shifted here, to keep the item also aligned with the cursor
+                    # while shifting, we need to add the delta a 2nd time
                     inmotion.move((x+2*dx, y+2*dy))
                     inmotion.last_x = offset_x
                     inmotion.last_y = offset_y
