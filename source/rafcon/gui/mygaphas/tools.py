@@ -620,8 +620,8 @@ class MoveHandleTool(gaphas.tool.HandleTool, AutoscrollMixin):
     extends the behaviour by requiring a modifier key to be pressed when moving ports. It also allows to change the
     modifier key, which are defined in `rafcon.gui.utils.constants`.
     """
-    def __init__(self):
-        super(MoveHandleTool, self).__init__()
+    def __init__(self, view=None):
+        super(MoveHandleTool, self).__init__(view)
         self.__init_mixin__()
 
 
