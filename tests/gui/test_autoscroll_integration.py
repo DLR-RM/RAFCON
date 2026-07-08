@@ -187,16 +187,13 @@ def _item_drag_into_autoscroll_and_stop(gui, view, state_v, monkeypatch, stop_co
     
     move_event = _make_event(Gdk.EventType.MOTION_NOTIFY, cx, cy)
     move_event.state = move_event.get_state()[1] | Gdk.EventMask.BUTTON_PRESS_MASK
-    ticks = view.get_allocated_width()/2 - 5   # 608 - 5 = 603 ticks -> should trigger autoscroll at x = 1019
-    
-    for i in range(0, int(ticks), 5):
-        move_event.x = cx + i
-        move_event.y = cy
+
+    while tool._scroll_tick_id == 0:
+        move_event.x += move_event.x + 5
         gui(tool.on_motion_notify, move_event)
         testing_utils.wait_for_gui()
         assert tool._is_dragging(), "item drag did not start"
-        if tool._scroll_tick_id > 0:
-            break
+
     if stop_condition == "BUTTON_RELEASE":
         stop_event = _make_event(Gdk.EventType.BUTTON_RELEASE, move_event.x, move_event.y)
         gui(tool.on_button_release, stop_event)
@@ -213,8 +210,7 @@ def _handle_drag_into_autoscroll_and_stop(gui, view, state_v, monkeypatch, stop_
     from rafcon.gui.mygaphas.tools import MoveHandleTool
     from gaphas.item import SE
     
-    tool = gui(MoveHandleTool)
-    tool.view = view
+    tool = gui(MoveHandleTool, view)
     
     monkeypatch.setattr(tool, "grabbed_item", lambda: state_v)    # deterministic item grab
     monkeypatch.setattr(tool, "grabbed_handle", lambda: state_v.handles()[SE])
@@ -234,16 +230,12 @@ def _handle_drag_into_autoscroll_and_stop(gui, view, state_v, monkeypatch, stop_
     move_event = _make_event(Gdk.EventType.MOTION_NOTIFY, cx, cy)
     move_event.state = move_event.get_state()[1] | Gdk.EventMask.BUTTON_PRESS_MASK
 
-    ticks = view.get_allocated_width() - (cx + 5)   # 608 - 5 = 603 ticks -> should trigger autoscroll at x = 1019
-    
-    for i in range(0, int(ticks), 5):
-        move_event.x = cx + i
-        move_event.y = cy
+    while tool._scroll_tick_id == 0:
+        move_event.x += move_event.x + 5
         gui(tool.on_motion_notify, move_event)
         testing_utils.wait_for_gui()
         assert tool._is_dragging(), "item drag did not start"
-        if tool._scroll_tick_id > 0:
-            break
+
     if stop_condition == "BUTTON_RELEASE":
         stop_event = _make_event(Gdk.EventType.BUTTON_RELEASE, move_event.x, move_event.y)
         gui(tool.on_button_release, stop_event)
@@ -280,15 +272,12 @@ def _connection_drag_into_autoscroll_and_stop(gui, view, state_v, monkeypatch, s
     move_event = _make_event(Gdk.EventType.MOTION_NOTIFY, cx, cy)
     move_event.state = move_event.get_state()[1] | Gdk.EventMask.BUTTON_PRESS_MASK
 
-    ticks = view.get_allocated_width() - (cx + 5)   # 608 - 5 = 603 ticks -> should trigger autoscroll at x = 1019
-    for i in range(0, int(ticks), 5): 
-        move_event.x = cx + i
-        move_event.y = cy
+    while tool._scroll_tick_id == 0:
+        move_event.x += move_event.x + 5
         gui(tool.on_motion_notify, move_event)
         testing_utils.wait_for_gui()
         assert tool._is_dragging(), "item drag did not start"
-        if tool._scroll_tick_id > 0:
-            break
+
     if stop_condition == "BUTTON_RELEASE":
         stop_event = _make_event(Gdk.EventType.BUTTON_RELEASE, move_event.x, move_event.y)
         gui(tool.on_button_release, stop_event)
