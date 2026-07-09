@@ -36,6 +36,8 @@ def execute(self, inputs, outputs, gvm):
             gvm.set_variable("rafcon_ros_node", rafcon_ros_node, per_reference=True)
 
             # Initialize the ros executor
+            # NOTE: SingleThreadedExecutor is more performant as of now, but does not allow
+            # for processing concurrent callbacks (e.g. with concurrent state machines) 
             executor = rclpy.executors.MultiThreadedExecutor()
             executor.add_node(rafcon_ros_node)
             gvm.set_variable("ros_executor", executor, per_reference=True)

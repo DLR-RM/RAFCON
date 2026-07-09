@@ -78,18 +78,21 @@ class AutoscrollMixin:
     ``self.handle_autoscroll(event.x, event.y)`` in the ``on_motion_notify`` event class
     of the gaphas tool
     """
-    _NOMINAL_FRAME_DT = 1.0 / 60.0   # seed dt for the first frame of a autoscroll cycle (assume 60fps)
+    _NOMINAL_FRAME_DT = (
+        1.0 / 60.0
+    )  # seed dt for the first frame of a autoscroll cycle (assume 60fps)
 
     def __init_mixin__(self) -> None:
         self._scroll_tick_id = 0
         self._last_frame_time = 0
         self._last_event_pos = (0, 0)
         self._margin = 30  # px distance to border to trigger autoscroll
-        self._speed = global_gui_config.get_config_value("GRAPHAS_EDITOR_AUTOSCROLL_SPEED", 200)  # px scrolled per second
+        self._speed = global_gui_config.get_config_value(
+            "GRAPHAS_EDITOR_AUTOSCROLL_SPEED", 200
+        )  # px scrolled per second
 
-
-    def handle_autoscroll(self,x: float, y: float) -> None:
-        '''Start or stop autoscrolling based on the current curser position'''
+    def handle_autoscroll(self, x: float, y: float) -> None:
+        """Start or stop autoscrolling based on the current curser position"""
         self._last_event_pos = (x, y)
         if self._is_dragging() and any(self._should_autoscroll(x, y)):
             if not self._scroll_tick_id:
@@ -98,12 +101,10 @@ class AutoscrollMixin:
         elif self._scroll_tick_id:
             self._stop_autoscroll()
 
-
     def _is_dragging(self) -> bool:
         '''True while this tool is dragging an item or handle'''
         return bool(getattr(self, '_movable_items', None)) or \
                bool(getattr(self, 'motion_handle', None))
-
 
     def _should_autoscroll(self, x: float, y: float):
         '''checks if border thresholds get hit for autoscrolling.
@@ -119,7 +120,6 @@ class AutoscrollMixin:
 
         return left_border_hit, top_border_hit, right_border_hit, bottom_border_hit
 
-
     def _scroll_view(self, dx: float, dy: float) -> None:
         '''Scroll the view by (dx, dy) pixels by adjusting the view object'''
         h_adj = self.view.get_hadjustment()
@@ -127,9 +127,8 @@ class AutoscrollMixin:
         h_adj.set_value(h_adj.get_value() + dx)
         v_adj.set_value(v_adj.get_value() + dy)
 
-
     def _on_autoscroll(self, widget, frame_clock) -> bool:
-        '''Frame clock callback: scroll the view and drags item(s) along - fires one per rendered frame'''
+        """Frame clock callback: scroll the view and drags item(s) along - fires one per rendered frame"""
         if not self._is_dragging():
             self._stop_autoscroll()
             return False
@@ -143,34 +142,44 @@ class AutoscrollMixin:
         else:
             dt = self._NOMINAL_FRAME_DT
         self._last_frame_time = now
-        step = self._speed * min(dt, 1.0 / 30.0)  # cap to encounter unforseen frame-clock behavior leading to big jumps
+        step = self._speed * min(
+            dt, 1.0 / 30.0
+        )  # cap to encounter unforseen frame-clock behavior leading to big jumps
 
         x, y = self._last_event_pos
         zoom = self.view.matrix[0]
-        scroll_directions = self._should_autoscroll(self._last_event_pos[0],
-                                                    self._last_event_pos[1])
-        dx = (scroll_directions[2]-scroll_directions[0]) * step*zoom
-        dy = (scroll_directions[3]-scroll_directions[1]) * step*zoom
+        scroll_directions = self._should_autoscroll(
+            self._last_event_pos[0], self._last_event_pos[1]
+        )
+        dx = (scroll_directions[2] - scroll_directions[0]) * step * zoom
+        dy = (scroll_directions[3] - scroll_directions[1]) * step * zoom
 
-        offset_x= x + dx
+        offset_x = x + dx
         offset_y = y + dy
 
         if dx or dy:
             self._scroll_view(dx, dy)
-            if getattr(self, '_movable_items', None):
+            if getattr(self, "_movable_items", None):
                 for inmotion in self._movable_items:
                     if inmotion.item.parent:
-                        parent_border_left = parent_border_top = inmotion.item.parent.border_width
-                        parent_border_right = inmotion.item.parent.width - \
-                            (inmotion.item.width + inmotion.item.parent.border_width)
-                        parent_border_bottom = inmotion.item.parent.height - \
-                            (inmotion.item.height + inmotion.item.parent.border_width)
+                        parent_border_left = parent_border_top = (
+                            inmotion.item.parent.border_width
+                        )
+                        parent_border_right = inmotion.item.parent.width - (
+                            inmotion.item.width + inmotion.item.parent.border_width
+                        )
+                        parent_border_bottom = inmotion.item.parent.height - (
+                            inmotion.item.height + inmotion.item.parent.border_width
+                        )
 
-                        rel_x, rel_y = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
-                                                            inmotion.item.handles()[NW])
-                        #check to stop if parent borders are hit
-                        if rel_x in (parent_border_left, parent_border_right) or \
-                           rel_y in (parent_border_top, parent_border_bottom):
+                        rel_x, rel_y = gap_helper.calc_rel_pos_to_parent(
+                            self.view.canvas, inmotion.item, inmotion.item.handles()[NW]
+                        )
+                        # check to stop if parent borders are hit
+                        if rel_x in (
+                            parent_border_left,
+                            parent_border_right,
+                        ) or rel_y in (parent_border_top, parent_border_bottom):
                             self._stop_autoscroll()
                             return False
 
