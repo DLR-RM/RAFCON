@@ -60,7 +60,7 @@ class BreakpointManager:
 
     @staticmethod
     def _get_state_id(state):
-        if state.file_system_path is None:
+        if state is None or state.file_system_path is None:
             return None
         return os.path.basename(state.file_system_path)
 

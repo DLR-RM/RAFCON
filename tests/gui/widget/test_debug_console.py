@@ -22,9 +22,8 @@ logger = log.get_logger(__name__)
     "LOGGING_SHOW_ERROR": True
 },
 "libraries": {
-    "ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-    "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
-}}], indirect=True, ids=["with logging on, ros and turtle libraries"])
+    "ros2": join(testing_utils.EXAMPLES_PATH, "ros2_libraries")
+}}], indirect=True, ids=["with logging on, ros2"])
 def test_logging_view_widget(gui):
     """The function triggers and test basic functions of the logging widget in the debug console.
 

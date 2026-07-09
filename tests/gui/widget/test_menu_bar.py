@@ -102,9 +102,8 @@ def paste(gui, state_machine_model, state_m, main_window_controller, menu_bar_ct
 @pytest.mark.unstable35
 @pytest.mark.unstable37
 @pytest.mark.parametrize('gui', [{"libraries": {
-    "ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-    "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
-}}], indirect=True, ids=["with ros and turtle libraries"])
+    "ros2": join(testing_utils.EXAMPLES_PATH, "ros2_libraries")
+}}], indirect=True, ids=["with ros2"])
 def test_gui(gui):
     trigger_menu_bar_items(gui)
 
@@ -213,7 +212,7 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     first_sm_id += 1  # count state machine id once up because of library substitution (loads a state machine, too)
 
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
-    gui(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TUTORIAL_PATH, "basic_turtle_demo_sm"))
+    gui(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TEST_STATE_MACHINES_PATH, "start_from_here_test/start_from_here_test"))
     gui(testing_utils.wait_for_gui)
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
@@ -226,9 +225,9 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
     gui(focus_graphical_editor_in_page, page)
     print("#" * 30, "\n", '#### group states \n', "#" * 30, "\n")
-    state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
+    state_m_parent = sm_m.get_state_model_by_path('QBYTMD/GFPACD')
     state_ids_old = [state_id for state_id in state_m_parent.state.states]
-    state_m_list = [state_m_parent.states[child_state_id] for child_state_id in ['PAYECU', 'UEPNNW', 'KQDJYS']]
+    state_m_list = [state_m_parent.states[child_state_id] for child_state_id in ['DZIDMQ', 'UUZRJQ', 'BJGGIK']]
     gui(gui_helper_state.group_states_and_scoped_variables, state_m_list, [])
 
     ##########################################################
@@ -242,25 +241,25 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
 
     #########################################################
     print("select & copy an execution state -> and paste it somewhere")
-    select_and_paste_state(gui, sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ'),
+    select_and_paste_state(gui, sm_m, sm_m.get_state_model_by_path('QBYTMD/GAPOWF'),
                            sm_m.get_state_model_by_path(
-                               'CDMJPK/RMKGEW'), menubar_ctrl, 'copy', main_window_controller, page)
+                               'QBYTMD'), menubar_ctrl, 'copy', main_window_controller, page)
 
     ###########################################################
     print("select & copy a hierarchy state -> and paste it some where")
-    select_and_paste_state(gui, sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY'),
-                           sm_m.get_state_model_by_path('CDMJPK'), menubar_ctrl, 'copy', main_window_controller, page)
+    select_and_paste_state(gui, sm_m, sm_m.get_state_model_by_path('QBYTMD/GFPACD'),
+                           sm_m.get_state_model_by_path('QBYTMD'), menubar_ctrl, 'copy', main_window_controller, page)
 
     ##########################################################
     print("select a library state -> and paste it some where WITH CUT !!!")
     state_m, old_child_state_count = select_and_paste_state(gui, sm_m,
-                                                            sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY'),
-                                                            sm_m.get_state_model_by_path('CDMJPK'), menubar_ctrl, 'cut',
+                                                            sm_m.get_state_model_by_path('QBYTMD/GFPACD/BJGGIK'),
+                                                            sm_m.get_state_model_by_path('QBYTMD'), menubar_ctrl, 'cut',
                                                             main_window_controller, page)
 
     ##########################################################
     # create complex state with all elements
-    gui(sm_m.selection.set, [sm_m.get_state_model_by_path('CDMJPK'), ])
+    gui(sm_m.selection.set, [sm_m.get_state_model_by_path('QBYTMD'), ])
     lib_state = LibraryState(join("generic", "dialog"), "Dialog [3 options]", "0.1", "Dialog [3 options]")
     gui(gui_helper_state_machine.insert_state_into_selected_state, lib_state, True)
     assert len(state_m.state.states) == old_child_state_count + 2
@@ -272,7 +271,7 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     assert state is not None
     new_template_state = state
     gui(new_template_state.add_scoped_variable, 'scoopy', float, 0.3)
-    state_m_to_copy = sm_m.get_state_model_by_path('CDMJPK/' + new_template_state.state_id)
+    state_m_to_copy = sm_m.get_state_model_by_path('QBYTMD/' + new_template_state.state_id)
 
     ##########################################################
     print("copy & paste complex state into itself")
@@ -284,15 +283,15 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     ##########################################################
     # substitute state with template
     old_keys = list(state_m_parent.state.states.keys())
-    transitions_before, data_flows_before = state_m_parent.state.get_connections_for_state('RQXPAI')
+    transitions_before, data_flows_before = state_m_parent.state.get_connections_for_state('DZIDMQ')
 
     # lib_state = gui(rafcon.gui.singleton.library_manager.get_library_instance, 'generic', 'wait')
     # CORE LEVEL VERSION OF A SUBSTITUTE STATE EXAMPLE
-    # gui(state_m_parent.state.substitute_state, 'RQXPAI', lib_state.state_copy)
+    # gui(state_m_parent.state.substitute_state, 'DZIDMQ', lib_state.state_copy)
     # SAME WITH THE GUI AND HELPER METHOD
-    # gui(gui_helper_state.substitute_state_as, state_m_parent.states['RQXPAI'], lib_state, True)
+    # gui(gui_helper_state.substitute_state_as, state_m_parent.states['DZIDMQ'], lib_state, True)
     # GUI LEVEL SUBSTITUTE STATE EXAMPLE WITH CORRECT META DATA HANDLING TODO why those above produce wrong meta data?
-    gui(sm_m.selection.set, [state_m_parent.states['RQXPAI'], ])
+    gui(sm_m.selection.set, [state_m_parent.states['DZIDMQ'], ])
     library_path, library_name = ('generic', 'wait')
     gui(lib_tree_ctrl.select_library_tree_element_of_lib_tree_path, join(library_path, library_name))
     gui(lib_tree_ctrl.substitute_as_template_clicked, None, True)
@@ -308,7 +307,7 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     assert len(transitions_after['external']['ingoing']) == 1
     assert len(transitions_before['external']['outgoing']) == 1
     assert len(transitions_after['external']['outgoing']) == 0
-    gui(state_m_parent.state.add_transition, new_state_id, 0, 'MCOLIQ', None)
+    gui(state_m_parent.state.add_transition, new_state_id, 0, 'JVJFXI', None)
     print("XXX1")
     # modify the template with other data type and respective data flows to parent
     gui(list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].__setattr__, "data_type", "int")
@@ -391,7 +390,7 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
 
     ##########################################################
     # open separately
-    gui(sm_m.selection.set, [sm_m.get_state_model_by_path('CDMJPK'), ])
+    gui(sm_m.selection.set, [sm_m.get_state_model_by_path('QBYTMD'), ])
     lib_state = LibraryState(join("generic", "dialog"), "Dialog [3 options]", "0.1", "Dialog [3 options]")
     gui(gui_helper_state_machine.insert_state_into_selected_state, lib_state, False)
 

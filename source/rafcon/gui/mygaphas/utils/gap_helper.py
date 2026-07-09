@@ -327,7 +327,6 @@ def update_meta_data_for_connection_waypoints(graphical_editor_view, connection_
     :param bool publish: Whether to publish the changes using the meta signal
     """
 
-    from rafcon.gui.mygaphas.items.connection import TransitionView
     assert isinstance(connection_v, ConnectionView)
 
     connection_m = connection_v.model

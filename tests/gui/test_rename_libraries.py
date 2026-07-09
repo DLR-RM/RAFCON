@@ -17,8 +17,7 @@ STATE_MACHINE_NAME2 = 'library_middle1'
 def test_rename_library(caplog):
     testing_utils.initialize_environment(gui_already_started=False, libraries={
         "tutorials": testing_utils.TUTORIAL_PATH,
-        "ros": testing_utils.ROS_PATH,
-        "turtle_libraries": testing_utils.TURTLE_PATH,
+        "ros2": testing_utils.ROS_PATH
     })
 
     try:
@@ -61,8 +60,7 @@ def test_rename_library(caplog):
 def test_rename_library_missing_states(caplog):
     testing_utils.initialize_environment(gui_already_started=False, libraries={
         "tutorials": testing_utils.TUTORIAL_PATH,
-        "ros": testing_utils.ROS_PATH,
-        "turtle_libraries": testing_utils.TURTLE_PATH,
+        "ros2": testing_utils.ROS_PATH
     })
 
     try:

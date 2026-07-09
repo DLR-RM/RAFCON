@@ -49,8 +49,6 @@ class TransitionSegment(LineSegment):
 
     def split(self, pos):
         item = self.item
-        if isinstance(item, DataFlowView):
-            return
         handles = item.handles()
         x, y = self.view.get_matrix_v2i(item).transform_point(*pos)
         max_dist = item.parent.border_width / 4.

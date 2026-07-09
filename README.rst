@@ -13,6 +13,7 @@ RAFCON
 * Homepage: `DLR-RM.github.io/RAFCON/ <https://dlr-rm.github.io/RAFCON/>`_
 * License: `EPL <https://github.com/DLR-RM/RAFCON/blob/master/LICENSE>`_
 * Cheatsheet: `Download Cheatsheet <doc/_static/rafcon_cheatsheet.pdf>`_
+* Usage with ROS2: `RAFCON with ROS2 Tutorial <https://rafcon.readthedocs.io/en/latest/tutorials.html#using-ros2-with-rafcon>`_
 
 Develop your robotic tasks using an intuitive graphical user interface
 ----------------------------------------------------------------------

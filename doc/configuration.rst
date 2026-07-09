@@ -25,8 +25,7 @@ A typical config file looks like this:
     LIBRARY_PATHS: {
         "generic": "${RAFCON_LIB_PATH}/generic",
         "tutorials": "${RAFCON_LIB_PATH}/../examples/tutorials",
-        "ros": "${RAFCON_LIB_PATH}/../examples/libraries/ros_libraries",
-        "turtle_libraries": "${RAFCON_LIB_PATH}/../examples/libraries/turtle_libraries",
+        "ros2": "${RAFCON_LIB_PATH}/../examples/ros2_libraries",
         "intermediate_level": "${RAFCON_LIB_PATH}/../examples/functionality_examples"
     }
     LIBRARY_RECOVERY_MODE: False

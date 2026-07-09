@@ -17,6 +17,9 @@ from gaphas.aspect import InMotion, HandleInMotion
 from gaphas.guide import GuidedItemInMotion, GuidedItemHandleInMotion, Guide, GuideMixin
 
 from rafcon.gui.mygaphas.items.state import StateView, NameView
+from rafcon.utils import log
+
+logger = log.get_logger(__name__)
 
 
 class GuidedStateMixin(GuideMixin):
@@ -78,7 +81,6 @@ class GuidedStateMixin(GuideMixin):
 
 @InMotion.when_type(StateView)
 class GuidedStateInMotion(GuidedStateMixin, GuidedItemInMotion):
-
     def start_move(self, pos):
         if self.item and self.item.model and self.item.model.state.is_root_state:
             return
@@ -90,7 +92,7 @@ class GuidedStateInMotion(GuidedStateMixin, GuidedItemInMotion):
             return
         super(GuidedStateInMotion, self).move(pos)
         parent_item = self.item.parent
-        if parent_item:
+        if parent_item:    ## e.g. parent_item=root state if I want to move HierarchyState1 inside root stae
             constraint = parent_item.keep_rect_constraints[self.item]
             self.view.canvas.solver.request_resolve_constraint(constraint)
 

@@ -175,6 +175,7 @@ class GraphicalEditorController(ExtendedController):
         :param info:
         :param time:
         """
+
         state_id_insert = data.get_text()
         parent_m = self.model.selection.get_selected_state()
         if not isinstance(parent_m, ContainerStateModel):
@@ -288,6 +289,7 @@ class GraphicalEditorController(ExtendedController):
 
         :param StateView | ConnectionView | PortView item: The item to be moved into the viewport
         """
+        
         if not item:
             return
         HORIZONTAL = 0
@@ -394,7 +396,7 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
-        """Called on any change within th state machine
+        """Called on any change within the state machine
 
         This method is called, when any state, transition, data flow, etc. within the state machine changes. This
         then typically requires a redraw of the graphical editor, to display these changes immediately.

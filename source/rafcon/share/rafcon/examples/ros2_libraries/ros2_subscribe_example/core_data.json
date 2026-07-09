@@ -1,0 +1,57 @@
+{
+    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
+    "description": "Author: Johannes Ernst\nDescription:\n    - Example state machine to perform subscribing with the RAFCON ROS node\n    - The message definition and topic has to be defined in first section of execute()\n    - Individual response parameter getter can be implemented if needed (see code example)\nInputs:\n    - namespace [str]: Namespace to be prepended to the topic\n    - timeout [float]: Decide the timeout for awaiting the subscription\nOutputs:\n    - [object] [type]: Custom outputs to match the received subscription message", 
+    "income": {
+        "__jsonqualname__": "rafcon.core.state_elements.logical_port.Income"
+    }, 
+    "input_data_ports": {
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 0, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "", 
+            "name": "namespace"
+        }, 
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 1, 
+            "data_type": {
+                "__type__": "__builtin__.float"
+            }, 
+            "default_value": 5.0, 
+            "name": "timeout"
+        }
+    }, 
+    "name": "ros2 subscribe example", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {
+        "4": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
+            "data_port_id": 4, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "", 
+            "name": "data"
+        }
+    }, 
+    "state_id": "FQAVES"
+}

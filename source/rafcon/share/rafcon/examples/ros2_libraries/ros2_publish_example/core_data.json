@@ -1,0 +1,47 @@
+{
+    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
+    "description": "Author: Johannes Ernst\nDescription:\n    - Example state machine to perform publishing with the RAFCON ROS node\n    - The message definition and topic has to be defined in first section of execute()\n    - Individual input parameter setter can be implemented if needed (see code example)\nInputs:\n    - namespace [str]: Namespace to be prepended to the topic\n    - [object] [type]: Custom inputs to match the publishing message\n", 
+    "income": {
+        "__jsonqualname__": "rafcon.core.state_elements.logical_port.Income"
+    }, 
+    "input_data_ports": {
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 0, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "", 
+            "name": "namespace"
+        }, 
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 1, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "example string", 
+            "name": "data"
+        }
+    }, 
+    "name": "ros2 publish example", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {}, 
+    "state_id": "SHJTYK"
+}

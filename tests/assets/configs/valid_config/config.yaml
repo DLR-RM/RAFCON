@@ -5,8 +5,7 @@ IN_MEMORY_EXECUTION_HISTORY_ENABLE: true
 LIBRARY_PATHS:
     advanced_examples: ${RAFCON_LIB_PATH}/../examples/functionality_examples
     generic: ${RAFCON_LIB_PATH}/generic
-    ros: ${RAFCON_LIB_PATH}/../examples/libraries/ros_libraries
-    turtle_libraries: ${RAFCON_LIB_PATH}/../examples/libraries/turtle_libraries
+    ros2: ${RAFCON_LIB_PATH}/../examples/ros2_libraries
     tutorials: ${RAFCON_LIB_PATH}/../examples/tutorials
     unit_test_state_machines: ../../../assets/unit_test_state_machines
 LIBRARY_RECOVERY_MODE: false

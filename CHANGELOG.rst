@@ -4,6 +4,24 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
+2.5.0
+""""""
+    - Features:
+        - Added ros2 support libraries and scripts
+        - Added autoscroll when dragging items in the visual editor against window border
+        - Bring selected data connections to front for better visibility
+
+    - Bug fixes:
+        - Child states are no longer executed when preempting after hitting a breakpoint
+        - Fixed adding waypoints to data flows
+        - Fixed minor breakpoint feature issues
+
+    - Miscellaneous:
+        - Extended documentation for ros2 setup
+        - Removed old ros1 components and turtle library state machines
+        - Reworked some unit test state machines
+        - Removed outdated documentation
+
 2.4.0
 """"""
     - Features:
