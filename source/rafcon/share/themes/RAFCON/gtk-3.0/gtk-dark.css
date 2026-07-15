@@ -21,14 +21,6 @@ $wm_icon_active_bg: $selected_fg_color;
 */
 *, button:link, button:visited {
   background-clip: padding-box;
-  -GtkToolButton-icon-spacing: 4;
-  -GtkTextView-error-underline-color: #ff3300;
-  -GtkScrolledWindow-scrollbar-spacing: 0;
-  -GtkToolItemGroup-expander-size: 11;
-  -GtkWidget-text-handle-width: 20;
-  -GtkWidget-text-handle-height: 20;
-  -GtkDialog-button-spacing: 4;
-  -GtkDialog-action-area-border: 0;
   outline-color: alpha(currentColor,0.3);
   outline-style: dashed;
   outline-offset: -3px;
@@ -259,9 +251,9 @@ treeview entry.flat, treeview entry {
 
 @keyframes needs_attention {
   from {
-    background-image: -gtk-gradient(radial, center center, 0, center center, 0.01, to(#2896ff), to(transparent)); }
+    background-image: radial-gradient(circle at center, #2896ff 0%, transparent 1%); }
   to {
-    background-image: -gtk-gradient(radial, center center, 0, center center, 0.5, to(#2896ff), to(transparent)); } }
+    background-image: radial-gradient(circle at center, #2896ff 0%, transparent 50%); } }
 
 button, button.sidebar-button {
   min-height: 22px;
@@ -481,7 +473,7 @@ button, button.sidebar-button {
       background-image: none; }
   button stacksidebar row.needs-attention > label, button.sidebar-button stacksidebar row.needs-attention > label, stacksidebar button row.needs-attention > label, stacksidebar button.sidebar-button row.needs-attention > label, button stacksidebar popover row.needs-attention > label.separator, stacksidebar popover button row.needs-attention > label.separator, button popover stacksidebar row.needs-attention > label.separator, popover stacksidebar button row.needs-attention > label.separator, .stack-switcher > button.needs-attention > label, .stack-switcher > button.needs-attention > image {
     animation: needs_attention 150ms ease-in;
-    background-image: -gtk-gradient(radial, center center, 0, center center, 0.5, to(#2896ff), to(transparent));
+    background-image: radial-gradient(circle at center, #2896ff 0%, transparent 50%);
     background-size: 6px 6px, 6px 6px;
     background-repeat: no-repeat;
     background-position: right 3px, right 2px; }
@@ -1336,7 +1328,6 @@ combobox:drop(active) button.combo, combobox:drop(active) button.combo.sidebar-b
   box-shadow: none; }
 
 toolbar, .inline-toolbar {
-  -GtkWidget-window-dragging: true;
   padding: 4px;
   background-color: #1e232d; }
   toolbar separator, .inline-toolbar separator {
@@ -1456,7 +1447,7 @@ headerbar,
       padding-right: 10px; }
       headerbar.selection-mode .selection-menu GtkArrow,
       .selection-mode.titlebar:not(headerbar) .selection-menu GtkArrow {
-        -GtkArrow-arrow-scaling: 1; }
+ }
       headerbar.selection-mode .selection-menu .arrow,
       .selection-mode.titlebar:not(headerbar) .selection-menu .arrow {
         -gtk-icon-source: -gtk-icontheme("pan-down-symbolic"); }
@@ -2285,13 +2276,7 @@ treeview.view {
   border-left-color: #3e434c;
   border-top-color: #3e434c; }
   *, button:link, button:visited {
-    -GtkTreeView-horizontal-separator: 25;
-    -GtkTreeView-vertical-separator: 8;
-    -GtkTreeView-grid-line-width: 1;
-    -GtkTreeView-grid-line-pattern: '-';
-    -GtkTreeView-tree-line-width: 1;
-    -GtkTreeView-tree-line-pattern: '';
-    -GtkTreeView-expander-size: 16; }
+ }
   treeview.view acceleditor > label, treeview.view popover acceleditor > label.separator {
     background-color: #2896ff; }
   treeview.view:selected, treeview.view:selected:focus {
@@ -2382,7 +2367,6 @@ treeview.view {
 
 menubar,
 .menubar {
-  -GtkWidget-window-dragging: true;
   padding: 0px;
   background-color: #1e232d;
   color: rgba(255, 255, 255, 0.6); }
@@ -2647,8 +2631,7 @@ scrollbar {
   background-color: #2b3039;
   transition: 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94); }
   *, button:link, button:visited {
-    -GtkScrollbar-has-backward-stepper: false;
-    -GtkScrollbar-has-forward-stepper: false; }
+ }
   scrollbar.top {
     border-bottom: 1px solid #141923; }
   scrollbar.bottom {
@@ -3249,7 +3232,7 @@ scrolledwindow viewport.frame {
   border-style: none; }
 
 scrolledwindow overshoot.top {
-  background-image: -gtk-gradient(radial, center top, 0, center top, 0.6, from(rgba(40, 150, 255, 0.2)), to(rgba(40, 150, 255, 0)));
+  background-image: radial-gradient(circle at center top, rgba(40, 150, 255, 0.2) 0%, rgba(40, 150, 255, 0) 60%);
   background-size: 100% 60%;
   background-repeat: no-repeat;
   background-position: center top;
@@ -3258,7 +3241,7 @@ scrolledwindow overshoot.top {
   box-shadow: none; }
 
 scrolledwindow overshoot.bottom {
-  background-image: -gtk-gradient(radial, center bottom, 0, center bottom, 0.6, from(rgba(40, 150, 255, 0.2)), to(rgba(40, 150, 255, 0)));
+  background-image: radial-gradient(circle at center bottom, rgba(40, 150, 255, 0.2) 0%, rgba(40, 150, 255, 0) 60%);
   background-size: 100% 60%;
   background-repeat: no-repeat;
   background-position: center bottom;
@@ -3267,7 +3250,7 @@ scrolledwindow overshoot.bottom {
   box-shadow: none; }
 
 scrolledwindow overshoot.left {
-  background-image: -gtk-gradient(radial, left center, 0, left center, 0.6, from(rgba(40, 150, 255, 0.2)), to(rgba(40, 150, 255, 0)));
+  background-image: radial-gradient(circle at left center, rgba(40, 150, 255, 0.2) 0%, rgba(40, 150, 255, 0) 60%);
   background-size: 60% 100%;
   background-repeat: no-repeat;
   background-position: left center;
@@ -3276,7 +3259,7 @@ scrolledwindow overshoot.left {
   box-shadow: none; }
 
 scrolledwindow overshoot.right {
-  background-image: -gtk-gradient(radial, right center, 0, right center, 0.6, from(rgba(40, 150, 255, 0.2)), to(rgba(40, 150, 255, 0)));
+  background-image: radial-gradient(circle at right center, rgba(40, 150, 255, 0.2) 0%, rgba(40, 150, 255, 0) 60%);
   background-size: 60% 100%;
   background-repeat: no-repeat;
   background-position: right center;
@@ -4087,7 +4070,7 @@ label.execution-running, popover label.execution-running.separator {
   padding: 5px 6px; }
 
 #state_icons_box {
-  margin: 5px 5px 0 0; }
+  margin: 5px 25px 0 0; }
 
 #toolbar {
   margin-bottom: 15px; }

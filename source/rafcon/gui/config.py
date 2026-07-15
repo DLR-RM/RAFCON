@@ -126,7 +126,7 @@ class GuiConfig(ObservableConfig):
         if is_custom_design_enabled():
             theme_path = self._get_custom_theme_path()
 
-        css_file_path = os.path.join(theme_path, "gtk-4.0", css_filename)
+        css_file_path = os.path.join(theme_path, "gtk-3.0", css_filename)
         if not os.path.isfile(css_file_path):
             raise ValueError("GTK theme does not exist: {}".format(str(css_file_path)))
 
