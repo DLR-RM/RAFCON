@@ -76,7 +76,8 @@ dev = [
 [tool.pdm.build]
 package-dir = "source"
 includes = ["source/rafcon"]
-excludes = ["source/rafcon/share/ln", "source/rafcon/share/themes/RAFCON/templates", "tests"]
+excludes = ["source/rafcon/share/ln", "source/rafcon/share/themes/RAFCON/templates", "tests",
+    "source/rafcon/web/app/node_modules"]
 
 [tool.pdm.scripts]
 pre_build.shell = """

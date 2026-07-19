@@ -150,6 +150,17 @@ def setup_argument_parser():
         "(rafcon --connect ws://<host>:<port>). Optionally takes the port to listen on, default: 9999. "
         "In server mode state machines are not started automatically but from an attached GUI.")
     parser.add_argument(
+        '-wp',
+        '--web-port',
+        nargs='?',
+        type=int,
+        dest='web_port',
+        metavar='port',
+        default=None,
+        const=8880,
+        help="serve the browser-based GUI on the given HTTP port (default: 8880). "
+        "Implies --server if not given explicitly.")
+    parser.add_argument(
         '-s',
         '--start_state_path',
         metavar='path',
@@ -306,10 +317,6 @@ def main(optional_args=None):
         user_input = parser.parse_args(optional_args)
     else:
         user_input = parser.parse_args()
-    if not user_input.state_machine_path and user_input.server_port is None:
-        logger.error("You have to specify a valid state machine path")
-        exit(-1)
-
     if user_input.memory_profiling:
         tracemalloc.start()
         memory_profiling_args = {
@@ -323,6 +330,15 @@ def main(optional_args=None):
 
     setup_configuration(user_input.config_path)
 
+    # in any server mode (CLI flags or config) state machines can be opened from an attached
+    # GUI, so a state machine path is only mandatory without a server
+    server_mode = (user_input.server_port is not None or user_input.web_port is not None
+                   or global_config.get_config_value("NETWORK_SERVER_ENABLED", False)
+                   or global_config.get_config_value("WEB_SERVER_ENABLED", False))
+    if not user_input.state_machine_path and not server_mode:
+        logger.error("You have to specify a valid state machine path")
+        exit(-1)
+
     post_setup_plugins(user_input)
 
     first_sm = None
@@ -335,10 +351,25 @@ def main(optional_args=None):
     server_port = user_input.server_port
     if server_port is None and global_config.get_config_value("NETWORK_SERVER_ENABLED", False):
         server_port = global_config.get_config_value("NETWORK_SERVER_PORT", 9999)
+
+    web_port = user_input.web_port
+    if web_port is None and global_config.get_config_value("WEB_SERVER_ENABLED", False):
+        web_port = global_config.get_config_value("WEB_SERVER_PORT", 8880)
+    if web_port is not None and server_port is None:
+        # the web GUI needs the websocket server
+        server_port = global_config.get_config_value("NETWORK_SERVER_PORT", 9999)
+
     if server_port is not None:
         from rafcon.network.server import RemoteServer
-        server = RemoteServer(port=server_port)
+        server = RemoteServer(port=server_port,
+                              max_clients=global_config.get_config_value("NETWORK_MAX_CLIENTS", 10))
         server.start()
+
+    web_server = None
+    if web_port is not None:
+        from rafcon.network.web_server import WebServer
+        web_server = WebServer(port=web_port, ws_port=server_port)
+        web_server.start()
 
     if not user_input.remote and not server:
         start_state_machine(first_sm, user_input.start_state_path)
@@ -355,6 +386,8 @@ def main(optional_args=None):
     else:
         wait_for_state_machine_finished(first_sm)
 
+    if web_server:
+        web_server.stop()
     if server:
         server.stop()
 

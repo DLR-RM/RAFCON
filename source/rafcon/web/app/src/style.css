@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+
+/* RAFCON dark palette, taken from the GTK theme
+   (share/themes/RAFCON/gtk-3.0/gtk-dark.css + colors-dark.json) */
+@theme {
+  --color-surface-950: #1a1f29; /* canvas / page background (slightly below theme_bg) */
+  --color-surface-900: #1e232d; /* theme_bg_color — sidebars, bars */
+  --color-surface-800: #2d323c; /* theme_base_color — elevated surfaces, inputs */
+  --color-surface-700: #323b4c; /* hover background, subtle borders */
+  --color-surface-600: #3d4757; /* pressed / stronger borders */
+  --color-ink-100: #f2f4f8; /* primary text */
+  --color-ink-300: #c0c1c4; /* button text */
+  --color-ink-500: #83868c; /* tertiary text */
+  --color-accent-400: #4da3ff;
+  --color-accent-500: #2896ff; /* rafcon_color */
+  --color-accent-600: #0063c1; /* selected borders */
+  --color-run-400: #5dcd61; /* success */
+  --color-wait-400: #dfe480; /* waiting-for-next-state */
+  --color-warn-400: #fd8009; /* warning */
+  --color-err-400: #ff3300; /* error */
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--color-surface-950);
+  color: var(--color-ink-100);
+  font-family:
+    'Source Sans Pro',
+    'Source Sans 3',
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+
+::selection {
+  background: var(--color-accent-600);
+  color: #fff;
+}
+
+/* slim modern scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-600) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-surface-600);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 1px;
+}

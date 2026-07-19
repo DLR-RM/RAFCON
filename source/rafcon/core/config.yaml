@@ -24,3 +24,8 @@ SCRIPT_RECOMPILATION_ON_STATE_EXECUTION: True
 # Start a network server so that remote GUIs can attach to this core (same as 'rafcon_core --server')
 NETWORK_SERVER_ENABLED: False
 NETWORK_SERVER_PORT: 9999
+NETWORK_MAX_CLIENTS: 10
+
+# Serve the browser-based GUI (same as 'rafcon_core --web-port'); implies the network server
+WEB_SERVER_ENABLED: False
+WEB_SERVER_PORT: 8880

@@ -157,3 +157,6 @@ requirements.txt
 
 # Vscode
 .vscode/
+
+# Web GUI
+source/rafcon/web/app/node_modules/

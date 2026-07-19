@@ -8,6 +8,11 @@ All messages are JSON objects sent as one websocket text frame with the envelope
 Client -> server message types: ``hello``, ``execution_command``, ``open_state_machine``
 Server -> client message types: ``welcome``, ``sync``, ``execution_status_changed``,
 ``state_execution_status_changed``, ``state_machine_added``, ``state_machine_removed``, ``error``
+
+Clients announce a ``flavor`` in the ``hello`` payload: ``"gtk"`` (default) receives state machines
+as zipped storage folders (``sm_zip_b64``), ``"web"`` receives them as one nested JSON document
+(``sm_json``, see :mod:`rafcon.network.web_serializer`) and additionally the web-only message types
+``global_variables_changed``, ``execution_history_event`` and ``log_record``.
 """
 
 import json
@@ -20,6 +25,7 @@ DEFAULT_PORT = 9999
 HELLO = "hello"
 EXECUTION_COMMAND = "execution_command"
 OPEN_STATE_MACHINE = "open_state_machine"
+CLOSE_STATE_MACHINE = "close_state_machine"
 
 # server -> client
 WELCOME = "welcome"
@@ -29,6 +35,15 @@ STATE_EXECUTION_STATUS_CHANGED = "state_execution_status_changed"
 STATE_MACHINE_ADDED = "state_machine_added"
 STATE_MACHINE_REMOVED = "state_machine_removed"
 ERROR = "error"
+
+# server -> client, web flavor only
+GLOBAL_VARIABLES_CHANGED = "global_variables_changed"
+EXECUTION_HISTORY_EVENT = "execution_history_event"
+LOG_RECORD = "log_record"
+
+# client flavors announced in the hello payload
+FLAVOR_GTK = "gtk"
+FLAVOR_WEB = "web"
 
 # commands allowed in EXECUTION_COMMAND payloads; maps 1:1 to ExecutionEngine methods
 EXECUTION_COMMANDS = ("start", "pause", "stop", "step_mode", "step_into", "step_over", "step_out",
