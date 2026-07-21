@@ -108,3 +108,11 @@ If you want to uninstall RAFCON, all you need to do is call
 ```bash
 pip uninstall rafcon
 ```
+
+## Funding
+
+This project has received public funding from the **European Union** NextGenerationEU within the Important Project of Common European Interest – Cloud Infrastructures and Services (IPCEI-CIS) under grant agreement 13IPC034 (*[ROX](https://www.project-rox.ai/en/)* project).
+
+<p align="center">
+  <img alt="Bundesministerium für Wirtschaft und Energie (BMWE)-EU and secunet funding logo" src="documents/assets/bmwe_logo.png" width="400"/>
+</p>
