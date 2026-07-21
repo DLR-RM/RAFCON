@@ -1,0 +1,118 @@
+# RAFCON
+
+<p align="left">
+     <img src="documents/assets/Screenshot_Drill_Skill_Scaled.png"
+          alt="Screenshot showing RAFCON with a big state machine">
+</p>
+
+- **Documentation:** Hosted on [Read the Docs](https://rafcon.readthedocs.io/en/latest/)
+- **Homepage:** [DLR-RM.github.io/RAFCON/](https://dlr-rm.github.io/RAFCON/)
+- **License:** [EPL](https://github.com/DLR-RM/RAFCON/blob/master/LICENSE.md)
+- **Cheatsheet:** [Download Cheatsheet](doc/_static/rafcon_cheatsheet.pdf)
+- **Usage with ROS2:** [RAFCON with ROS2 Tutorial](https://rafcon.readthedocs.io/en/latest/tutorials.html#using-ros2-with-rafcon)
+
+## Develop your robotic tasks using an intuitive graphical user interface
+
+RAFCON uses hierarchical state machines, featuring concurrent state execution, to represent robot programs.
+It ships with a graphical user interface supporting the creation of state machines and contains IDE-like debugging mechanisms.
+Alternatively, state machines can be programmatically generated using RAFCON's API.
+
+**Universal application**
+
+> RAFCON is written in Python, can be extended with plugins and is hard- and middleware-independent.
+
+**Visual programming**
+
+> The sophisticated graphical editor can be used for the creation, execution, and debugging of state machines.
+
+**Collaborative working**
+
+> Share and reuse your state machines in the form of libraries, stored as JSON strings in text files.
+
+<p align="left">
+     <img src="documents/assets/RAFCON-sm-creation-preview.gif"
+          alt="Example on how to create a simple state machine"
+          width="570">
+</p>
+
+## Installation preparations
+
+Before installing RAFCON, Python >=3.9, pip, and setuptools are required on your system.
+Most of the other dependencies are automatically resolved by pip/setuptools, but not all of them.
+Those need to be installed manually, too.
+
+### General requirements
+
+- Python >=3.9
+- pip (recent version required)
+- pdm (recent version required)
+
+### Installation requirements
+
+*Tested under Ubuntu 24.04*
+
+```bash
+sudo apt update
+sudo apt install python3-dev python3-pip python3-setuptools
+sudo apt install libcairo2-dev pkg-config libgirepository1.0-dev
+sudo apt install gir1.2-gtk-3.0 gir1.2-gtksource-3.0
+```
+
+## Installing RAFCON
+
+*Tested under Ubuntu 24.04*
+
+It is recommended to install RAFCON inside a virtual environment.
+Once created, make sure setuptools is installed:
+
+```bash
+pip install "setuptools<81"
+```
+
+Then, simply install RAFCON with:
+
+```bash
+pip install rafcon --user
+```
+
+The `--user` flag is optional.
+If not set, RAFCON is installed globally (in this case you normally need root privileges).
+
+If you run into any problems installing and starting RAFCON, **please let us know in the issues!**
+
+Of course, you can also directly use the RAFCON sources from GitHub.
+
+```bash
+cd /install/directory
+git clone https://github.com/DLR-RM/RAFCON.git rafcon
+```
+
+## Start RAFCON
+
+No matter which installation option you choose, RAFCON can be started from any location (make sure `/usr/local/bin` or `~/.local/bin` is in your `PATH` environment variable):
+
+```bash
+rafcon
+```
+
+On a multi-Python setup, start RAFCON using:
+
+```bash
+python<your-version> -m rafcon
+```
+
+## Uninstallation
+
+If you want to uninstall RAFCON, all you need to do is call
+
+```bash
+pip uninstall rafcon
+```
+
+## Funding
+
+This project has received public funding from the **European Union** NextGenerationEU within the Important Project of Common European Interest – Cloud Infrastructures and Services (IPCEI-CIS) under grant agreement 13IPC034 (*[ROX](https://www.project-rox.ai/en/)* project).
+
+<p align="center">
+  <img alt="Bundesministerium für Wirtschaft und Energie (BMWE)-EU and secunet funding logo" src="documents/assets/bmwe_logo.png" width="400"/>
+</p>
