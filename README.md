@@ -1,12 +1,13 @@
 # RAFCON
 
-[<img src="documents/assets/Screenshot_Drill_Skill_Scaled.png"
-     alt="Screenshot showing RAFCON with a big state machine"
-     width="800">](documents/assets/Screenshot_Drill_Scaled.png?raw=true)
+<p align="left">
+     <img src="documents/assets/Screenshot_Drill_Skill_Scaled.png"
+          alt="Screenshot showing RAFCON with a big state machine">
+</p>
 
 - **Documentation:** Hosted on [Read the Docs](https://rafcon.readthedocs.io/en/latest/)
-- **Homepage:** https://dlr-rm.github.io/RAFCON/
-- **License:** https://github.com/DLR-RM/RAFCON/blob/master/LICENSE
+- **Homepage:** [DLR-RM.github.io/RAFCON/](https://dlr-rm.github.io/RAFCON/)
+- **License:** [EPL](https://github.com/DLR-RM/RAFCON/blob/master/LICENSE.md)
 - **Cheatsheet:** [Download Cheatsheet](doc/_static/rafcon_cheatsheet.pdf)
 - **Usage with ROS2:** [RAFCON with ROS2 Tutorial](https://rafcon.readthedocs.io/en/latest/tutorials.html#using-ros2-with-rafcon)
 
@@ -18,19 +19,21 @@ Alternatively, state machines can be programmatically generated using RAFCON's A
 
 **Universal application**
 
-RAFCON is written in Python, can be extended with plugins and is hard- and middleware-independent.
+> RAFCON is written in Python, can be extended with plugins and is hard- and middleware-independent.
 
 **Visual programming**
 
-The sophisticated graphical editor can be used for the creation, execution, and debugging of state machines.
+> The sophisticated graphical editor can be used for the creation, execution, and debugging of state machines.
 
 **Collaborative working**
 
-Share and reuse your state machines in the form of libraries, stored as JSON strings in text files.
+> Share and reuse your state machines in the form of libraries, stored as JSON strings in text files.
 
-<img src="documents/assets/RAFCON-sm-creation-preview.gif"
-     alt="Example on how to create a simple state machine"
-     width="570">
+<p align="left">
+     <img src="documents/assets/RAFCON-sm-creation-preview.gif"
+          alt="Example on how to create a simple state machine"
+          width="570">
+</p>
 
 ## Installation preparations
 
