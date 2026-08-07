@@ -1,9 +1,9 @@
 [project]
 name = "rafcon"
-version = "2.5.0" # Handled by bump2version
+version = "2.5.1" # Handled by bump2version
 description = "Develop your robotic tasks with hierarchical state machines using an intuitive graphical user interface"
 keywords = ["state machine", "robotic", "FSM", "development", "GUI", "visual programming"]
-readme = "README.rst"
+readme = "README.md"
 authors = [
     {name = "Sebastian Brunner", email = "sebastian.brunner@dlr.de"},
     {name = "Rico Belder", email = "rico.belder@dlr.de"},
@@ -27,7 +27,6 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    "wrapt (>=1.14.0,<2.0.0)",
     "astroid (>=2.15.8,<4.0.0)",
     "gaphas (>=2.1.0,<2.2.0)",
     "jsonconversion (>=1.1.0,<2.0.0)",
@@ -42,7 +41,7 @@ dependencies = [
     "packaging (>=21)",
 
     # Add setuptools for distutils if python>=3.12
-    "setuptools<81; python_version >= '3.12'",
+    "setuptools>=83; python_version >= '3.12'",
 ]
 license = {text = "EPL"}
 requires-python = ">=3.9"

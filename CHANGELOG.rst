@@ -4,6 +4,12 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
+2.5.1
+""""""
+    - Miscellaneous:
+        - Pinned setuptools version to remove vulnerability
+        - Removed orphaned package dependency: wrapt
+
 2.5.0
 """"""
     - Features:

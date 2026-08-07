@@ -66,7 +66,7 @@ It is recommended to install RAFCON inside a virtual environment.
 Once created, make sure setuptools is installed:
 
 ```bash
-pip install "setuptools<81"
+pip install "setuptools>=83"
 ```
 
 Then, simply install RAFCON with:
