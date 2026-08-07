@@ -27,7 +27,6 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    "wrapt (>=1.14.0,<2.0.0)",
     "astroid (>=2.15.8,<4.0.0)",
     "gaphas (>=2.1.0,<2.2.0)",
     "jsonconversion (>=1.1.0,<2.0.0)",
@@ -42,7 +41,7 @@ dependencies = [
     "packaging (>=21)",
 
     # Add setuptools for distutils if python>=3.12
-    "setuptools<81; python_version >= '3.12'",
+    "setuptools>=83; python_version >= '3.12'",
 ]
 license = {text = "EPL"}
 requires-python = ">=3.9"
