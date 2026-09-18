@@ -4,6 +4,16 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/master>`__.
 
+2.5.2
+""""""
+    - Bug fixes:
+        - Fixed infinite GUI updating loop when highlighting multiple data connections
+
+    - Miscellaneous:
+        - Removed explicit astroid dependency in favor of pylint flag
+        - Increased floor of pylint dependency
+        - Updated deprecated pylint configuration file to modern standard
+
 2.5.1
 """"""
     - Miscellaneous:

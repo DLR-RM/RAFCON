@@ -26,7 +26,6 @@ try:
 except ModuleNotFoundError:
     from pylint.reporters.json_reporter import JSONReporter
 from io import StringIO
-from astroid import MANAGER
 import importlib.resources as importlib_resources
 
 import rafcon
@@ -169,17 +168,19 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
         with open(self.tmp_file, "w") as text_file:
             text_file.write(current_text)
 
-        # clear astroid module cache, see http://stackoverflow.com/questions/22241435/pylint-discard-cached-file-state
-        MANAGER.astroid_cache.clear()
+        # Lint updated script and clear cache after every linting run
         lint_config_file = importlib_resources.files(rafcon.__name__) / 'pylintrc'
         with importlib_resources.as_file(lint_config_file) as path:
-            args = ["--rcfile={}".format(path)]  # put your own here
-        with contextlib.closing(StringIO()) as dummy_buffer:
-            json_report = JSONReporter(dummy_buffer.getvalue())
-            try:
-                lint.Run([self.tmp_file] + args, reporter=json_report, exit=False)
-            except:
-                logger.exception("Could not run linter to check script")
+            args = [
+                "--rcfile={}".format(path),
+                "--clear-cache-post-run=y",
+            ]
+            with contextlib.closing(StringIO()) as dummy_buffer:
+                json_report = JSONReporter(dummy_buffer.getvalue())
+                try:
+                    lint.Run([self.tmp_file] + args, reporter=json_report, exit=False)
+                except:
+                    logger.exception("Could not run linter to check script")
         os.remove(self.tmp_file)
 
         if json_report.messages:
