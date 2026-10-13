@@ -514,7 +514,7 @@ class ContainerState(State):
         if len(ingoing_logical_destinations) > 1:
             logger.warning("There is only one ingoing transition on a state possible. \n"
                            "The following transitions are removed by 'group_states': \n{}"
-                           "".format('\n'.join([str(destination) for destination in ingoing_logical_destinations.items()[1:]])))
+                           "".format('\n'.join([str(destination) for destination in list(ingoing_logical_destinations.items())[1:]])))
         ingoing_transitions = None
         if len(ingoing_logical_destinations) > 0:
             ingoing_transitions = next(iter(ingoing_logical_destinations.items()))[1]
