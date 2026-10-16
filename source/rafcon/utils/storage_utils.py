@@ -18,13 +18,16 @@
 
 import json
 import yaml
+import builtins
 from time import gmtime, strftime
 
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
+from rafcon.core.config import global_config
 
+# For backward compatibility of old state machines that have these strings in their __jsonqualname__ field in .json
 substitute_modules = {
-    # backward compatibiliy (remove in next minor release): state elements
+    # after introducing state elements
     'rafcon.statemachine.data_flow.DataFlow': 'rafcon.core.state_elements.data_flow.DataFlow',
     'rafcon.statemachine.data_port.DataPort': 'rafcon.core.state_elements.data_port.DataPort',
     'rafcon.statemachine.data_port.InputDataPort': 'rafcon.core.state_elements.data_port.InputDataPort',
@@ -59,8 +62,95 @@ substitute_modules = {
     'rafcon.core.state_elements.outcome.Outcome': 'rafcon.core.state_elements.logical_port.Outcome'
 }
 
-
 TIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+# We define the safe types for loading state machines (usually used for data_port types in
+# the __type__ field)
+RAFCON_ALLOWED_TYPES = {
+    # python3 builtins common types that are considered safe
+    'builtins.int': builtins.int,
+    'builtins.str': builtins.str,
+    'builtins.float': builtins.float,
+    'builtins.bool': builtins.bool,
+    'builtins.list': builtins.list,
+    'builtins.dict': builtins.dict,
+    'builtins.tuple': builtins.tuple,
+    'builtins.set': builtins.set,
+    'builtins.bytes': builtins.bytes,
+    'builtins.range': builtins.range,
+    'builtins.complex': builtins.complex,
+    'builtins.bytearray': builtins.bytearray,
+    'builtins.object': builtins.object,
+    # currently, .json files are still saved with python2 __builtin__ convention
+    '__builtin__.int': builtins.int,
+    '__builtin__.str': builtins.str,
+    '__builtin__.float': builtins.float,
+    '__builtin__.bool': builtins.bool,
+    '__builtin__.list': builtins.list,
+    '__builtin__.dict': builtins.dict,
+    '__builtin__.tuple': builtins.tuple,
+    '__builtin__.set': builtins.set,
+    '__builtin__.bytes': builtins.bytes,
+    '__builtin__.range': builtins.range,
+    '__builtin__.complex': builtins.complex,
+    '__builtin__.bytearray': builtins.bytearray,
+    '__builtin__.object': builtins.object,
+}
+
+
+def get_allowed_classes():
+    '''For loading state machines from .json we define the allowed classes to provide some security
+    with jsonconversion which reconstructs objects from the __jsonqualname__ field
+    '''
+    # Importing inside the function avoids module-level circular imports
+    from rafcon.core.state_elements.data_flow import DataFlow
+    from rafcon.core.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
+    from rafcon.core.state_elements.logical_port import Income, Outcome
+    from rafcon.core.state_elements.scope import ScopedData, ScopedVariable
+    from rafcon.core.state_elements.state_element import StateElement
+    from rafcon.core.state_elements.transition import Transition
+    from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+    from rafcon.core.states.barrier_concurrency_state import DeciderState
+    from rafcon.core.states.concurrency_state import ConcurrencyState
+    from rafcon.core.states.container_state import ContainerState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.library_state import LibraryState
+    from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+    from rafcon.core.states.state import State
+    from numpy import ndarray
+
+    RAFCON_ALLOWED_CLASSES = {
+        # RAFCON classes that need to be reconstructed
+        'rafcon.core.state_elements.data_flow.DataFlow': DataFlow,
+        'rafcon.core.state_elements.data_port.DataPort': DataPort,
+        'rafcon.core.state_elements.data_port.InputDataPort': InputDataPort,
+        'rafcon.core.state_elements.data_port.OutputDataPort': OutputDataPort,
+        'rafcon.core.state_elements.logical_port.Outcome': Outcome,
+        'rafcon.core.state_elements.logical_port.Income': Income,
+        'rafcon.core.state_elements.scope.ScopedData': ScopedData,
+        'rafcon.core.state_elements.scope.ScopedVariable': ScopedVariable,
+        'rafcon.core.state_elements.state_element.StateElement': StateElement,
+        'rafcon.core.state_elements.transition.Transition': Transition,
+        'rafcon.core.states.barrier_concurrency_state.BarrierConcurrencyState': BarrierConcurrencyState,
+        'rafcon.core.states.barrier_concurrency_state.DeciderState': DeciderState,
+        'rafcon.core.states.concurrency_state.ConcurrencyState':ConcurrencyState,
+        'rafcon.core.states.container_state.ContainerState': ContainerState,
+        'rafcon.core.states.execution_state.ExecutionState': ExecutionState,
+        'rafcon.core.states.hierarchy_state.HierarchyState': HierarchyState,
+        'rafcon.core.states.library_state.LibraryState': LibraryState,
+        'rafcon.core.states.preemptive_concurrency_state.PreemptiveConcurrencyState': PreemptiveConcurrencyState,
+        'rafcon.core.states.state.State': State,
+        # python3 builtins classes that need to be reconstructed (e.g. for meta_data.json)
+        'builtins.tuple': builtins.tuple,
+        'builtins.set': builtins.set,
+        # currently, .json files are still saved with python2 __builtin__ convention
+        '__builtin__.tuple': builtins.tuple,
+        '__builtin__.set': builtins.set,
+        # for legacy support of jsonconversion encodings of numpy.ndarray
+        'numpy.ndarray': ndarray,
+    }
+    return RAFCON_ALLOWED_CLASSES
 
 
 def get_current_time_string():
@@ -104,6 +194,20 @@ def load_objects_from_json(path, as_dict=False):
     if as_dict:
         result = json.load(f)
     else:
-        result = json.load(f, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
+        # get config option to allow untrusted types
+        allow_untrusted_types = global_config.get_config_value("ALLOW_UNTRUSTED_DATA_TYPES", False)
+        try:
+            result = json.load(
+                f,
+                cls=JSONObjectDecoder,
+                allowed_classes=get_allowed_classes(),
+                allowed_types=RAFCON_ALLOWED_TYPES,
+                allow_untrusted_types=allow_untrusted_types,
+                substitute_modules=substitute_modules)
+        except ValueError as e:
+            raise ValueError(
+                "Failed to load state machine! Enable import of untrusted data types in the "\
+                "core configuration with the ALLOW_UNTRUSTED_DATA_TYPES field."
+            ) from e
     f.close()
     return result

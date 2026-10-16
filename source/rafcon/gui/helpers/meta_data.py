@@ -688,6 +688,8 @@ def meta_data_reference_check(meta):
     meta_source = meta
     meta_str = json.dumps(meta, cls=JSONObjectEncoder,
                           indent=4, check_circular=False, sort_keys=True)
+    # NOTE: The function meta_data_reference_check is reached only for debugging.
+    # If it is used again, the decoder call needs to be updated (compare other usages in codebase)
     meta_dump_copy = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
     meta_deepcopy = deepcopy(meta)
 

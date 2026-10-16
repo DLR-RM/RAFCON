@@ -47,13 +47,14 @@ from rafcon.core.states.hierarchy_state import HierarchyState, ContainerState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.states.state import State
+from rafcon.core.config import global_config
 from rafcon.gui.models import ContainerStateModel, LibraryStateModel
 from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
 from rafcon.gui.utils.notification_overview import NotificationOverview
 
 from rafcon.utils import log
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
-from rafcon.utils.storage_utils import substitute_modules
+from rafcon.utils.storage_utils import substitute_modules, get_allowed_classes, RAFCON_ALLOWED_TYPES
 
 logger = log.get_logger(__name__)
 
@@ -106,8 +107,22 @@ def create_state_from_image(state_image):
     # Transitions and data flows are not added, as also states are not added
     # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
     # validity checks for transitions and data flows would fail
-    state_info = json.loads(state_image.core_data,
-                            cls=JSONObjectDecoder, substitute_modules=substitute_modules)
+
+    # get config option to allow untrusted types
+    allow_untrusted_types = global_config.get_config_value("ALLOW_UNTRUSTED_DATA_TYPES", False)
+    try:
+        state_info = json.loads(
+            state_image.core_data,
+            cls=JSONObjectDecoder,
+            allowed_classes=get_allowed_classes(),
+            allowed_types=RAFCON_ALLOWED_TYPES,
+            allow_untrusted_types=allow_untrusted_types,
+            substitute_modules=substitute_modules)
+    except ValueError as e:
+        raise ValueError(
+            "Failed to load state machine! Enable import of untrusted data types in the "\
+            "core configuration with the ALLOW_UNTRUSTED_DATA_TYPES field."
+        ) from e
     if not isinstance(state_info, tuple):
         state = state_info
     else:
@@ -460,7 +475,22 @@ class MetaDataAction(AbstractAction):
 
         meta_str = json.dumps(overview.get_affected_model().meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
-        self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
+
+        # get config option to allow untrusted types
+        allow_untrusted_types = global_config.get_config_value("ALLOW_UNTRUSTED_DATA_TYPES", False)
+        try:
+            self.meta = json.loads(
+                meta_str,
+                cls=JSONObjectDecoder,
+                allowed_classes=get_allowed_classes(),
+                allowed_types=RAFCON_ALLOWED_TYPES,
+                allow_untrusted_types=allow_untrusted_types,
+                substitute_modules=substitute_modules)
+        except ValueError as e:
+            raise ValueError(
+                "Failed to load state machine! Enable import of untrusted data types in the "\
+                "core configuration with the ALLOW_UNTRUSTED_DATA_TYPES field."
+            ) from e
 
     def get_state_image(self):
         parent_state_model = self.state_machine_model.get_state_model_by_path(self.parent_path)

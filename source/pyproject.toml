@@ -12,7 +12,7 @@ dependencies = [
     "pandas (>=1.2.0,<2.0.0)",
     "simplegeneric (>=0.5.0,<1.0.0)",
     "psutil (>=5.0.0,<6.0.0)",
-    "jsonconversion (>=1.1.0,<2.0.0)",
+    "jsonconversion (>=2.0.0,<3.0.0)",
 ]
 name = "rafcon-core"
 version = "2.5.2" # Handled by bump2version
