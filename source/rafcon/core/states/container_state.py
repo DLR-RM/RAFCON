@@ -512,9 +512,12 @@ class ContainerState(State):
         # transition from ingoing transition
         ingoing_logical_destinations = find_logical_destinations_of_transitions(related_transitions['ingoing'])
         if len(ingoing_logical_destinations) > 1:
+            removed_transitions = [t for transitions in list (ingoing_logical_destinations.values())[1:]
+                                   for t in transitions]
             logger.warning("There is only one ingoing transition on a state possible. \n"
-                           "The following transitions are removed by 'group_states': \n{}"
-                           "".format('\n'.join([str(destination) for destination in list(ingoing_logical_destinations.items())[1:]])))
+                           "The following logic transition(s) are removed by 'group_states' (from state ID -> to state ID):\n{}"
+                           "".format('\n'.join(" '{}' -> '{}'".format(t.from_state, t.to_state)
+                                               for t in removed_transitions)))
         ingoing_transitions = None
         if len(ingoing_logical_destinations) > 0:
             ingoing_transitions = next(iter(ingoing_logical_destinations.items()))[1]
