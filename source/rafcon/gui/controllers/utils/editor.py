@@ -164,4 +164,6 @@ class EditorController(ExtendedController):
     @ExtendedController.observe("state", after=True)
     def after_notification_of_script_text_was_changed(self, model, prop_name, info):
         if self.view and "method_name" in info and self._observed_method == info['method_name']:
-            self.view.set_text(self.source_text)
+            # Skip if the view already shows the text (e.g. after applying it), to keep the undo history clean
+            if self.view.get_text() != self.source_text:
+                self.view.set_text(self.source_text)

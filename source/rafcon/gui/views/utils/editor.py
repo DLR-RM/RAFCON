@@ -146,7 +146,10 @@ class EditorView(View):
         :return:
         """
         line_number, line_offset = self.get_cursor_position()
+        # Gtk.TextBuffer.set_text deletes and re-inserts the whole content; group both into a single undo step
+        self.get_buffer().begin_user_action()
         self.get_buffer().set_text(text)
+        self.get_buffer().end_user_action()
         self.set_cursor_position(line_number, line_offset)
 
     def set_enabled(self, on, text=None):
