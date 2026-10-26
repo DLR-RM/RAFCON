@@ -244,6 +244,9 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                  ('library_path', None)]:
                 execution_item[l] = return_item.get(l, default)
 
+            if 'log_messages' in return_item:
+                execution_item['log_messages'] = return_item['log_messages']
+
             for l in ['outcome_name', 'outcome_id']:
                 execution_item[l] = return_item[l]
             for l in ['timestamp']:

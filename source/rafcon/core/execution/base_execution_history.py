@@ -110,8 +110,12 @@ class BaseExecutionHistory(object):
         from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
         if isinstance(state_for_scoped_data, LibraryState):
             state_for_scoped_data = state_for_scoped_data.state_copy
+
+        # Retrieve the log list from the executed state for the execution history
+        log_state = (state.state_copy if isinstance(state, LibraryState) else state)
+        log_messages = getattr(log_state, "_log_message_records", None)
         history_item = ReturnItem(state, call_type, state_for_scoped_data, output_data,
-                                  state.run_id)
+                                  state.run_id, log_messages=log_messages)
         if link_and_feed_item_to_consumers and self.consumer_manager.consumers_exist:
             self._link_item(history_item)
             self.feed_consumers(history_item)
