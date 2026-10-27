@@ -38,10 +38,13 @@ A typical config file looks like this:
 
     IN_MEMORY_EXECUTION_HISTORY_ENABLE: True
     FILE_SYSTEM_EXECUTION_HISTORY_ENABLE: True
+    CAPTURE_LOG_MESSAGES_IN_EXECUTION_HISTORY: False
     EXECUTION_LOG_PATH: "%RAFCON_TEMP_PATH_BASE/execution_logs"
     EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL: False
 
     SCRIPT_RECOMPILATION_ON_STATE_EXECUTION: True
+
+    ALLOW_UNTRUSTED_DATA_TYPES: False
 
 .. _core_config_docs:
 
@@ -111,6 +114,11 @@ FILE\_SYSTEM\_EXECUTION\_HISTORY\_ENABLE
   | Default: ``True``
   | Enables the logging of rafcon execution histories to the file system. Every time a statemachine is executed, a python shelve is created in the execution log directory, e.g. ``/tmp/rafcon_execution_logs/rafcon_execution_log_99-Bottles-of-Beer_2017-08-31-16-07-17.shelve``. Some helpful utility functions for working with log files through python are in: ``import rafcon.utils.execution_log``. A tiny tiny code snippet which shows how to use the pandas.DataFrame representation to query the outcomes of a state named ‘CheckFinished’ is here: ``https://rmc-github.robotic.dlr.de/common/rafcon/pull/324#issuecomment-2520``
 
+CAPTURE\_LOG\_MESSAGES\_IN\_EXECUTION\_HISTORY
+  | Type: boolean
+  | Default: ``False``
+  | Enables the capturing of log messages for ExecutionStates in the execution history under the field ``log_messages``. To view it, the execution history must be opened externally. The field will list all log entries that appeared during the execution of a corresponding ExecutionState in the Debug Console. It contains the log level, the message and the timestamp of the log entries. This can be useful for a deeper understanding of the executed code, for debugging purposes or to assess the runtime of some code blocks in the ExecutionStates.
+
 EXECUTION\_LOG\_PATH:
   | Type: String
   | Default: ``"/tmp/"``
@@ -128,6 +136,11 @@ SCRIPT\_RECOMPILATION\_ON\_STATE\_EXECUTION:
     resetting all global variables. For reasons of backwards compatibility, the default value is ``True``. It is
     recommended to set the value to ``False``, causing a recompilation only when the execution of a state machine is
     newly started, which is a bit faster and allows to share data between consecutive state executions.
+
+ALLOW\_UNTRUSTED\_DATA\_TYPES
+  | Type: boolean
+  | Default: ``False``
+  | Can be used to disable a security config option and allow loading of untrusted data types. Since loading a state machine with custom data types for data ports invokes the import of the corresponding package, loading untrusted state machines could lead to unwanted code execution. By default, this config option rejects the loading of state machines with uncommon or custom data types in their ports. The current allow list consists of: ``int``, ``str``, ``float``, ``bool``, ``list``, ``dict``, ``tuple``, ``set``, ``bytes``, ``range``, ``complex``, ``bytearray``, ``object``. The option can be disabled but state machines should then only be loaded from trusted sources.
   
 GUI Configuration
 -----------------

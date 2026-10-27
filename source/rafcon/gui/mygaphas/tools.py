@@ -70,10 +70,12 @@ class AutoscrollMixin:
     the view is scrolled in that direction. The dragged item follows the curser.
 
     This mixin class expects to be combined with a ``gaphas`` tool and
-    relies on the following attributes provided by the base classes.
-        * ``self.view``             - the GtkView object on which the tool operates on
-        * ``self._movable_items``   - InMotion objects, which are set by the ItemTool
-        * ``self.motion_handle``    - HandleInMotion object. which is set by the HandleTool
+    relies on the following attributes provided by the base classes:
+
+    * ``self.view`` -- the GtkView object on which the tool operates on
+    * ``self._movable_items`` -- InMotion objects, which are set by the ItemTool
+    * ``self.motion_handle`` -- HandleInMotion object. which is set by the HandleTool
+    
     Call ``self.__init_mixin__()`` in the tool`s ``__init__`` and
     ``self.handle_autoscroll(event.x, event.y)`` in the ``on_motion_notify`` event class
     of the gaphas tool
