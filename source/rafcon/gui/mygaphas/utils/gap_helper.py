@@ -104,7 +104,7 @@ def create_new_connection(from_port_m, to_port_m):
     if isinstance(from_port_m, LogicalPortModel) and isinstance(to_port_m, LogicalPortModel):
         return add_transition_to_state(from_port_m, to_port_m)
     elif isinstance(from_port_m, LogicalPortModel) and (to_port_m is None or isinstance(to_port_m, AbstractStateModel)):
-        return add_transition_to_state(from_port_m, to_port_m, add_outcome=True)
+        return add_transition_to_state(from_port_m, to_port_m, resolve_outcome=True)
     elif isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) and \
             isinstance(to_port_m, (DataPortModel, ScopedVariableModel)):
         return add_data_flow_to_state(from_port_m, to_port_m)
@@ -240,15 +240,15 @@ def add_data_flow_to_state(from_port_m, to_port_m, add_data_port=False):
         return False
 
 
-def add_transition_to_state(from_port_m, to_port_m, add_outcome=False):
+def add_transition_to_state(from_port_m, to_port_m, resolve_outcome=False):
     """Interface method between Gaphas and RAFCON core for adding transitions
 
     The method checks the types of the given ports (IncomeView or OutcomeView) and from this determines the necessary
     parameters for the add_transition method of the RAFCON core. Also the parent state is derived from the ports.
 
     :param from_port_m: Port model from which the transition starts
-    :param to_port_m: Port model to which the transition goes to (state model or None if add_outcome)
-    :param add_outcome: Boolean add the outcome automatically
+    :param to_port_m: Port model to which the transition goes to (can be a state model or None if resolve_outcome=True)
+    :param resolve_outcome: Flag to enable automatic port resolution for to_port_m
     :return: True if a transition was added, False if an error occurred
     """
     from rafcon.core.states.library_state import LibraryState
@@ -256,7 +256,7 @@ def add_transition_to_state(from_port_m, to_port_m, add_outcome=False):
     from rafcon.gui.models.logical_port import IncomeModel, OutcomeModel
 
     # Same idea as add_data_port in add_data_flow_to_state: find or add the port of the state dropped on
-    if add_outcome:
+    if resolve_outcome:
         parent_m = from_port_m.parent.parent
         if not isinstance(from_port_m, OutcomeModel) or parent_m is None:
             return False
@@ -264,7 +264,7 @@ def add_transition_to_state(from_port_m, to_port_m, add_outcome=False):
         if to_port_m is not None and to_port_m is not from_port_m.parent and to_port_m.parent is parent_m:
             to_port_m = to_port_m.income
         else:
-            # inside of parent: do not connect, as this happens easily by mistake
+            # released inside of parent: do not connect, as this happens easily by mistake
             node_m = to_port_m
             while isinstance(node_m, AbstractStateModel) and node_m is not parent_m:
                 node_m = node_m.parent
@@ -277,7 +277,7 @@ def add_transition_to_state(from_port_m, to_port_m, add_outcome=False):
                 return False
             name = from_port_m.outcome.name
             outcome_ids = [o_id for o_id, o in parent_m.state.outcomes.items() if o.name == name]
-            outcome_id = outcome_ids[0] if outcome_ids else parent_m.state.add_outcome(name)
+            outcome_id = outcome_ids[0] if outcome_ids else parent_m.state.resolve_outcome(name)
             to_port_m = parent_m.get_outcome_m(outcome_id)
 
     from_state_m = from_port_m.parent

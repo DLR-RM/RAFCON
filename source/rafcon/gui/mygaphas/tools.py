@@ -976,7 +976,7 @@ class ConnectionModificationTool(ConnectionTool):
 
         if not self._current_sink or not self._connection_v.from_port:  # Reset connection to original status if new connection is not defined properly
             self._reset_connection()
-        elif not self._current_sink.port and self._is_transition:  # Moving transitions onto a state is not supported
+        elif not self._current_sink.port and self._is_transition:  # Moving an existing transitions onto a state resets the connection
             self._reset_connection()
         elif not self._current_sink.port:   # Try to create a port if it was released above a state
             self.view.canvas.update_now()
