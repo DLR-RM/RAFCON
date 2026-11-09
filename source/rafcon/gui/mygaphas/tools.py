@@ -900,6 +900,8 @@ class ConnectionCreationTool(ConnectionTool):
                     sink_model = sink_port_v.model
                     self._disconnect_temporarily(sink_port_v, target=True)
                 gap_helper.create_new_connection(self._connection_v.from_port.model, sink_model)
+            elif self._is_transition:  # Released on the empty canvas, e.g. an outcome dragged out of the root state
+                gap_helper.create_new_connection(self._connection_v.from_port.model, None)
 
             # remove placeholder from canvas
             if self._connection_v:
@@ -973,6 +975,8 @@ class ConnectionModificationTool(ConnectionTool):
         self._handle_temporary_connection(self._current_sink, None, of_target=modify_target)
 
         if not self._current_sink or not self._connection_v.from_port:  # Reset connection to original status if new connection is not defined properly
+            self._reset_connection()
+        elif not self._current_sink.port and self._is_transition:  # Moving transitions onto a state is not supported
             self._reset_connection()
         elif not self._current_sink.port:   # Try to create a port if it was released above a state
             self.view.canvas.update_now()
