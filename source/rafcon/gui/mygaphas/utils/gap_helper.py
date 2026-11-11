@@ -277,7 +277,7 @@ def add_transition_to_state(from_port_m, to_port_m, resolve_outcome=False):
                 return False
             name = from_port_m.outcome.name
             outcome_ids = [o_id for o_id, o in parent_m.state.outcomes.items() if o.name == name]
-            outcome_id = outcome_ids[0] if outcome_ids else parent_m.state.resolve_outcome(name)
+            outcome_id = outcome_ids[0] if outcome_ids else parent_m.state.add_outcome(name)
             to_port_m = parent_m.get_outcome_m(outcome_id)
 
     from_state_m = from_port_m.parent
