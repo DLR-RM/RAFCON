@@ -80,8 +80,6 @@ def test_execution_log(caplog):
         ss.close()
 
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    except ImportError:  # if pandas is not installed
-        print("test_execution_log skipped as pandas is not installed")
     finally:
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=0)
 
@@ -151,8 +149,6 @@ def test_execution_log_without_memory(caplog):
         ss.close()
 
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    except ImportError:  # if pandas is not installed
-        print("test_execution_log skipped as pandas is not installed")
     finally:
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=0)
 
@@ -185,8 +181,6 @@ def test_execution_log_without_file_system(caplog):
         assert isinstance(execution_history[3], ReturnItem)
 
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    except ImportError:  # if pandas is not installed
-        print("test_execution_log skipped as pandas is not installed")
     finally:
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=0)
 
