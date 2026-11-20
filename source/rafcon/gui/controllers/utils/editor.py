@@ -167,3 +167,5 @@ class EditorController(ExtendedController):
             # Skip if the view already shows the text (e.g. after applying it), to keep the undo history clean
             if self.view.get_text() != self.source_text:
                 self.view.set_text(self.source_text)
+            else:  # nothing to refill, but let buffer observers (e.g. the tab's '*') re-check against the model
+                self.view.get_buffer().emit('changed')
