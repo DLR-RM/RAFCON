@@ -84,7 +84,10 @@ class BaseExecutionHistory(object):
         :param state_for_scoped_data: the state of which the scoped data needs to be saved for further usages
             (e.g. backward stepping)
         :param link_and_feed_item_to_consumers: if the history item should be feed to all other consumers
+        :return: the history item, or None if no consumer exists to receive it
         """
+        if link_and_feed_item_to_consumers and not self.consumer_manager.consumers_exist:
+            return None  # nobody would ever see the item, so do not build it (path lookup and deep copies)
         from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
         if isinstance(state_for_scoped_data, LibraryState):
             state_for_scoped_data = state_for_scoped_data.state_copy
@@ -106,7 +109,11 @@ class BaseExecutionHistory(object):
                             i.e. if it refers to a container state or an execution state
         :param state_for_scoped_data: the state of which the scoped data needs to be saved for further usages (e.g.
             backward stepping)
+        :param link_and_feed_item_to_consumers: if the history item should be feed to all other consumers
+        :return: the history item, or None if no consumer exists to receive it
         """
+        if link_and_feed_item_to_consumers and not self.consumer_manager.consumers_exist:
+            return None  # see push_call_history_item
         from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
         if isinstance(state_for_scoped_data, LibraryState):
             state_for_scoped_data = state_for_scoped_data.state_copy
