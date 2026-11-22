@@ -136,6 +136,9 @@ SCRIPT\_RECOMPILATION\_ON\_STATE\_EXECUTION:
     resetting all global variables. For reasons of backwards compatibility, the default value is ``True``. It is
     recommended to set the value to ``False``, causing a recompilation only when the execution of a state machine is
     newly started, which is a bit faster and allows to share data between consecutive state executions.
+    The difference only shows when a state is executed more than once per start, e.g. in a loop: if every state runs
+    once, both settings build one module per state. In both cases the module is built from the script text in
+    memory, and the compiled code is reused as long as that text is unchanged.
 
 ALLOW\_UNTRUSTED\_DATA\_TYPES
   | Type: boolean
