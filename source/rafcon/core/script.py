@@ -45,12 +45,14 @@ class Script(Observable, yaml.YAMLObject):
     :ivar path: the path where the script resides
     :ivar filename: the full name of the script file
     :ivar _compiled_module: the compiled module
+    :ivar _compiled_code: cache of (script text, code name, code object) of the last compilation
     :ivar _script_id: the id of the script
     :ivar check_path: a flag to indicate if the path should be checked for existence
 
     """
 
     _script = None
+    _compiled_code = None
 
     def __init__(self, path=None, filename=None, parent=None):
 
@@ -129,7 +131,12 @@ class Script(Observable, yaml.YAMLObject):
         try:
             _imp.acquire_lock()
 
-            code = compile(self.script, '%s (%s)' % (self.filename, self._script_id), 'exec')
+            code_name = '%s (%s)' % (self.filename, self._script_id)
+            # compiling is the expensive part, so reuse the code object while the script text is unchanged
+            # the module below is still created fresh on every call
+            if self._compiled_code is None or self._compiled_code[:2] != (self.script, code_name):
+                self._compiled_code = (self.script, code_name, compile(self.script, code_name, 'exec'))
+            code = self._compiled_code[2]
             # load module
             module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
             module_spec = importlib.machinery.ModuleSpec(module_name, None)
