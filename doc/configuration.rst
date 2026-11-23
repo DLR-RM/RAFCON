@@ -39,6 +39,7 @@ A typical config file looks like this:
     IN_MEMORY_EXECUTION_HISTORY_ENABLE: True
     FILE_SYSTEM_EXECUTION_HISTORY_ENABLE: True
     CAPTURE_LOG_MESSAGES_IN_EXECUTION_HISTORY: False
+    LOGGING_LEVEL: None
     EXECUTION_LOG_PATH: "%RAFCON_TEMP_PATH_BASE/execution_logs"
     EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL: False
 
@@ -142,6 +143,14 @@ ALLOW\_UNTRUSTED\_DATA\_TYPES
   | Default: ``False``
   | Can be used to disable a security config option and allow loading of untrusted data types. Since loading a state machine with custom data types for data ports invokes the import of the corresponding package, loading untrusted state machines could lead to unwanted code execution. By default, this config option rejects the loading of state machines with uncommon or custom data types in their ports. The current allow list consists of: ``int``, ``str``, ``float``, ``bool``, ``list``, ``dict``, ``tuple``, ``set``, ``bytes``, ``range``, ``complex``, ``bytearray``, ``object``. The option can be disabled but state machines should then only be loaded from trusted sources.
   
+LOGGING\_LEVEL
+  | Type: string or None
+  | Default: ``None``
+  | Lowest log level of RAFCON's own logger (``rafcon``), e.g. ``INFO`` or ``WARNING``. Messages below this level are
+    not created at all, so they appear neither in the terminal nor in the GUI or log files, which saves run time
+    (debug messages are written for every executed state). ``None`` keeps the level of the logging configuration
+    (see :ref:`logging_configuration`). The level can only raise the one of the logging configuration, never lower it.
+
 GUI Configuration
 -----------------
 
@@ -346,22 +355,26 @@ PORT\_SNAP\_DISTANCE
 LOGGING\_SHOW\_VERBOSE
   | Type: boolean
   | Default: ``False``
-  | The flag decides to activate the VERBOSE log level in the logging console view.
+  | The flag decides to activate the VERBOSE log level in the logging console view. Levels below the lowest
+    activated one are not logged at all while the GUI runs, also not in the terminal.
 
 LOGGING\_SHOW\_DEBUG
   | Type: boolean
   | Default: ``False``
-  | The flag decides to activate the DEBUG log level in the logging console view.
+  | The flag decides to activate the DEBUG log level in the logging console view. Levels below the lowest
+    activated one are not logged at all while the GUI runs, also not in the terminal.
     
 LOGGING\_SHOW\_INFO
   | Type: boolean
   | Default: ``True``
-  | The flag decides to activate the INFO log level in the logging console view.
+  | The flag decides to activate the INFO log level in the logging console view. Levels below the lowest
+    activated one are not logged at all while the GUI runs, also not in the terminal.
     
 LOGGING\_SHOW\_WARNING
   | Type: boolean
   | Default: ``True``
-  | The flag decides to activate the WARNING log level in the logging console view.
+  | The flag decides to activate the WARNING log level in the logging console view. Levels below the lowest
+    activated one are not logged at all while the GUI runs, also not in the terminal.
     
 LOGGING\_SHOW\_ERROR
   | Type: boolean
@@ -610,6 +623,8 @@ If the env variable :envvar:`RAFCON_START_MINIMIZED` is set (i.e., has a value w
 started minimized/iconified. This comes in handy, when the tests are run. You can then continue working, without
 RAFCON windows repeatedly being opened and closed in the foreground.
 
+
+.. _logging_configuration:
 
 Logging configuration
 ---------------------

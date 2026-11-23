@@ -55,8 +55,10 @@ class DebugConsoleController(ExtendedController):
         self.connect_button_to_function("button_follow_logging", "toggled", self.on_log_button_toggled,
                                         "CONSOLE_FOLLOW_LOGGING")
         self.update_log_button_state()
+        self.update_logging_level()
 
     def destroy(self):
+        log.set_logging_level_limit("gui", None)
         self.view.quit_flag = True
         log_helpers.LoggingViewHandler.remove_logging_view('main')
         super(DebugConsoleController, self).destroy()
@@ -76,9 +78,25 @@ class DebugConsoleController(ExtendedController):
         config_key = info['args'][1]
         if "LOGGING" in config_key:
             self.update_log_button_state()
+        if config_key.startswith("LOGGING_SHOW_"):
+            self.update_logging_level()
 
     def on_log_button_toggled(self, log_button, config_key):
         gui_config.set_config_value(config_key, log_button.get_active())
+
+    @staticmethod
+    def update_logging_level():
+        """Do not create log records below the lowest level shown in the logging console (also not for the terminal)
+
+        Messages of a level that is hidden when they are logged are lost, showing the level later does not bring them
+        back. ERROR is always kept.
+        """
+        lowest_shown = "ERROR"
+        for level in ["verbose", "debug", "info", "warning"]:
+            if gui_config.get_config_value("LOGGING_SHOW_{}".format(level.upper())):
+                lowest_shown = level.upper()
+                break
+        log.set_logging_level_limit("gui", lowest_shown)
 
     def update_log_button_state(self):
         for level in ["verbose", "debug", "info", "warning", "error"]:

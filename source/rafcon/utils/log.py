@@ -102,6 +102,33 @@ with open(logging_conf_path) as logging_conf_file:
 warnings.simplefilter("once", RAFCONDeprecationWarning)
 logging.captureWarnings(True)
 
+# Level of the "rafcon" logger as set by the logging configuration. Other sources (the core config option LOGGING_LEVEL,
+# the shown levels of the GUI logging console) can only raise it, see set_logging_level_limit.
+_logging_conf_level = logging.getLogger(rafcon_root).level
+_logging_level_limits = {}
+
+
+def set_logging_level_limit(source, level):
+    """Raise the level of the "rafcon" logger for one source, or remove the limit of that source with None
+
+    Records below the resulting level are not created at all, so they are skipped for every handler (console, logging
+    console of the GUI, log files). The resulting level is the highest of the logging configuration and all limits.
+
+    :param str source: Who sets the limit, e.g. "core" or "gui"
+    :param level: A level name like "INFO", a level number, or None
+    :raises ValueError: if the level name is unknown
+    """
+    if isinstance(level, str):
+        level_number = logging.getLevelName(level.upper())
+        if not isinstance(level_number, int):
+            raise ValueError("Unknown logging level: {}".format(level))
+        level = level_number
+    if level is None:
+        _logging_level_limits.pop(source, None)
+    else:
+        _logging_level_limits[source] = level
+    logging.getLogger(rafcon_root).setLevel(max([_logging_conf_level] + list(_logging_level_limits.values())))
+
 
 def get_logger(name):
     """Returns a logger for the given name

@@ -215,6 +215,23 @@ class Config(ObservableConfig):
         
         # Validate config values after loading
         self._validate_config_values()
+        self._apply_logging_level()
+
+    def set_config_value(self, key, value):
+        super(Config, self).set_config_value(key, value)
+        if key == 'LOGGING_LEVEL':
+            self._apply_logging_level()
+
+    def _apply_logging_level(self):
+        """Applies LOGGING_LEVEL to the "rafcon" logger, so lower levels are not even created"""
+        level = self.get_config_value('LOGGING_LEVEL')
+        if level == 'None':  # how the yaml config returns None
+            level = None
+        try:
+            log.set_logging_level_limit("core", level)
+        except ValueError as e:
+            log.set_logging_level_limit("core", None)
+            logger.error("Invalid LOGGING_LEVEL in core config, ignored: {}".format(e))
 
 
 # This variable holds the global configuration parameters for the state machine
