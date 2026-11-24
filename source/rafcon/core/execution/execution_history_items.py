@@ -217,15 +217,22 @@ class CallItem(ScopedDataItem):
 class ReturnItem(ScopedDataItem):
     """A history item to represent the return of a root state call
     """
-    def __init__(self, state, call_type, state_for_scoped_data, output_data, run_id):
+    def __init__(self, state, call_type, state_for_scoped_data, output_data, run_id, log_messages=None):
         ScopedDataItem.__init__(self, state, call_type, state_for_scoped_data, output_data, run_id)
         self.outcome = copy.deepcopy(state.final_outcome)
+        self.log_messages = (
+            copy.deepcopy(log_messages)
+            if log_messages is not None
+            else None
+        )
 
     def __str__(self):
         return "ReturnItem %s" % (ScopedDataItem.__str__(self))
 
     def to_dict(self, pickled=True):
         record = ScopedDataItem.to_dict(self, pickled=pickled)
+        if self.log_messages is not None:
+            record["log_messages"] = self.log_messages
         if self.outcome is not None:
             record['outcome_name'] = self.outcome.to_dict()['name']
             record['outcome_id'] = self.outcome.to_dict()['outcome_id']

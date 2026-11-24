@@ -32,6 +32,7 @@ from rafcon.core.script import Script
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.execution.execution_history_items import CallType
 from rafcon.core.config import global_config
+from rafcon.core.execution.log_message_capturing import capture_log_messages_decorator
 
 from rafcon.utils import log, plugins
 
@@ -130,6 +131,7 @@ class ExecutionState(State):
         logger.error("Returned outcome of {0} not existing: {1}".format(self, outcome_item))
         return Outcome(-1, "aborted")
 
+    @capture_log_messages_decorator
     def run(self):
         """ This defines the sequence of actions that are taken when the execution state is executed
 

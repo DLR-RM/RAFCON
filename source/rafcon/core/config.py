@@ -99,9 +99,11 @@ class Config(ObservableConfig):
         'NO_PROGRAMMATIC_CHANGE_OF_LIBRARY_STATES_PERFORMED': bool,
         'IN_MEMORY_EXECUTION_HISTORY_ENABLE': bool,
         'FILE_SYSTEM_EXECUTION_HISTORY_ENABLE': bool,
+        'CAPTURE_LOG_MESSAGES_IN_EXECUTION_HISTORY': bool,
         'EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL': bool,
         'SCRIPT_RECOMPILATION_ON_STATE_EXECUTION': bool,
         'MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH': (type(None), int),
+        'ALLOW_UNTRUSTED_DATA_TYPES': bool,
     }
 
     def __init__(self, logger_object=None):
